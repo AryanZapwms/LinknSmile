@@ -5,7 +5,7 @@
   import { HomeCarousel } from "@/components/home-carousel"
   import { ShopByConcern } from "@/components/shop-by-concern"
   import WhyChoose from "@/components/why-choose"
-  import Testimonials from "@/components/testimonials"
+  // import Testimonials from "@/components/testimonials"
   import { getCachedSync, fetchWithCache, invalidateCache } from "@/lib/cacheClient"
 
   interface Product {
@@ -443,9 +443,9 @@
         </section>
 
         {/* Reviews Section */}
-        <div>
+        {/* <div>
           <Testimonials companySlug="default"/>
-        </div>
+        </div> */}
 
         {/* Floating Buttons */}
         <div className=" fixed left-4 bottom-6 transform -translate-y-1/2 z-50" style={{ WebkitTapHighlightColor: "transparent" }}>

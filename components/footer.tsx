@@ -150,12 +150,7 @@ export default function Footer() {
                         About Us
                       </Link>
                     </li>
-                    <li>
-                      <Link href="/blog" className="text-sm text-[#4A4A4A] hover:text-[#FDB241] transition-colors duration-200 flex items-center group">
-                        <span className="w-0 group-hover:w-2 h-px bg-[#FDB241] transition-all duration-200 mr-0 group-hover:mr-2"></span>
-                        Blogs
-                      </Link>
-                    </li>
+                   
                     <li>
                       <Link href="/contact-us" className="text-sm text-[#4A4A4A] hover:text-[#FDB241] transition-colors duration-200 flex items-center group">
                         <span className="w-0 group-hover:w-2 h-px bg-[#FDB241] transition-all duration-200 mr-0 group-hover:mr-2"></span>

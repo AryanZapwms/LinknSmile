@@ -335,9 +335,7 @@ if (!mounted) return null
               <Link href="/about-us" className="text-sm hover:underline">
                 About Us
               </Link>
-              <Link href="/blog" className="text-sm hover:underline">
-                Blogs
-              </Link>
+              
               <Link href="/contact-us" className="text-sm hover:underline">
                 Contact
               </Link>
@@ -372,11 +370,7 @@ if (!mounted) return null
                         About Us
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/blogs" className="flex items-center gap-2 cursor-pointer">
-                        Blogs
-                      </Link>
-                    </DropdownMenuItem>
+                   
                     <DropdownMenuItem asChild>
                       <Link href="/contact-us" className="flex items-center gap-2 cursor-pointer">
                         Contact
@@ -443,11 +437,7 @@ if (!mounted) return null
                           About Us
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/blogs" className="cursor-pointer">
-                          Blogs
-                        </Link>
-                      </DropdownMenuItem>
+                      
                       <DropdownMenuItem asChild>
                         <Link href="/contact-us" className="cursor-pointer">
                           Contact

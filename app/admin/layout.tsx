@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
   { href: "/admin/categories", label: "Categories", icon: <Layers className="w-5 h-5" /> },
   { href: "/admin/companies", label: "Companies", icon: <Building2 className="w-5 h-5" /> },
   { href: "/admin/users", label: "Users", icon: <Users className="w-5 h-5" /> },
-  { href: "/admin/blogs", label: "Blogs", icon: <BookOpen className="w-5 h-5" /> },
+
   { href: "/admin/images", label: "Images", icon: <Image className="w-5 h-5" /> },
   { href: "/admin/promos", label: "Promo Bar", icon: <Megaphone className="w-5 h-5" /> },
   { href: "/admin/reviews", label: "Reviews", icon: <MessageSquare className="w-5 h-5" /> },

@@ -194,19 +194,19 @@ export default function ProductsPage() {
                         <td className="py-3 px-2 align-top text-sm text-muted-foreground">{product.stock}</td>
 
                         <td className="py-3 px-2 align-top">
-                          <div className="flex gap-2 flex-wrap">
+                          <div className="flex flex-wrap">
                             <Link
                               href={`/shop/${product.company?.name?.toLowerCase().replace(/\\s+/g, '-')}/product/${product._id}`}
                               className="flex-1"
                             >
-                              <Button size="sm" variant="ghost" className="w-full justify-start">
+                              <Button size="sm" variant="ghost" className="w-fit justify-start border bg-blue-400 text-white">
                                 <Eye className="w-4 h-4 mr-2" />
                                 View
                               </Button>
                             </Link>
 
                           <Link href={`/admin/products/edit/${product._id}`} className="flex-1">
-                            <Button size="sm" variant="outline" className="w-full justify-start">
+                            <Button size="sm" variant="outline" className="w-fit justify-start border">
                               <Edit2 className="w-4 h-4 mr-2" />
                               Edit
                             </Button>
@@ -215,11 +215,11 @@ export default function ProductsPage() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            className="w-full"
+                            className="w-fit text-center border"
                             onClick={() => deleteProduct(product._id)}
                           >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
+                            <Trash2 className="w-4 h-4 " />
+                           
                           </Button>
                         </div>
                       </td>
