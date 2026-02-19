@@ -1,0 +1,164 @@
+.next/dev/types/validator.ts(576,31): error TS2344: Type 'typeof import("C:/Users/ASUS/Desktop/Aryan/LinkAndSmile/app/api/admin/reviews/[id]/reply/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/admin/reviews/[id]/reply">'.
+  Types of property 'POST' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ review: { id: any; productId: any; companyId: any; userId: any; ... 6 more ...; updatedAt: any; }; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(594,31): error TS2344: Type 'typeof import("C:/Users/ASUS/Desktop/Aryan/LinkAndSmile/app/api/admin/vendors/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/admin/vendors/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(req: NextRequest, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ message: string; }> | NextResponse<{ success: boolean; shop: IShop & Required<{ _id: ObjectId; }> & { ...; }; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(702,31): error TS2344: Type 'typeof import("C:/Users/ASUS/Desktop/Aryan/LinkAndSmile/app/api/categories/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/categories/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(request: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<Document<unknown, {}, { parent: ObjectId; name: string; slug: string; company: ObjectId; isActive: boolean; description?: string | ... 1 more ... | undefined; image?: string | ... 1 more ... | undefined; } & DefaultTimestampProps, {...' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(909,31): error TS2344: Type 'typeof import("C:/Users/ASUS/Desktop/Aryan/LinkAndSmile/app/api/promos/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/promos/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { id: string; }; }) => Promise<NextResponse<Document<unknown, {}, { link: string; message: string; isActive: boolean; priority: number; linkText: string; backgroundColor: string; textColor: string; title?: string | ... 1 more ... | undefined; } & DefaultTimestampProps, { ...' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(999,31): error TS2344: Type 'typeof import("C:/Users/ASUS/Desktop/Aryan/LinkAndSmile/app/api/users/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/users/[id]">'.
+  Types of property 'PUT' are incompatible.
+    Type '(request: Request, { params }: { params: { id: string; }; }) => Promise<NextResponse<any>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/dev/types/validator.ts(1026,31): error TS2344: Type 'typeof import("C:/Users/ASUS/Desktop/Aryan/LinkAndSmile/app/api/vendor/products/[id]/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/vendor/products/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(req: NextRequest, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ message: string; }> | NextResponse<{ success: boolean; product: any; }>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+app/admin/categories/page.tsx(112,19): error TS2345: Argument of type '{ name: string; slug: string; description: string; company: string; isActive: true; }' is not assignable to parameter of type 'SetStateAction<{ name: string; slug: string; description: string; company: string; parent: string; isActive: boolean; }>'.
+  Property 'parent' is missing in type '{ name: string; slug: string; description: string; company: string; isActive: true; }' but required in type '{ name: string; slug: string; description: string; company: string; parent: string; isActive: boolean; }'.
+app/admin/categories/page.tsx(129,33): error TS2339: Property '_id' does not exist on type '{ name: string; }'.
+app/admin/categories/page.tsx(130,32): error TS2339: Property '_id' does not exist on type '{ name: string; slug: string; }'.
+app/admin/categories/page.tsx(243,46): error TS2339: Property '_id' does not exist on type '{ name: string; }'.
+app/admin/categories/page.tsx(333,61): error TS2339: Property '_id' does not exist on type '{ name: string; slug: string; }'.
+app/admin/companies/[id]/new-arrivals/page.tsx(556,61): error TS2345: Argument of type 'string | Product' is not assignable to parameter of type 'string'.
+  Type 'Product' is not assignable to type 'string'.
+app/admin/companies/[id]/new-arrivals/page.tsx(828,49): error TS2322: Type 'string' is not assignable to type 'Product'.
+app/admin/companies/page.tsx(666,71): error TS2339: Property 'shopByConcern' does not exist on type 'Company'.
+app/admin/layout.tsx(49,70): error TS2322: Type '{ className: string; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'className' does not exist on type 'IntrinsicAttributes'.
+app/admin/page.tsx(373,13): error TS2322: Type '{ date: string; label: string; }' is not assignable to type 'CompanyChartPoint'.
+  Type '{ date: string; label: string; }' is not assignable to type 'Record<string, number>'.
+    Property 'date' is incompatible with index signature.
+      Type 'string' is not assignable to type 'number'.
+app/admin/products/edit/[id]/page.tsx(351,36): error TS2339: Property 'split' does not exist on type 'never'.
+app/admin/products/edit/[id]/page.tsx(351,52): error TS7006: Parameter 'i' implicitly has an 'any' type.
+app/admin/products/edit/[id]/page.tsx(355,33): error TS2339: Property 'split' does not exist on type 'never'.
+app/admin/products/edit/[id]/page.tsx(355,49): error TS7006: Parameter 'b' implicitly has an 'any' type.
+app/admin/products/edit/[id]/page.tsx(359,36): error TS2339: Property 'split' does not exist on type 'never'.
+app/admin/products/edit/[id]/page.tsx(359,52): error TS7006: Parameter 's' implicitly has an 'any' type.
+app/api/auth/register-vendor/route.ts(6,9): error TS2305: Module '"@/lib/otp"' has no exported member 'sendOTP'.
+app/api/companies/[id]/shop-by-concern/route.ts(61,13): error TS7006: Parameter 'item' implicitly has an 'any' type.
+app/api/companies/[id]/shop-by-concern/route.ts(85,39): error TS7006: Parameter 'item' implicitly has an 'any' type.
+app/api/companies/migrate/route.ts(26,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(filter: _QueryFilter<Record<string, any>>, update: UpdateWithAggregationPipeline | UpdateQuery<any>, options?: (UpdateOptions & MongooseUpdateQueryOptions<...>) | ... 1 more ... | undefined): Query<...>', gave the following error.
+    Object literal may only specify known properties, and 'new' does not exist in type 'UpdateOptions & MongooseUpdateQueryOptions<any>'.
+  Overload 2 of 2, '(filter: Query<any, any, {}, unknown, "find", Record<string, never>>, update: UpdateWithAggregationPipeline | UpdateQuery<any>, options?: (UpdateOptions & MongooseUpdateQueryOptions<...>) | ... 1 more ... | undefined): Query<...>', gave the following error.
+    Object literal may only specify known properties, and '_id' does not exist in type 'Query<any, any, {}, unknown, "find", Record<string, never>>'.
+app/api/companies/reorder/route.ts(35,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(filter: _QueryFilter<Record<string, any>>, update: UpdateWithAggregationPipeline | UpdateQuery<any>, options?: (UpdateOptions & MongooseUpdateQueryOptions<...>) | ... 1 more ... | undefined): Query<...>', gave the following error.
+    Object literal may only specify known properties, and 'new' does not exist in type 'UpdateOptions & MongooseUpdateQueryOptions<any>'.
+  Overload 2 of 2, '(filter: Query<any, any, {}, unknown, "find", Record<string, never>>, update: UpdateWithAggregationPipeline | UpdateQuery<any>, options?: (UpdateOptions & MongooseUpdateQueryOptions<...>) | ... 1 more ... | undefined): Query<...>', gave the following error.
+    Object literal may only specify known properties, and '_id' does not exist in type 'Query<any, any, {}, unknown, "find", Record<string, never>>'.
+app/api/email/send/route.ts(34,16): error TS2339: Property 'success' does not exist on type 'boolean'.
+app/api/email/send/route.ts(35,67): error TS2339: Property 'messageId' does not exist on type 'boolean'.
+app/api/email/send/route.ts(37,48): error TS2339: Property 'error' does not exist on type 'boolean'.
+app/api/products/route.ts(41,36): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/products/route.ts(41,45): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/products/route.ts(41,55): error TS2322: Type 'number' is not assignable to type 'string'.
+app/api/products/route.ts(41,61): error TS2322: Type 'number' is not assignable to type 'string'.
+app/api/products/route.ts(41,68): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/promos/route.ts(21,14): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/api/razorpay/verify-payment/route.ts(149,28): error TS2304: Cannot find name 'mappedAddress'.
+app/api/setup/brands/route.ts(67,60): error TS18046: 'error' is of type 'unknown'.
+app/api/setup/categories/route.ts(216,63): error TS18046: 'error' is of type 'unknown'.
+app/api/setup/products/route.ts(58,57): error TS2339: Property 'slug' does not exist on type 'ObjectId'.
+app/api/setup/products/route.ts(93,58): error TS2339: Property 'slug' does not exist on type 'ObjectId'.
+app/api/setup/products/route.ts(127,57): error TS2339: Property 'slug' does not exist on type 'ObjectId'.
+app/api/setup/products/route.ts(165,59): error TS2339: Property 'slug' does not exist on type 'ObjectId'.
+app/api/setup/products/route.ts(195,60): error TS2339: Property 'slug' does not exist on type 'ObjectId'.
+app/api/setup/products/route.ts(231,59): error TS2339: Property 'slug' does not exist on type 'ObjectId'.
+app/api/setup/products/route.ts(265,62): error TS2339: Property 'slug' does not exist on type 'ObjectId'.
+app/api/setup/products/route.ts(301,62): error TS18046: 'error' is of type 'unknown'.
+app/checkout/page.tsx(295,15): error TS2322: Type '{ totalAmount: number; onSubmit: (shippingAddress: any, paymentMethod: string) => Promise<void>; availablePaymentMethods: string[]; initialData: { name: any; phone: any; street: any; city: any; state: any; zipCode: any; country: string; }; isSubmitting: boolean; }' is not assignable to type 'IntrinsicAttributes & CheckoutFormProps'.
+  Property 'isSubmitting' does not exist on type 'IntrinsicAttributes & CheckoutFormProps'.
+app/order-success/[id]/page.tsx(51,15): error TS2345: Argument of type 'string | null | undefined' is not assignable to parameter of type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+app/page.tsx(336,47): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(type: "touchstart", listener: (this: Document, ev: TouchEvent) => any, options?: boolean | AddEventListenerOptions | undefined): void', gave the following error.
+    Argument of type '(e: MouseEvent) => void' is not assignable to parameter of type '(this: Document, ev: TouchEvent) => any'.
+      Types of parameters 'e' and 'ev' are incompatible.
+        Type 'TouchEvent' is missing the following properties from type 'MouseEvent': button, buttons, clientX, clientY, and 15 more.
+  Overload 2 of 2, '(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions | undefined): void', gave the following error.
+    Argument of type '(e: MouseEvent) => void' is not assignable to parameter of type 'EventListenerOrEventListenerObject'.
+      Type '(e: MouseEvent) => void' is not assignable to type 'EventListener'.
+        Types of parameters 'e' and 'evt' are incompatible.
+          Type 'Event' is missing the following properties from type 'MouseEvent': altKey, button, buttons, clientX, and 23 more.
+app/page.tsx(340,52): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(type: "touchstart", listener: (this: Document, ev: TouchEvent) => any, options?: boolean | EventListenerOptions | undefined): void', gave the following error.
+    Argument of type '(e: MouseEvent) => void' is not assignable to parameter of type '(this: Document, ev: TouchEvent) => any'.
+      Types of parameters 'e' and 'ev' are incompatible.
+        Type 'TouchEvent' is missing the following properties from type 'MouseEvent': button, buttons, clientX, clientY, and 15 more.
+  Overload 2 of 2, '(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions | undefined): void', gave the following error.
+    Argument of type '(e: MouseEvent) => void' is not assignable to parameter of type 'EventListenerOrEventListenerObject'.
+      Type '(e: MouseEvent) => void' is not assignable to type 'EventListener'.
+        Types of parameters 'e' and 'evt' are incompatible.
+          Type 'Event' is missing the following properties from type 'MouseEvent': altKey, button, buttons, clientX, and 23 more.
+app/shop/[company]/page.tsx(248,32): error TS2322: Type 'CarouselImage[] | undefined' is not assignable to type 'CarouselImage[]'.
+  Type 'undefined' is not assignable to type 'CarouselImage[]'.
+app/shop/[company]/product/[id]/page.tsx(777,40): error TS18048: 'product.sizes' is possibly 'undefined'.
+app/shop/page.tsx(81,51): error TS2322: Type 'Dispatch<SetStateAction<{ company: string; priceRange: [number, number]; }>>' is not assignable to type '(filters: { company?: string | undefined; priceRange?: [number, number] | undefined; }) => void'.
+  Types of parameters 'value' and 'filters' are incompatible.
+    Type '{ company?: string | undefined; priceRange?: [number, number] | undefined; }' is not assignable to type 'SetStateAction<{ company: string; priceRange: [number, number]; }>'.
+      Type '{ company?: string | undefined; priceRange?: [number, number] | undefined; }' is not assignable to type '{ company: string; priceRange: [number, number]; }'.
+        Types of property 'company' are incompatible.
+          Type 'string | undefined' is not assignable to type 'string'.
+            Type 'undefined' is not assignable to type 'string'.
+app/termsofservice/page.tsx(86,26): error TS7006: Parameter 'id' implicitly has an 'any' type.
+app/vendor/products/add/page.tsx(377,24): error TS2304: Cannot find name 'Badge'.
+app/vendor/products/add/page.tsx(377,79): error TS2304: Cannot find name 'Badge'.
+app/vendor/products/page.tsx(246,30): error TS2304: Cannot find name 'Package'.
+components/new-arrivals.tsx(115,17): error TS2322: Type '({ _id: any; productId: { _id: any; name: any; price: any; discountPrice: any; }; title: any; image: any; description: any; company: { _id: string; name: string; slug: string; }; } | null)[]' is not assignable to type 'NewArrivalProduct[]'.
+  Type '{ _id: any; productId: { _id: any; name: any; price: any; discountPrice: any; }; title: any; image: any; description: any; company: { _id: string; name: string; slug: string; }; } | null' is not assignable to type 'NewArrivalProduct'.
+    Type 'null' is not assignable to type 'NewArrivalProduct'.
+components/product-card.tsx(91,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/product-card.tsx(108,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/product-card.tsx(282,15): error TS2322: Type '"sm" | "md"' is not assignable to type '"default" | "sm" | "lg" | "icon" | "icon-sm" | "icon-lg" | null | undefined'.
+  Type '"md"' is not assignable to type '"default" | "sm" | "lg" | "icon" | "icon-sm" | "icon-lg" | null | undefined'.
+components/ui/chart.tsx(109,3): error TS2339: Property 'payload' does not exist on type 'Omit<Props<ValueType, NameType>, PropertiesReadFromContext> & { active?: boolean | undefined; allowEscapeViewBox?: AllowInDimension | undefined; ... 17 more ...; wrapperStyle?: CSSProperties | undefined; } & ClassAttributes<...> & HTMLAttributes<...> & { ...; }'.
+components/ui/chart.tsx(114,3): error TS2339: Property 'label' does not exist on type 'Omit<Props<ValueType, NameType>, PropertiesReadFromContext> & { active?: boolean | undefined; allowEscapeViewBox?: AllowInDimension | undefined; ... 17 more ...; wrapperStyle?: CSSProperties | undefined; } & ClassAttributes<...> & HTMLAttributes<...> & { ...; }'.
+components/ui/chart.tsx(182,23): error TS7006: Parameter 'item' implicitly has an 'any' type.
+components/ui/chart.tsx(182,29): error TS7006: Parameter 'index' implicitly has an 'any' type.
+components/ui/chart.tsx(260,39): error TS2344: Type '"verticalAlign" | "payload"' does not satisfy the constraint '"string" | "role" | "key" | "id" | "type" | "result" | "end" | "filter" | "fill" | "values" | "name" | "version" | "min" | "max" | "transform" | "cursor" | "content" | "method" | ... 428 more ... | "onBBoxUpdate"'.
+  Type '"payload"' is not assignable to type '"string" | "role" | "key" | "id" | "type" | "result" | "end" | "filter" | "fill" | "values" | "name" | "version" | "min" | "max" | "transform" | "cursor" | "content" | "method" | ... 428 more ... | "onBBoxUpdate"'.
+components/ui/chart.tsx(266,17): error TS2339: Property 'length' does not exist on type '{}'.
+components/ui/chart.tsx(278,16): error TS2339: Property 'map' does not exist on type '{}'.
+components/ui/chart.tsx(278,21): error TS7006: Parameter 'item' implicitly has an 'any' type.
+lib/db.ts(9,21): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+lib/db.ts(12,19): error TS7017: Element implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+lib/email.tsx(1,24): error TS7016: Could not find a declaration file for module 'nodemailer'. 'C:/Users/ASUS/Desktop/Aryan/LinkAndSmile/node_modules/nodemailer/lib/nodemailer.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/nodemailer` if it exists or add a new declaration (.d.ts) file containing `declare module 'nodemailer';`
+lib/EmailOtp.ts(1,24): error TS7016: Could not find a declaration file for module 'nodemailer'. 'C:/Users/ASUS/Desktop/Aryan/LinkAndSmile/node_modules/nodemailer/lib/nodemailer.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/nodemailer` if it exists or add a new declaration (.d.ts) file containing `declare module 'nodemailer';`
+lib/facebook-pixel.ts(21,4): error TS2554: Expected 7 arguments, but got 4.

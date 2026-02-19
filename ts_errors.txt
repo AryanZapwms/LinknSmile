@@ -1,0 +1,17 @@
+app/admin/product-approvals/page.tsx(274,27): error TS1382: Unexpected token. Did you mean `{'>'}` or `&gt;`?
+app/admin/product-approvals/page.tsx(276,29): error TS17002: Expected corresponding JSX closing tag for 'Button'.
+app/admin/product-approvals/page.tsx(277,27): error TS17002: Expected corresponding JSX closing tag for 'div'.
+app/admin/product-approvals/page.tsx(301,25): error TS17002: Expected corresponding JSX closing tag for 'TableCell'.
+app/admin/product-approvals/page.tsx(302,23): error TS17002: Expected corresponding JSX closing tag for 'TableRow'.
+app/admin/product-approvals/page.tsx(303,19): error TS1005: ')' expected.
+app/admin/product-approvals/page.tsx(303,21): error TS17002: Expected corresponding JSX closing tag for 'TableBody'.
+app/admin/product-approvals/page.tsx(304,19): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+app/admin/product-approvals/page.tsx(305,17): error TS17002: Expected corresponding JSX closing tag for 'Table'.
+app/admin/product-approvals/page.tsx(306,13): error TS1005: ')' expected.
+app/admin/product-approvals/page.tsx(306,15): error TS17002: Expected corresponding JSX closing tag for 'CardContent'.
+app/admin/product-approvals/page.tsx(307,12): error TS1381: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+app/admin/product-approvals/page.tsx(308,11): error TS17002: Expected corresponding JSX closing tag for 'Card'.
+app/admin/product-approvals/page.tsx(309,9): error TS17002: Expected corresponding JSX closing tag for 'div'.
+app/admin/product-approvals/page.tsx(311,7): error TS1005: ')' expected.
+app/admin/product-approvals/page.tsx(353,5): error TS1128: Declaration or statement expected.
+app/admin/product-approvals/page.tsx(354,3): error TS1109: Expression expected.
