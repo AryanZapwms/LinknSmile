@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Filter, Package, SlidersHorizontal } from 'lucide-react';
+import { Search, Package } from 'lucide-react';
 
 interface Product {
   _id: string;
@@ -20,7 +20,7 @@ interface Product {
   price: number;
   discountPrice?: number;
   image: string;
-  company: { _id: string; name: string; slug: string };
+  slug: string;
   category?: { _id: string; name: string; slug: string };
   stock: number;
 }
@@ -31,22 +31,14 @@ interface Category {
   slug: string;
 }
 
-interface Company {
-  _id: string;
-  name: string;
-  slug: string;
-}
-
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedBrand, setSelectedBrand] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
@@ -56,21 +48,18 @@ export default function ProductsPage() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [productsRes, categoriesRes, companiesRes] = await Promise.all([
+      const [productsRes, categoriesRes] = await Promise.all([
         fetch('/api/products?limit=100'),
         fetch('/api/categories'),
-        fetch('/api/companies'),
       ]);
 
-      const [productsData, categoriesData, companiesData] = await Promise.all([
+      const [productsData, categoriesData] = await Promise.all([
         productsRes.json(),
         categoriesRes.json(),
-        companiesRes.json(),
       ]);
 
       setProducts(productsData.products || []);
       setCategories(categoriesData || []);
-      setCompanies(companiesData || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -84,19 +73,13 @@ export default function ProductsPage() {
     // Search query
     if (searchQuery) {
       result = result.filter((p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.company.name.toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     // Category filter
     if (selectedCategory !== 'all') {
       result = result.filter((p) => p.category?._id === selectedCategory);
-    }
-
-    // Brand filter
-    if (selectedBrand !== 'all') {
-      result = result.filter((p) => p.company._id === selectedBrand);
     }
 
     // Sort
@@ -110,7 +93,7 @@ export default function ProductsPage() {
     }
 
     return result;
-  }, [products, searchQuery, selectedCategory, selectedBrand, sortBy]);
+  }, [products, searchQuery, selectedCategory, sortBy]);
 
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
@@ -121,7 +104,7 @@ export default function ProductsPage() {
             Our Products
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl">
-            Explore our curated collection of premium products from trusted brands.
+            Explore our curated collection of premium products.
           </p>
         </div>
       </div>
@@ -129,7 +112,7 @@ export default function ProductsPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Filters Bar */}
         <div className="bg-white rounded-xl shadow-sm border p-4 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative lg:col-span-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -156,21 +139,6 @@ export default function ProductsPage() {
               </SelectContent>
             </Select>
 
-            {/* Brand */}
-            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-              <SelectTrigger>
-                <SelectValue placeholder="Brand" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Brands</SelectItem>
-                {companies.map((brand) => (
-                  <SelectItem key={brand._id} value={brand._id}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
             {/* Sort */}
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger>
@@ -184,7 +152,7 @@ export default function ProductsPage() {
             </Select>
           </div>
 
-          {(searchQuery || selectedCategory !== 'all' || selectedBrand !== 'all') && (
+          {(searchQuery || selectedCategory !== 'all') && (
             <div className="mt-4 pt-4 border-t flex items-center justify-between">
               <p className="text-sm text-gray-500">
                 Found {filteredProducts.length} products
@@ -195,7 +163,6 @@ export default function ProductsPage() {
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedCategory('all');
-                  setSelectedBrand('all');
                 }}
                 className="text-purple-600 hover:text-purple-700"
               >
@@ -227,7 +194,7 @@ export default function ProductsPage() {
                 price={product.price}
                 discountPrice={product.discountPrice}
                 image={product.image}
-                company={product.company}
+                slug={product.slug}
                 stock={product.stock}
               />
             ))}

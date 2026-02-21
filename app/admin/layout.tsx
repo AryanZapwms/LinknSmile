@@ -19,7 +19,7 @@ import {
   Menu,
   X,
   SearchX,
-  Image,
+  Image as ImageIcon,
   DollarSign,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -36,16 +36,13 @@ const navItems: NavItem[] = [
   { href: "/admin/orders", label: "Orders", icon: <ShoppingCart className="w-5 h-5" /> },
   { href: "/admin/products", label: "Products", icon: <Package className="w-5 h-5" /> },
   { href: "/admin/categories", label: "Categories", icon: <Layers className="w-5 h-5" /> },
-  { href: "/admin/companies", label: "Companies", icon: <Building2 className="w-5 h-5" /> },
   { href: "/admin/users", label: "Users", icon: <Users className="w-5 h-5" /> },
-
-  { href: "/admin/images", label: "Images", icon: <Image className="w-5 h-5" /> },
   { href: "/admin/promos", label: "Promo Bar", icon: <Megaphone className="w-5 h-5" /> },
-  { href: "/admin/reviews", label: "Reviews", icon: <MessageSquare className="w-5 h-5" /> },
-  { href: "/admin/settings", label: "Payment Settings", icon: <Settings className="w-5 h-5" /> },
-  { href: "/admin/payouts", label: "Payouts", icon: <DollarSign className="w-5 h-5" /> },
-  { href: "/admin/vendors", label: "Vendors", icon: <Users className="w-5 h-5" /> },
   { href: "/admin/product-approvals", label: "Product Approvals", icon: <Package className="w-5 h-5" /> },
+  { href: "/admin/vendors", label: "Vendors", icon: <Users className="w-5 h-5" /> },
+  { href: "/admin/setup", label: "Setup", icon: <Settings className="w-5 h-5" /> },
+  { href: "/admin/payouts", label: "Payouts", icon: <DollarSign className="w-5 h-5" /> },
+  { href: "/admin/settings", label: "Payment Settings", icon: <Settings className="w-5 h-5" /> },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

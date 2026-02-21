@@ -1,480 +1,354 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  ArrowLeft, CheckCircle, XCircle, Store, User, 
-  Mail, Phone, MapPin, Calendar, Package, 
-  ShoppingCart, DollarSign, AlertCircle, Ban, Play
-} from 'lucide-react';
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useToast } from "@/hooks/use-toast"
+import { CheckCircle, XCircle, Store, DollarSign, Package, ShoppingBag } from "lucide-react"
 
-import { toast } from 'sonner';
-import Link from 'next/link';
+export default function VendorDetailsPage() {
+  const params = useParams()
+  const id = params?.id as string
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  const { toast } = useToast()
 
-interface Shop {
-  _id: string;
-  shopName: string;
-  slug: string;
-  description: string;
-  logo?: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    pincode: string;
-    country: string;
-  };
-  contactInfo: {
-    phone: string;
-    email: string;
-  };
-  gstNumber?: string;
-  panNumber?: string;
-  commissionRate: number;
-  isApproved: boolean;
-  isActive: boolean;
-  approvalDate?: string;
-  rejectionReason?: string;
-  createdAt: string;
-  ownerId: {
-    _id: string;
-    name: string;
-    email: string;
-    phone: string;
-    createdAt: string;
-  };
-  stats: {
-    totalProducts: number;
-    totalOrders: number;
-    totalRevenue: number;
-  };
-  ratings: {
-    average: number;
-    count: number;
-  };
-}
-
-export default function VendorDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const vendorId = params.id as string;
-
-  const [shop, setShop] = useState<Shop | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [vendor, setVendor] = useState<any>(null)
+  const [products, setProducts] = useState<any[]>([])
+  const [orders, setOrders] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [commission, setCommission] = useState("10")
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
-    fetchShop();
-  }, [vendorId]);
+    if (status === "loading") return
 
-  const fetchShop = async () => {
-    try {
-      const res = await fetch(`/api/admin/vendors/${vendorId}`);
-      const data = await res.json();
-
-      if (data.success) {
-        setShop(data.shop);
-      } else {
-        toast.error('Vendor not found');
-        router.push('/admin/vendors');
-      }
-    } catch (error) {
-      console.error('Failed to fetch vendor:', error);
-      toast.error('Failed to load vendor details');
-    } finally {
-      setLoading(false);
+    if (status === "unauthenticated") {
+      router.replace("/auth/login")
+      return
     }
-  };
 
-  const handleAction = async (action: string, reason?: string) => {
-    setProcessing(true);
-    try {
-      const res = await fetch(`/api/admin/vendors/${vendorId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, rejectionReason: reason }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        toast.success(data.message);
-        if (action === 'reject') {
-          setShowRejectDialog(false);
-          setRejectionReason('');
-        }
-        fetchShop();
-      } else {
-        toast.error(data.message || 'Action failed');
-      }
-    } catch (error) {
-      console.error('Action error:', error);
-      toast.error('Failed to perform action');
-    } finally {
-      setProcessing(false);
+    if (id) {
+      fetchVendorDetails()
     }
-  };
+  }, [id, status])
 
-  if (loading) {
+  const fetchVendorDetails = async () => {
+    try {
+      setLoading(true)
+
+      const res = await fetch(`/api/admin/vendors/${id}`)
+      if (!res.ok) throw new Error("Failed to fetch vendor")
+
+      const data = await res.json()
+
+      // ✅ SAFE STATE ASSIGNMENTS
+      setVendor(data?.shop ?? null)
+      setProducts(Array.isArray(data?.products) ? data.products : [])
+      setOrders(Array.isArray(data?.orders) ? data.orders : [])
+      setCommission(data?.shop?.commissionRate?.toString() ?? "10")
+    } catch (error) {
+      console.error("Error:", error)
+      toast({
+        title: "Error",
+        description: "Could not load vendor details",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateCommission = async () => {
+    setUpdating(true)
+    try {
+      const res = await fetch(`/api/admin/vendors/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commissionRate: Number(commission) }),
+      })
+
+      if (!res.ok) throw new Error("Update failed")
+
+      toast({ title: "Success", description: "Commission rate updated" })
+      await fetchVendorDetails()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Update failed",
+        variant: "destructive",
+      })
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const toggleStatus = async (action: "approve" | "deactivate" | "activate") => {
+    try {
+      const body =
+        action === "approve"
+          ? { isApproved: true, isActive: true }
+          : { isActive: action === "activate" }
+
+      const res = await fetch(`/api/admin/vendors/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) throw new Error("Status update failed")
+
+      toast({
+        title: "Success",
+        description: `Vendor ${action}d successfully`,
+      })
+
+      await fetchVendorDetails()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update status",
+        variant: "destructive",
+      })
+    }
+  }
+
+  if (loading)
     return (
-      <div className="max-w-6xl mx-auto space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid gap-6 md:grid-cols-2">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-        </div>
+      <div className="p-8 text-center text-muted-foreground">
+        Loading vendor details...
       </div>
-    );
-  }
+    )
 
-  if (!shop) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>Vendor not found</AlertDescription>
-      </Alert>
-    );
-  }
+  if (!vendor)
+    return <div className="p-8 text-center">Vendor not found</div>
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 mt-8">
+    <div className="container mx-auto py-8 space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1 ml-3">
-          <h1 className="text-3xl font-bold tracking-tight">{shop.shopName}</h1>
-          <p className="text-muted-foreground">Vendor Details</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Store className="w-8 h-8 text-purple-600" />
+            {vendor?.shopName}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Owned by {vendor?.ownerId?.name} ({vendor?.ownerId?.email})
+          </p>
         </div>
-        <div className="flex gap-2">
-          {shop.isApproved ? (
-            <Badge variant="default" className="bg-green-500">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Approved
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="text-orange-500">
-              Pending Approval
-            </Badge>
-          )}
-          {shop.isActive ? (
-            <Badge variant="default">Active</Badge>
-          ) : (
-            <Badge variant="destructive">Inactive</Badge>
-          )}
-        </div>
-      </div>
 
-      {/* Action Buttons */}
-      {!shop.isApproved && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader>
-            <CardTitle className="text-orange-900">Pending Approval</CardTitle>
-            <CardDescription className="text-orange-700">
-              This vendor is waiting for approval. Review the details and approve or reject the application.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex gap-4">
+        <div className="flex gap-2">
+          {!vendor?.isApproved && (
             <Button
-              className="bg-green-500 hover:bg-green-600"
-              onClick={() => handleAction('approve')}
-              disabled={processing}
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => toggleStatus("approve")}
             >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Approve Vendor
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Approve Store
             </Button>
+          )}
+
+          {vendor?.isActive ? (
             <Button
               variant="destructive"
-              onClick={() => setShowRejectDialog(true)}
-              disabled={processing}
+              onClick={() => toggleStatus("deactivate")}
             >
-              <XCircle className="h-4 w-4 mr-2" />
-              Reject Application
+              <XCircle className="w-4 h-4 mr-2" />
+              Deactivate Store
             </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {shop.rejectionReason && (
-        <Alert variant="destructive">
-          <XCircle className="h-4 w-4" />
-          <AlertTitle>Rejection Reason</AlertTitle>
-          <AlertDescription>{shop.rejectionReason}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{shop.stats.totalProducts}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Orders</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{shop.stats.totalOrders}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">₹{shop.stats.totalRevenue.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Commission Rate</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{shop.commissionRate}%</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Shop Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Shop Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start gap-3">
-              <Store className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-muted-foreground">Shop Name</p>
-                <p className="font-medium">{shop.shopName}</p>
-                <p className="text-sm text-muted-foreground">/{shop.slug}</p>
-              </div>
-            </div>
-
-            {shop.description && (
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground">Description</p>
-                  <p className="text-sm">{shop.description}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-start gap-3">
-              <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-muted-foreground">Address</p>
-                <p className="text-sm">
-                  {shop.address.street}<br />
-                  {shop.address.city}, {shop.address.state} {shop.address.pincode}<br />
-                  {shop.address.country}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-muted-foreground">Joined</p>
-                <p className="text-sm">{new Date(shop.createdAt).toLocaleDateString()}</p>
-              </div>
-            </div>
-
-            {shop.approvalDate && (
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground">Approved</p>
-                  <p className="text-sm">{new Date(shop.approvalDate).toLocaleDateString()}</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Owner Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Owner Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start gap-3">
-              <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-muted-foreground">Name</p>
-                <p className="font-medium">{shop.ownerId?.name}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-muted-foreground">Email</p>
-                <p className="text-sm">{shop.ownerId?.email}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                <p className="text-sm">{shop.ownerId?.phone}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-muted-foreground">Member Since</p>
-              <p className="text-sm">{shop.ownerId?.createdAt ? new Date(shop.ownerId.createdAt).toLocaleDateString() : "N/A"}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Business Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Business Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {shop.gstNumber && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">GST Number</p>
-                <p className="font-mono text-sm">{shop.gstNumber}</p>
-              </div>
-            )}
-
-            {shop.panNumber && (
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">PAN Number</p>
-                <p className="font-mono text-sm">{shop.panNumber}</p>
-              </div>
-            )}
-
-            {!shop.gstNumber && !shop.panNumber && (
-              <p className="text-sm text-muted-foreground">No business details provided</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Actions */}
-        {shop.isApproved && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {shop.isActive ? (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => handleAction('deactivate')}
-                  disabled={processing}
-                >
-                  <Ban className="h-4 w-4 mr-2" />
-                  Deactivate Shop
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => handleAction('activate')}
-                  disabled={processing}
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Activate Shop
-                </Button>
-              )}
-
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                asChild
-              >
-                <Link href={`/admin/vendors/${vendorId}/products`}>
-                  <Package className="h-4 w-4 mr-2" />
-                  View Products
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Reject Dialog */}
-      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Vendor Application</DialogTitle>
-            <DialogDescription>
-              Please provide a reason for rejecting this vendor application. This will be sent to the vendor.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="reason">Rejection Reason *</Label>
-              <Textarea
-                id="reason"
-                placeholder="e.g., Incomplete business documents, invalid GST number, business type not suitable..."
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
+          ) : (
             <Button
               variant="outline"
-              onClick={() => {
-                setShowRejectDialog(false);
-                setRejectionReason('');
-              }}
-              disabled={processing}
+              className="border-green-600 text-green-600 hover:bg-green-50"
+              onClick={() => toggleStatus("activate")}
             >
-              Cancel
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Activate Store
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() => handleAction('reject', rejectionReason)}
-              disabled={processing || !rejectionReason.trim()}
-            >
-              {processing ? 'Rejecting...' : 'Reject Application'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Revenue
+            </CardTitle>
+            <DollarSign className="w-4 h-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ₹{vendor?.stats?.totalRevenue?.toLocaleString?.() ?? 0}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Orders
+            </CardTitle>
+            <ShoppingBag className="w-4 h-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {vendor?.stats?.totalOrders ?? 0}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Products
+            </CardTitle>
+            <Package className="w-4 h-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            {/* ✅ SAFE LENGTH */}
+            <div className="text-2xl font-bold">
+              {products?.length ?? 0}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Business Details</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold mb-2">Address</h3>
+                <p className="text-sm text-gray-600">
+                  {vendor?.address?.street}, {vendor?.address?.city}
+                  <br />
+                  {vendor?.address?.state} - {vendor?.address?.pincode}
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">Contact</h3>
+                <p className="text-sm text-gray-600">
+                  Phone: {vendor?.contactInfo?.phone}
+                  <br />
+                  Email: {vendor?.contactInfo?.email}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="products">
+          <Card>
+            <CardHeader>
+              <CardTitle>Product List</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left">
+                      <th className="py-2">Product Name</th>
+                      <th className="py-2">Price</th>
+                      <th className="py-2">Stock</th>
+                      <th className="py-2">Status</th>
+                      <th className="py-2">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products?.length > 0 ? (
+                      products.map((p) => (
+                        <tr key={p._id} className="border-b">
+                          <td className="py-2 font-medium">{p.name}</td>
+                          <td className="py-2">₹{p.price}</td>
+                          <td className="py-2">{p.stock}</td>
+                          <td className="py-2">
+                            <Badge
+                              variant={p.isActive ? "default" : "secondary"}
+                            >
+                              {p.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                          </td>
+                          <td className="py-2">
+                            <Button size="sm" variant="ghost" asChild>
+                              <a
+                                href={`/products/${p._id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                View
+                              </a>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="py-4 text-center text-muted-foreground"
+                        >
+                          No products found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Commission Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-end gap-4 max-w-sm">
+                <div className="grid gap-2 w-full">
+                  <label
+                    htmlFor="commission"
+                    className="text-sm font-medium"
+                  >
+                    Platform Commission (%)
+                  </label>
+                  <Input
+                    id="commission"
+                    type="number"
+                    value={commission}
+                    onChange={(e) => setCommission(e.target.value)}
+                    min="0"
+                    max="100"
+                  />
+                </div>
+                <Button onClick={updateCommission} disabled={updating}>
+                  {updating ? "Saving..." : "Save"}
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                This percentage will be deducted from each sale made by this vendor.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
-  );
+  )
 }

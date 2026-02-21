@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/db";
 import { Category } from "@/lib/models/category";
-import { Company } from "@/lib/models/company";
+
 import { User } from "@/lib/models/user";
 import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
@@ -10,18 +10,13 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const company = searchParams.get("company");
+
     const all = searchParams.get("all");
     const flat = searchParams.get("flat") === "true";
 
     let query: any = { isActive: true };
 
-    if (company) {
-      const companyDoc = await Company.findOne({ slug: company });
-      if (companyDoc) {
-        query.company = companyDoc._id;
-      }
-    }
+
 
     if (all === "true") {
       query = {};
@@ -29,7 +24,6 @@ export async function GET(request: NextRequest) {
 
     const categories = await Category.find(query)
       .setOptions({ strictPopulate: false })
-      .populate("company", "name slug")
       .populate("parent", "name slug")
       .sort({ createdAt: -1 });
 
@@ -76,14 +70,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, slug, description, image, company, parent, isActive } = body;
+    const { name, slug, description, image, parent, isActive } = body;
 
     const category = new Category({
       name,
       slug: slug || name.toLowerCase().replace(/\s+/g, "-"),
       description,
       image,
-      company,
+
       parent: parent || null,
       isActive: isActive ?? true,
     });

@@ -3,6 +3,7 @@ import { Order } from "@/lib/models/order"
 import { Product } from "@/lib/models/product"
 import { User } from "@/lib/models/user"
 import Shop from "@/lib/models/shop"
+import { Cart } from "@/lib/models/cart"
 import { getServerSession } from "next-auth"
 import { type NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
@@ -78,14 +79,21 @@ export async function POST(request: NextRequest) {
         continue // Skip missing products instead of failing entire order
       }
 
-      // ✅ Calculate commission and vendor earnings
-      const shopId = item.shopId || product.shopId?._id?.toString() || 'platform'
-      const shopName = item.shopName || product.shopId?.shopName || 'LinkAndSmile'
-      const commissionRate = item.commissionRate || product.shopId?.commissionRate || 10
+      // ✅ Calculate commission and vendor earnings - STRICT VALIDATION
+      const dbShopId = product.shopId?._id || product.shopId;
       
-      const itemTotal = item.price * item.quantity
-      const platformCommission = (itemTotal * commissionRate) / 100
-      const vendorEarnings = itemTotal - platformCommission
+      if (!dbShopId) {
+        console.error(`Product ${product.name} is missing a vendorId and cannot be processed.`);
+        continue; // Or handle as an error
+      }
+
+      const shopId = dbShopId.toString();
+      const shopName = product.shopId?.shopName || 'LinkAndSmile Platform';
+      const commissionRate = product.shopId?.commissionRate ?? 10;
+      
+      const itemTotal = item.price * item.quantity;
+      const platformCommission = (itemTotal * commissionRate) / 100;
+      const vendorEarnings = itemTotal - platformCommission;
 
       processedItems.push({
         product: item.product,
@@ -93,7 +101,7 @@ export async function POST(request: NextRequest) {
         price: item.price,
         selectedSize: item.selectedSize,
         // ✅ Vendor tracking
-        shopId: shopId,
+        shopId: dbShopId, 
         shopName: shopName,
         platformCommission: platformCommission,
         vendorEarnings: vendorEarnings,
@@ -103,7 +111,7 @@ export async function POST(request: NextRequest) {
       // ✅ Group by vendor for payout tracking
       if (!vendorPayouts[shopId]) {
         vendorPayouts[shopId] = {
-          shopId: shopId,
+          shopId: dbShopId,
           shopName: shopName,
           amount: 0,
           items: [],
@@ -208,7 +216,7 @@ export async function POST(request: NextRequest) {
 
     // ✅ Update shop stats for each vendor
     for (const [shopId, payoutInfo] of Object.entries(vendorPayouts)) {
-      if (shopId !== 'platform') {
+      if (shopId !== '699942a5a2b407e83b6d9ea8') {
         await Shop.findByIdAndUpdate(shopId, {
           $inc: {
             'stats.totalOrders': 1,
@@ -216,6 +224,39 @@ export async function POST(request: NextRequest) {
           },
         })
       }
+    }
+
+    // ✅ Clear the user's cart in DB
+    try {
+      if (user?._id) {
+        await Cart.findOneAndUpdate(
+          { userId: user._id },
+          { items: [], $inc: { version: 1 } },
+          { upsert: true }
+        );
+      }
+    } catch (cartError) {
+      console.error("[Razorpay] Failed to clear cart:", cartError);
+    }
+
+    // ✅ NEW: Record entry in Ledger System
+    try {
+      const ledgerItems = processedItems.map(item => ({
+        shopId: item.shopId,
+        vendorEarnings: item.vendorEarnings,
+        commission: item.platformCommission
+      }));
+      
+      const { LedgerService } = await import("@/lib/services/ledger-service");
+      await LedgerService.recordSale({
+        orderId: order._id.toString(),
+        totalAmount,
+        items: ledgerItems
+      });
+    } catch (ledgerError) {
+      console.error("Ledger recording failed, but payment succeeded:", ledgerError);
+      // We log but don't fail here to avoid inconsistencies, 
+      // though in a perfect world this should be part of a distributed transaction.
     }
 
     const orderDate = new Date(order.createdAt).toLocaleDateString('en-IN', { 

@@ -3,7 +3,6 @@ import { connectDB } from "@/lib/db"
 import { Order } from "@/lib/models/order"
 import { Product } from "@/lib/models/product"
 import { User } from "@/lib/models/user"
-import { Company } from "@/lib/models/company"
 import { Review } from "@/lib/models/review"
 import "@/lib/models/category"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
@@ -92,25 +91,14 @@ export async function GET(request: NextRequest) {
     const overviewTotalProducts = await Product.countDocuments({ isActive: true })
     const overviewTotalUsers = await User.countDocuments({ role: "user" })
 
-    const companyDocs = await Company.find({ isActive: true }).select("name slug logo").lean()
-    const companyMap = new Map<string, { name: string; slug: string; logo?: string }>()
-    for (const company of companyDocs) {
-      companyMap.set(company._id.toString(), {
-        name: company.name,
-        slug: company.slug,
-        logo: company.logo,
-      })
-    }
-
     const ordersCurrent = await Order.find({
       paymentStatus: "completed",
       createdAt: { $gte: startDate, $lte: endDate },
     })
       .populate({
         path: "items.product",
-        select: "name image company category price slug",
+        select: "name image category price slug",
         populate: [
-          { path: "company", select: "name slug logo" },
           { path: "category", select: "name slug" },
         ],
       })
@@ -124,8 +112,7 @@ export async function GET(request: NextRequest) {
     })
       .populate({
         path: "items.product",
-        select: "company",
-        populate: [{ path: "company", select: "slug" }],
+        select: "name price",
       })
       .lean()
 
@@ -175,39 +162,19 @@ export async function GET(request: NextRequest) {
         name: string
         slug?: string
         image?: string
-        companyId: string
-        companyName: string
-        companySlug: string
-        companyLogo?: string
         unitsSold: number
         revenue: number
-      }
-    >()
-    const companyStats = new Map<
-      string,
-      {
-        name: string
-        slug: string
-        logo?: string
-        revenue: number
-        orderIds: Set<string>
-        monthlyRevenue: Map<string, number>
-        orders: number
-        unitsSold: number
       }
     >()
     const categoryStats = new Map<
       string,
       {
         categoryName: string
-        companyId: string
-        companyName: string
         revenue: number
         orders: number
         units: number
       }
     >()
-    const companyRevenueShare = new Map<string, number>()
     const hourlyOrders = Array.from({ length: 24 }, () => ({ orders: 0, revenue: 0 }))
     const weekdayOrders = Array.from({ length: 7 }, () => ({ orders: 0, revenue: 0 }))
     const customerRangeStats = new Map<
@@ -230,7 +197,6 @@ export async function GET(request: NextRequest) {
     let totalGeographyRevenue = 0
 
     for (const order of ordersCurrent) {
-      const orderId = order._id.toString()
       const orderDate = new Date(order.createdAt)
       const hour = orderDate.getHours()
       const weekday = orderDate.getDay()
@@ -288,34 +254,9 @@ export async function GET(request: NextRequest) {
         const quantity = item.quantity ?? 0
         if (!quantity) continue
         const product: any = item.product
-        if (!product || !product.company) continue
-        const companyId = product.company._id ? product.company._id.toString() : product.company.toString()
-        const companyInfo = companyStats.get(companyId)
+        if (!product) continue
         const revenue = (item.price ?? product.price ?? 0) * quantity
-        const month = monthKey(orderDate)
-
-        if (companyInfo) {
-          companyInfo.revenue += revenue
-          companyInfo.unitsSold += quantity
-          companyInfo.orderIds.add(orderId)
-          const monthValue = companyInfo.monthlyRevenue.get(month) ?? 0
-          companyInfo.monthlyRevenue.set(month, monthValue + revenue)
-        } else {
-          companyStats.set(companyId, {
-            name: product.company.name,
-            slug: product.company.slug,
-            logo: product.company.logo,
-            revenue,
-            orderIds: new Set([orderId]),
-            monthlyRevenue: new Map([[month, revenue]]),
-            orders: 0,
-            unitsSold: quantity,
-          })
-        }
-
-        const companyShareValue = companyRevenueShare.get(companyId) ?? 0
-        companyRevenueShare.set(companyId, companyShareValue + revenue)
-
+        
         const productId = product._id.toString()
         const productInfo = productStats.get(productId)
         if (productInfo) {
@@ -326,10 +267,6 @@ export async function GET(request: NextRequest) {
             name: product.name,
             slug: product.slug,
             image: product.image,
-            companyId,
-            companyName: product.company.name,
-            companySlug: product.company.slug,
-            companyLogo: product.company.logo,
             unitsSold: quantity,
             revenue,
           })
@@ -347,8 +284,6 @@ export async function GET(request: NextRequest) {
           } else {
             categoryStats.set(categoryId, {
               categoryName: product.category.name ?? "Unknown",
-              companyId,
-              companyName: product.company.name,
               revenue,
               orders: 1,
               units: quantity,
@@ -358,33 +293,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    for (const [companyId, stats] of companyStats) {
-      stats.orders = stats.orderIds.size
-    }
-
     const previousProductRevenue = new Map<string, number>()
-    const previousCompanyRevenue = new Map<string, number>()
-    const previousCompanyOrders = new Map<string, number>()
 
     for (const order of ordersPrevious) {
-      const orderId = order._id.toString()
-      const handledCompanyOrders = new Set<string>()
       for (const item of order.items || []) {
         const quantity = item.quantity ?? 0
         if (!quantity) continue
         const product: any = item.product
-        if (!product || !product.company) continue
-        const companyId = product.company._id ? product.company._id.toString() : product.company.toString()
+        if (!product) continue
         const revenue = (item.price ?? 0) * quantity
         previousProductRevenue.set(
           product._id.toString(),
           (previousProductRevenue.get(product._id.toString()) ?? 0) + revenue,
         )
-        previousCompanyRevenue.set(companyId, (previousCompanyRevenue.get(companyId) ?? 0) + revenue)
-        if (!handledCompanyOrders.has(companyId)) {
-          previousCompanyOrders.set(companyId, (previousCompanyOrders.get(companyId) ?? 0) + 1)
-          handledCompanyOrders.add(companyId)
-        }
       }
     }
 
@@ -430,12 +351,6 @@ export async function GET(request: NextRequest) {
           name: stats.name,
           slug: stats.slug,
           image: stats.image,
-          company: {
-            id: stats.companyId,
-            name: stats.companyName,
-            slug: stats.companySlug,
-            logo: stats.companyLogo,
-          },
           unitsSold: stats.unitsSold,
           revenue: stats.revenue,
           growth,
@@ -447,51 +362,6 @@ export async function GET(request: NextRequest) {
         if (b.unitsSold === a.unitsSold) return b.revenue - a.revenue
         return b.unitsSold - a.unitsSold
       })
-
-    const companySeries = Array.from(companyStats.entries()).map(([companyId, stats]) => {
-      const previousRevenue = previousCompanyRevenue.get(companyId) ?? 0
-      const previousOrders = previousCompanyOrders.get(companyId) ?? 0
-      const growth = previousRevenue ? ((stats.revenue - previousRevenue) / previousRevenue) * 100 : null
-      const averageOrderValue = stats.orders ? stats.revenue / stats.orders : 0
-      return {
-        companyId,
-        name: stats.name,
-        slug: stats.slug,
-        logo: stats.logo,
-        revenue: stats.revenue,
-        orders: stats.orders,
-        averageOrderValue,
-        growth,
-        monthlyRevenue: Array.from(stats.monthlyRevenue.entries()).map(([date, revenue]) => ({ date, revenue })),
-      }
-    })
-
-    const totalRevenueCurrent = companySeries.reduce((sum, item) => sum + item.revenue, 0)
-    const totalOrdersCurrent = companySeries.reduce((sum, item) => sum + item.orders, 0)
-
-    const companyMarketShare = companySeries.map((item) => ({
-      companyId: item.companyId,
-      name: item.name,
-      slug: item.slug,
-      logo: item.logo,
-      revenue: item.revenue,
-      share: totalRevenueCurrent ? (item.revenue / totalRevenueCurrent) * 100 : 0,
-    }))
-
-    const companyRankings = companySeries
-      .slice()
-      .sort((a, b) => b.revenue - a.revenue)
-      .map((item, index) => ({
-        rank: index + 1,
-        companyId: item.companyId,
-        name: item.name,
-        slug: item.slug,
-        logo: item.logo,
-        revenue: item.revenue,
-        orders: item.orders,
-        averageOrderValue: item.averageOrderValue,
-        growth: item.growth,
-      }))
 
     const categoryPerformance = Array.from(categoryStats.values())
       .sort((a, b) => b.revenue - a.revenue)
@@ -512,46 +382,22 @@ export async function GET(request: NextRequest) {
     const customerSatisfaction = await Review.aggregate([
       {
         $group: {
-          _id: "$company",
+          _id: null,
           averageRating: { $avg: "$rating" },
           totalReviews: { $sum: 1 },
         },
       },
     ])
 
-    const satisfactionByCompany = customerSatisfaction.map((item) => {
-      const companyId = item._id?.toString() ?? ""
-      const companyInfo = companyMap.get(companyId)
-      return {
-        companyId,
-        name: companyInfo?.name ?? "Unknown",
-        slug: companyInfo?.slug ?? "",
-        logo: companyInfo?.logo,
-        averageRating: Number(item.averageRating?.toFixed(1) ?? 0),
-        totalReviews: item.totalReviews,
-      }
-    })
-
-    const satisfactionLookup = new Map(satisfactionByCompany.map((item) => [item.companyId, item]))
-
-    const overallSatisfaction = satisfactionByCompany.reduce(
-      (acc, item) => {
-        acc.totalReviews += item.totalReviews
-        acc.weightedRating += item.averageRating * item.totalReviews
-        return acc
-      },
-      { totalReviews: 0, weightedRating: 0 },
-    )
-
-    const overallRating = overallSatisfaction.totalReviews
-      ? Number((overallSatisfaction.weightedRating / overallSatisfaction.totalReviews).toFixed(1))
+    const overallRating = customerSatisfaction[0]?.averageRating 
+      ? Number(customerSatisfaction[0].averageRating.toFixed(1)) 
       : 0
+    const totalReviewsCount = customerSatisfaction[0]?.totalReviews || 0
 
     const topReviews = await Review.find()
       .sort({ createdAt: -1 })
       .limit(5)
       .populate("product", "name")
-      .populate("company", "name slug logo")
       .lean()
 
     const paymentMethodStats = new Map<
@@ -599,11 +445,7 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10)
 
-    const previousAverageOrderValue = (() => {
-      const prevRevenue = Array.from(previousCompanyRevenue.values()).reduce((sum, value) => sum + value, 0)
-      const prevOrders = Array.from(previousCompanyOrders.values()).reduce((sum, value) => sum + value, 0)
-      return prevOrders ? prevRevenue / prevOrders : 0
-    })()
+    const previousAverageOrderValue = overviewTotalOrders > 0 ? (overviewRevenueAgg[0]?.total || 0) / overviewTotalOrders : 0
 
     let newCustomers = 0
     let returningCustomers = 0
@@ -624,7 +466,7 @@ export async function GET(request: NextRequest) {
       ? totalClv / customerAggregates.length
       : 0
 
-    const topCustomers = await Order.aggregate([
+    const topCustomersResult = await Order.aggregate([
       { $match: { paymentStatus: "completed" } },
       {
         $group: {
@@ -644,8 +486,7 @@ export async function GET(request: NextRequest) {
     }
 
     const inventoryProducts = await Product.find()
-      .select("name stock price company image slug isActive")
-      .populate("company", "name slug logo")
+      .select("name stock price image slug isActive")
       .lean()
 
     let inStock = 0
@@ -657,61 +498,13 @@ export async function GET(request: NextRequest) {
     let outOfStockValue = 0
     let overStockValue = 0
     const lowStockProducts: any[] = []
-    const companyProductMetrics = new Map<
-      string,
-      {
-        companyId: string
-        name: string
-        slug: string
-        logo?: string
-        totalProducts: number
-        activeProducts: number
-        inactiveProducts: number
-        outOfStock: number
-        lowStock: number
-        overStock: number
-        totalInventoryValue: number
-      }
-    >()
+    
+    // Removed companyProductMetrics entirely as it's no longer relevant
 
     for (const product of inventoryProducts) {
       const stock = product.stock ?? 0
       const price = product.price ?? 0
       const totalValue = stock * price
-      const companyId = product.company?._id?.toString()
-      if (companyId) {
-        const existing = companyProductMetrics.get(companyId)
-        const baseMetrics =
-          existing ??
-          {
-            companyId,
-            name: product.company?.name ?? "Unknown",
-            slug: product.company?.slug ?? "",
-            logo: product.company?.logo,
-            totalProducts: 0,
-            activeProducts: 0,
-            inactiveProducts: 0,
-            outOfStock: 0,
-            lowStock: 0,
-            overStock: 0,
-            totalInventoryValue: 0,
-          }
-        baseMetrics.totalProducts += 1
-        if (product.isActive) {
-          baseMetrics.activeProducts += 1
-        } else {
-          baseMetrics.inactiveProducts += 1
-        }
-        if (stock <= 0) {
-          baseMetrics.outOfStock += 1
-        } else if (stock < 10) {
-          baseMetrics.lowStock += 1
-        } else if (stock > 50) {
-          baseMetrics.overStock += 1
-        }
-        baseMetrics.totalInventoryValue += totalValue
-        companyProductMetrics.set(companyId, baseMetrics)
-      }
 
       if (stock <= 0) {
         outOfStock += 1
@@ -731,15 +524,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const companyProductPerformance = Array.from(companyProductMetrics.values()).map((metrics) => {
-      const satisfaction = satisfactionLookup.get(metrics.companyId)
-      return {
-        ...metrics,
-        averageRating: satisfaction?.averageRating ?? 0,
-        totalReviews: satisfaction?.totalReviews ?? 0,
-      }
-    })
-
     const paymentAnalytics = Array.from(paymentMethodStats.values()).map((stats) => ({
       method: stats.method,
       orders: stats.totalOrders,
@@ -748,12 +532,10 @@ export async function GET(request: NextRequest) {
       successRate: stats.totalOrders ? (stats.completedOrders / stats.totalOrders) * 100 : 0,
     }))
 
-    const averageOrderValueCurrent = totalOrdersCurrent ? totalRevenueCurrent / totalOrdersCurrent : 0
+    const averageOrderValueCurrent = overviewTotalOrders ? (overviewRevenueAgg[0]?.total || 0) / overviewTotalOrders : 0
     const averageOrderValueChange = previousAverageOrderValue
       ? ((averageOrderValueCurrent - previousAverageOrderValue) / previousAverageOrderValue) * 100
       : null
-
-    const marketShareTotal = companyMarketShare.reduce((sum, item) => sum + item.revenue, 0)
 
     return NextResponse.json({
       overview: {
@@ -766,45 +548,18 @@ export async function GET(request: NextRequest) {
         startDate,
         endDate,
       },
-      companyPerformance: {
-        companies: companySeries.map((item) => ({
-          companyId: item.companyId,
-          name: item.name,
-          slug: item.slug,
-          logo: item.logo,
-          revenue: item.revenue,
-          orders: item.orders,
-          averageOrderValue: item.averageOrderValue,
-          growth: item.growth,
-          monthlyRevenue: item.monthlyRevenue,
-        })),
-        totalRevenue: totalRevenueCurrent,
-        totalOrders: totalOrdersCurrent,
-        averageOrderValue: averageOrderValueCurrent,
-        averageOrderValueChange,
-        marketShare: companyMarketShare.map((item) => ({
-          companyId: item.companyId,
-          name: item.name,
-          slug: item.slug,
-          logo: item.logo,
-          revenue: item.revenue,
-          share: marketShareTotal ? (item.revenue / marketShareTotal) * 100 : 0,
-        })),
-        rankings: companyRankings,
-      },
       revenueByMonth: Array.from(revenueByMonthMap.entries()).map(([date, value]) => ({
         date,
         revenue: value.revenue,
         orders: value.orders,
       })),
       topProducts,
-      topProductCompanies: companyProductPerformance,
       categoryPerformance,
       recentOrders,
       orderStatusBreakdown,
       paymentStatusBreakdown,
       topCustomers: await Promise.all(
-        topCustomers.map(async (customer) => {
+        topCustomersResult.map(async (customer) => {
           const userDoc = await User.findById(customer._id).select("name email").lean()
           return {
             userId: customer._id.toString(),
@@ -854,26 +609,18 @@ export async function GET(request: NextRequest) {
             name: product.name,
             stock: product.stock ?? 0,
             price: product.price ?? 0,
-            company: product.company?.name ?? "",
             slug: product.slug,
             image: product.image,
           })),
       },
       customerSatisfaction: {
         overallRating,
-        totalReviews: overallSatisfaction.totalReviews,
-        byCompany: satisfactionByCompany,
-        recentFeedback: topReviews.map((review) => ({
+        totalReviews: totalReviewsCount,
+        recentFeedback: topReviews.map((review: any) => ({
           id: review._id.toString(),
           product: {
             id: review.product?._id?.toString() ?? "",
             name: review.product?.name ?? "",
-          },
-          company: {
-            id: review.company?._id?.toString() ?? "",
-            name: review.company?.name ?? "",
-            slug: review.company?.slug ?? "",
-            logo: review.company?.logo,
           },
           rating: review.rating,
           comment: review.comment,

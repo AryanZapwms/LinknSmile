@@ -5,9 +5,19 @@ import { getServerSession } from "next-auth"
 import { type NextRequest, NextResponse } from "next/server"
 import { sendEmail, getOrderStatusUpdateEmail } from "@/lib/email"
 
+// These imports are required to register Mongoose schemas before population.
+// Without them, Mongoose throws MissingSchemaError when trying to populate
+// items.product (Product) and items.product.company (Company).
+import { Product } from "@/lib/models/product"
+import { Company } from "@/lib/models/company"
+
+// Use void to avoid TypeScript "declared but never read" errors
+void Product
+void Company
+
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params // await params
+    const { id } = await context.params
 
     const session = await getServerSession()
     if (!session?.user?.email) {
@@ -24,6 +34,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const order = await Order.findOne({ _id: id, user: user._id })
       .populate({
         path: "items.product",
+        select: "name image slug",
         populate: { path: "company", select: "name slug" },
       })
       .lean()
@@ -41,7 +52,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params // ✅ await params
+    const { id } = await context.params
 
     const session = await getServerSession()
     if (!session?.user?.email) {

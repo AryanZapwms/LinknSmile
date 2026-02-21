@@ -19,6 +19,23 @@ const reviewSchema = new mongoose.Schema(
     comment: { type: String, required: true },
     userName: { type: String, required: true },
     userEmail: { type: String, required: true },
+    status: { 
+      type: String, 
+      enum: ['PENDING', 'APPROVED', 'REJECTED'], 
+      default: 'PENDING',
+      index: true
+    },
+    isVerifiedBuyer: { type: Boolean, default: false },
+    moderatedAt: { type: Date },
+    moderatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    auditLog: [
+      {
+        action: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+        metadata: { type: mongoose.Schema.Types.Mixed },
+      }
+    ],
+    isDeleted: { type: Boolean, default: false },
     reply: replySchema,
   },
   { timestamps: true },

@@ -33,7 +33,7 @@ interface ProductQuickViewProps {
     price: number
     discountPrice?: number
     image?: string
-    company: { _id: string; name: string; slug: string }
+    slug: string
     description?: string
     ingredients?: string[]
     benefits?: string[]
@@ -116,8 +116,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
       discountPrice: selectedSize ? selectedSize.discountPrice : product.discountPrice,
       image: product.image,
       quantity: 1,
-      company: product.company,
-      slug: product.company.slug,
+      slug: product.slug,
       stock: selectedSize ? selectedSize.stock : (product.stock || 0),
       selectedSize: selectedSize || undefined,
       shopId: product.shopId || "default",
@@ -139,7 +138,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
           <div className="relative aspect-square bg-purple-50 flex items-center justify-center p-8">
             <div className="relative w-full h-full">
               <Image
-                src={p.image || "/companylogo.jpg"}
+                src={p.image || "/placeholder.jpg"}
                 alt={p.name}
                 fill
                 className="object-contain"
@@ -155,24 +154,11 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
           {/* Details Section */}
           <div className="p-6 md:p-8 flex flex-col h-full max-h-[90vh] overflow-y-auto">
             <DialogHeader className="text-left mb-4">
-             <div className="flex items-center gap-2 mb-1">
-  {p.company ? (
-    <Link
-      href={`/shop/${p.company.slug}`}
-      className="text-xs uppercase tracking-widest text-purple-600 font-bold hover:underline"
-    >
-      {p.company.name}
-    </Link>
-  ) : (
-    <span className="text-xs uppercase tracking-widest text-gray-400 font-bold">
-      No Brand
-    </span>
-  )}
-  <span className="text-xs text-muted-foreground">•</span>
-  <span className="text-xs font-medium text-muted-foreground">
-    Sold by: {p.shopName || "LinkAndSmile"}
-  </span>
-</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Sold by: {p.shopName || "LinkAndSmile"}
+                </span>
+              </div>
 
               <DialogTitle className="text-2xl font-bold leading-tight">
                 {p.name}

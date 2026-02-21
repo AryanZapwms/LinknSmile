@@ -97,10 +97,9 @@ const ShopSchema = new Schema<IShop>(
 // ShopSchema.index({ ownerId: 1 });
 ShopSchema.index({ isApproved: 1, isActive: 1 });
 
-// For Next.js development, delete the model if it exists to ensure new schema is used
-if (process.env.NODE_ENV === "development") {
-  delete mongoose.models.Shop;
-}
 
-const Shop: Model<IShop> = mongoose.models.Shop || mongoose.model<IShop>('Shop', ShopSchema);
+
+const Shop: Model<IShop> =
+  mongoose.models.Shop || mongoose.model<IShop>("Shop", ShopSchema);
+
 export default Shop;

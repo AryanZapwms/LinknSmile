@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from "next/server"
 import { connectDB } from "@/lib/db"
 import { Review } from "@/lib/models/review"
 import { Product } from "@/lib/models/product"
+import { Order } from "@/lib/models/order"
+import Shop from "@/lib/models/shop"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"
 
@@ -19,21 +21,22 @@ const emptySummary = {
 }
 
 function buildSummary(reviews: any[]) {
-  if (!reviews.length) {
+  const approvedReviews = reviews.filter(r => r.status === 'APPROVED');
+  if (!approvedReviews.length) {
     return emptySummary
   }
   const ratingCounts = { ...emptySummary.ratingCounts }
   let sum = 0
-  for (const review of reviews) {
+  for (const review of approvedReviews) {
     const rating = review.rating || 0
     if (ratingCounts[review.rating as keyof typeof ratingCounts] !== undefined) {
       ratingCounts[review.rating as keyof typeof ratingCounts] += 1
     }
     sum += rating
   }
-  const average = Number((sum / reviews.length).toFixed(1))
+  const average = Number((sum / approvedReviews.length).toFixed(1))
   return {
-    total: reviews.length,
+    total: approvedReviews.length,
     averageRating: average,
     ratingCounts,
   }
@@ -49,6 +52,8 @@ function mapReview(review: any) {
     comment: review.comment,
     userName: review.userName,
     userEmail: review.userEmail,
+    status: review.status,
+    isVerifiedBuyer: review.isVerifiedBuyer,
     reply: review.reply
       ? {
           message: review.reply.message,
@@ -67,7 +72,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Await params in Next.js 15+
     const { id: productId } = await params
     
     if (!mongoose.Types.ObjectId.isValid(productId)) {
@@ -76,11 +80,16 @@ export async function GET(
 
     await connectDB()
 
-    const reviews = await Review.find({ product: productId }).sort({ createdAt: -1 }).lean()
-    const summary = buildSummary(reviews)
+    // Requirements: Never calculate ratings from unapproved reviews.
+    // Fetch all reviews to build summary but only return approved ones for listing.
+    const allReviews = await Review.find({ product: productId, isDeleted: false }).lean()
+    const summary = buildSummary(allReviews)
+    
+    const approvedReviews = allReviews.filter(r => r.status === 'APPROVED')
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     return NextResponse.json({
-      reviews: reviews.map(mapReview),
+      reviews: approvedReviews.map(mapReview),
       summary,
     })
   } catch (error) {
@@ -99,7 +108,6 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Await params in Next.js 15+
     const { id: productId } = await params
     
     if (!mongoose.Types.ObjectId.isValid(productId)) {
@@ -120,24 +128,35 @@ export async function POST(
       return NextResponse.json({ error: "Comment is required" }, { status: 400 })
     }
 
-    if (!bodyName) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 })
-    }
-
-    if (!bodyEmail) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 })
-    }
-
     await connectDB()
 
-    const product = await Product.findById(productId).select("company")
+    const product = await Product.findById(productId).select("company shopId")
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
+    }
+
+    // Security: Prevent vendor reviewing themselves
+    if (product.shopId) {
+        const shop = await Shop.findById(product.shopId)
+        if (shop && shop.owner?.toString() === session.user.id) {
+            return NextResponse.json({ error: "Vendors cannot review their own products" }, { status: 403 })
+        }
     }
 
     const companyId = product.company
     if (!companyId) {
       return NextResponse.json({ error: "Product company missing" }, { status: 400 })
+    }
+
+    // Requirement: Only verified buyers can review
+    const hasOrder = await Order.findOne({
+      user: session.user.id,
+      "items.product": productId,
+      orderStatus: "delivered"
+    })
+
+    if (!hasOrder) {
+        return NextResponse.json({ error: "Only verified buyers who have received the product can submit a review." }, { status: 403 })
     }
 
     const userId = session.user.id
@@ -153,7 +172,12 @@ export async function POST(
       existingReview.comment = comment
       existingReview.userName = userName
       existingReview.userEmail = userEmail
-      existingReview.reply = undefined
+      existingReview.status = 'PENDING' // Reset to pending for re-moderation
+      existingReview.auditLog.push({
+          action: "REVIEW_UPDATED",
+          timestamp: new Date(),
+          metadata: { rating, comment }
+      })
       review = await existingReview.save()
     } else {
       review = await Review.create({
@@ -164,17 +188,26 @@ export async function POST(
         comment,
         userName,
         userEmail,
+        isVerifiedBuyer: true,
+        status: 'PENDING',
+        auditLog: [{
+            action: "REVIEW_CREATED",
+            timestamp: new Date(),
+            metadata: { rating, comment }
+        }]
       })
       created = true
     }
 
-    const reviews = await Review.find({ product: productId }).sort({ createdAt: -1 }).lean()
-    const summary = buildSummary(reviews)
+    // Build summary based on ALL approved reviews
+    const allReviews = await Review.find({ product: productId }).lean()
+    const summary = buildSummary(allReviews)
 
     return NextResponse.json(
       {
         review: mapReview(review.toObject ? review.toObject() : review),
         summary,
+        message: "Your review has been submitted and is pending moderation."
       },
       { status: created ? 201 : 200 },
     )

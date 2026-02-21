@@ -75,6 +75,8 @@ export async function GET(request: NextRequest) {
           comment: review.comment,
           userName: review.userName,
           userEmail: review.userEmail,
+          status: review.status,
+          isVerifiedBuyer: review.isVerifiedBuyer,
           reply: review.reply
             ? {
                 message: review.reply.message,

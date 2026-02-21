@@ -4,6 +4,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
 import { Product } from "@/lib/models/product";
+import { Cart } from "@/lib/models/cart";
 import Shop from "@/lib/models/shop";
 import { sendEmail } from "@/lib/email";
 
@@ -90,10 +91,19 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // ✅ Calculate commission and vendor earnings
-      const shopId = item.shopId || product.shopId?._id?.toString() || 'platform';
-      const shopName = item.shopName || product.shopId?.shopName || 'LinkAndSmile';
-      const commissionRate = item.commissionRate || product.shopId?.commissionRate || 10;
+      // ✅ Calculate commission and vendor earnings - STRICT VALIDATION
+      const dbShopId = product.shopId?._id || product.shopId;
+      
+      if (!dbShopId) {
+        return NextResponse.json(
+          { error: `Product ${product.name} is missing a valid vendor assignment.` },
+          { status: 400 }
+        );
+      }
+
+      const shopId = dbShopId.toString();
+      const shopName = product.shopId?.shopName || 'LinkAndSmile Platform';
+      const commissionRate = product.shopId?.commissionRate ?? 10;
       
       const itemTotal = item.price * item.quantity;
       const platformCommission = (itemTotal * commissionRate) / 100;
@@ -106,17 +116,17 @@ export async function POST(req: NextRequest) {
         price: item.price,
         selectedSize: item.selectedSize,
         // ✅ Vendor tracking fields
-        shopId: shopId,
+        shopId: dbShopId, // Keep as ObjectId if possible or let Mongoose handle string-to-oid
         shopName: shopName,
         platformCommission: platformCommission,
         vendorEarnings: vendorEarnings,
         commissionRate: commissionRate,
       });
 
-      // ✅ Group by vendor for payout tracking
+      // ✅ Group by vendor for payout tracking - Ensure shopId is handled correctly
       if (!vendorPayouts[shopId]) {
         vendorPayouts[shopId] = {
-          shopId: shopId,
+          shopId: dbShopId, // Use the ObjectId/original value
           amount: 0,
           items: [],
         };
@@ -144,13 +154,32 @@ export async function POST(req: NextRequest) {
       orderStatus: "pending",
       razorpayOrderId,
       razorpayPaymentId,
-      // ✅ Vendor payout tracking
       vendorPayouts: Object.values(vendorPayouts).map(v => ({
         shopId: v.shopId,
         amount: v.amount,
-        status: paymentStatus === "completed" ? "pending" : "held", // Release after payment confirmation
+        status: paymentStatus === "completed" ? "pending" : "held",
       })),
     });
+
+    // ✅ Credit vendor wallets via ledger (only for Razorpay-paid orders)
+    // COD orders are credited when order is marked as delivered
+    if (paymentStatus === "completed") {
+      try {
+        const { LedgerService } = await import("@/lib/services/ledger-service");
+        await LedgerService.recordSale({
+          orderId: order._id.toString(),
+          items: processedItems.map((item: any) => ({
+            shopId: item.shopId.toString(),
+            vendorEarnings: item.vendorEarnings,
+            commission: item.platformCommission,
+          })),
+          performedBy: "SYSTEM",
+        });
+      } catch (ledgerError) {
+        // Don't fail the order if ledger write fails — flag for reconciliation
+        console.error("[Orders] Ledger recordSale failed for order", order._id, ledgerError);
+      }
+    }
 
     // ✅ Update inventory for each item
     for (const item of items) {
@@ -182,7 +211,7 @@ export async function POST(req: NextRequest) {
 
     // ✅ Update shop stats for each vendor
     for (const [shopId, payoutInfo] of Object.entries(vendorPayouts)) {
-      if (shopId !== 'platform') {
+      if (shopId !== "699942a5a2b407e83b6d9ea8") {
         await Shop.findByIdAndUpdate(shopId, {
           $inc: {
             'stats.totalOrders': 1,
@@ -190,6 +219,17 @@ export async function POST(req: NextRequest) {
           },
         });
       }
+    }
+
+    // ✅ Clear the user's cart in DB
+    try {
+      await Cart.findOneAndUpdate(
+        { userId: session.user.id },
+        { items: [], $inc: { version: 1 } },
+        { upsert: true }
+      );
+    } catch (cartError) {
+      console.error("[Orders] Failed to clear cart:", cartError);
     }
 
     // ✅ Send emails
@@ -373,9 +413,15 @@ export async function GET(req: NextRequest) {
     await connectDB();
 
     const orders = await Order.find({ user: session.user.id })
-      .populate("items.product", "name image")
+      .populate("items.product", "name image slug")
       .sort({ createdAt: -1 })
       .lean();
+
+    // The /profile/orders page expects a plain array
+    const { searchParams } = new URL(req.url);
+    if (searchParams.get("userOrders") === "true") {
+      return NextResponse.json(orders);
+    }
 
     return NextResponse.json({ orders });
   } catch (error: any) {

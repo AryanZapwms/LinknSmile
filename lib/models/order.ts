@@ -30,7 +30,7 @@ const orderSchema = new mongoose.Schema(
           price: Number,
           discountPrice: Number,
         },
-           shopId: {
+        shopId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Shop",
         },
@@ -82,7 +82,7 @@ const orderSchema = new mongoose.Schema(
     razorpayOrderId: String,
     razorpayPaymentId: String,
 
-     vendorPayouts: [
+    vendorPayouts: [
       {
         shopId: {
           type: mongoose.Schema.Types.ObjectId,

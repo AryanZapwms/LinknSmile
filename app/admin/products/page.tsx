@@ -17,7 +17,7 @@ interface Product {
   discountPrice?: number
   image: string
   stock: number
-  company: { name: string }
+  shopId?: { shopName: string }
   category: { name: string }
 }
 
@@ -71,7 +71,7 @@ export default function ProductsPage() {
     return products.filter(
       (product) =>
         product.name.toLowerCase().includes(query) ||
-        product.company?.name?.toLowerCase().includes(query) ||
+        product.shopId?.shopName.toLowerCase().includes(query) ||
         product.category?.name?.toLowerCase().includes(query)
     )
   }, [products, searchQuery])
@@ -117,7 +117,7 @@ export default function ProductsPage() {
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search products by name, company, or category..."
+              placeholder="Search products by name, vendor, or category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -140,7 +140,7 @@ export default function ProductsPage() {
                   <tr className="text-left text-sm text-muted-foreground border-b">
                     <th className="py-3 px-2 w-16">Image</th>
                     <th className="py-3 px-2">Name</th>
-                    <th className="py-3 px-2 hidden md:table-cell">Company</th>
+                    <th className="py-3 px-2 hidden md:table-cell">Vendor</th>
                     <th className="py-3 px-2 hidden lg:table-cell">Category</th>
                     <th className="py-3 px-2">Price</th>
                     <th className="py-3 px-2">Stock</th>
@@ -180,7 +180,9 @@ export default function ProductsPage() {
                           <div className="text-xs text-muted-foreground hidden sm:block">ID: {product._id}</div>
                         </td>
 
-                        <td className="py-3 px-2 hidden md:table-cell align-top">{product.company?.name}</td>
+                        <td className="py-3 px-2 hidden md:table-cell align-top">
+                          {product.shopId?.shopName || "Unknown"}
+                        </td>
 
                         <td className="py-3 px-2 hidden lg:table-cell align-top">{product.category?.name}</td>
 
@@ -194,9 +196,9 @@ export default function ProductsPage() {
                         <td className="py-3 px-2 align-top text-sm text-muted-foreground">{product.stock}</td>
 
                         <td className="py-3 px-2 align-top">
-                          <div className="flex flex-wrap">
+                          <div className="flex flex-wrap gap-2">
                             <Link
-                              href={`/shop/${product.company?.name?.toLowerCase().replace(/\\s+/g, '-')}/product/${product._id}`}
+                              href={`/products/${product._id}`}
                               className="flex-1"
                             >
                               <Button size="sm" variant="ghost" className="w-fit justify-start border bg-blue-400 text-white">

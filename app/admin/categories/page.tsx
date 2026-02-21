@@ -13,21 +13,14 @@ interface Category {
   name: string
   slug: string
   description?: string
-  company: { _id: string; name: string }
   parent?: { _id: string; name: string; slug: string }
   isActive: boolean
-}
-
-interface Company {
-  _id: string
-  name: string
 }
 
 export default function CategoriesPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const [categories, setCategories] = useState<Category[]>([])
-  const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -35,7 +28,6 @@ export default function CategoriesPage() {
     name: "",
     slug: "",
     description: "",
-    company: "",
     parent: "",
     isActive: true,
   })
@@ -51,13 +43,8 @@ export default function CategoriesPage() {
 
   const fetchData = async () => {
     try {
-      const [categoriesRes, companiesRes] = await Promise.all([
-        fetch("/api/categories?all=true&flat=true"),
-        fetch("/api/companies"),
-      ])
-
+      const categoriesRes = await fetch("/api/categories?all=true&flat=true")
       const categoriesData = await categoriesRes.json()
-      const companiesData = await companiesRes.json()
 
       if (categoriesRes.ok && Array.isArray(categoriesData)) {
         setCategories(categoriesData)
@@ -65,17 +52,9 @@ export default function CategoriesPage() {
         console.error("Failed to fetch categories:", categoriesData)
         setCategories([])
       }
-
-      if (companiesRes.ok && Array.isArray(companiesData)) {
-        setCompanies(companiesData)
-      } else {
-        console.error("Failed to fetch companies:", companiesData)
-        setCompanies([])
-      }
     } catch (error) {
       console.error("Error fetching data:", error)
       setCategories([])
-      setCompanies([])
     } finally {
       setLoading(false)
     }
@@ -111,7 +90,6 @@ export default function CategoriesPage() {
         name: "",
         slug: "",
         description: "",
-        company: "",
         parent: "",
         isActive: true,
       })
@@ -125,7 +103,6 @@ export default function CategoriesPage() {
       name: category.name,
       slug: category.slug,
       description: category.description || "",
-      company: category.company._id,
       parent: category.parent?._id || "",
       isActive: category.isActive,
     })
@@ -152,7 +129,6 @@ export default function CategoriesPage() {
       name: "",
       slug: "",
       description: "",
-      company: "",
       parent: "",
       isActive: true,
     })
@@ -212,24 +188,6 @@ export default function CategoriesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Company *</label>
-                  <select
-                    name="company"
-                    value={formData.company}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  >
-                    <option value="">Select Company</option>
-                    {companies.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Parent Category</label>
                   <select
                     name="parent"
@@ -239,7 +197,7 @@ export default function CategoriesPage() {
                   >
                     <option value="">Select Parent (Main Category)</option>
                     {categories
-                      .filter(c => c.company._id === formData.company && !c.parent)
+                      .filter(c => !c.parent)
                       .map((c) => (
                         <option key={c._id} value={c._id}>
                           {c.name}
@@ -302,7 +260,6 @@ export default function CategoriesPage() {
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold text-foreground">{mainCategory.name}</h3>
                           <span className="text-xs text-muted-foreground">({mainCategory.slug})</span>
-                          <span className="text-xs text-muted-foreground">{mainCategory.company.name}</span>
                           <span
                             className={`px-2 py-1 rounded text-xs font-medium ${mainCategory.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
                               }`}

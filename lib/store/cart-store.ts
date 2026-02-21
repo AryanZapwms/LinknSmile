@@ -10,13 +10,11 @@ export interface CartItem {
   image?: string;
   quantity: number;
   stock: number;
-
   
-  // ✅ NEW: Multi-vendor fields
   shopId: string;
   shopName: string;
   commissionRate: number; // percentage (e.g., 10 for 10%)
-  
+
   // Size variant support (existing)
   selectedSize?: {
     size: string;
@@ -28,11 +26,6 @@ export interface CartItem {
   };
   
   // Product details
-  company?: {
-    _id: string;
-    name: string;
-    slug: string
-  };
   category?: {
     _id: string;
     name: string;
@@ -41,10 +34,12 @@ export interface CartItem {
 
 interface CartStore {
   items: CartItem[];
+  items_version: number;
   addItem: (item: CartItem) => void;
   removeItem: (id: string, sizeId?: string) => void;
   updateQuantity: (id: string, quantity: number, sizeId?: string) => void;
   clearCart: () => void;
+  setInitialItems: (items: CartItem[]) => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
   getItemsByVendor: () => Record<string, CartItem[]>; // ✅ NEW: Group by vendor
@@ -68,6 +63,11 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      items_version: 0,
+
+      setInitialItems: (items) => {
+        set({ items, items_version: get().items_version + 1 });
+      },
 
       addItem: (item) => {
         set((state) => {
@@ -96,11 +96,11 @@ export const useCartStore = create<CartStore>()(
                 quantity: existingItem.quantity + item.quantity,
               };
             }
-            return { items: newItems };
+            return { items: newItems, items_version: state.items_version + 1 };
           }
 
           // New item
-          return { items: [...state.items, item] };
+          return { items: [...state.items, item], items_version: state.items_version + 1 };
         });
       },
 
@@ -115,6 +115,7 @@ export const useCartStore = create<CartStore>()(
             }
             return item.productId !== id;
           }),
+          items_version: state.items_version + 1,
         }));
       },
 
@@ -133,10 +134,11 @@ export const useCartStore = create<CartStore>()(
             }
             return item;
           }).filter((item) => item.quantity > 0),
+          items_version: state.items_version + 1,
         }));
       },
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set((state) => ({ items: [], items_version: state.items_version + 1 })),
 
       getTotalItems: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0);
@@ -151,83 +153,79 @@ export const useCartStore = create<CartStore>()(
         }, 0);
       },
 
-      // ✅ NEW: Group items by vendor
-     getItemsByVendor: () => {
-  const items = get().items;
-  const grouped: Record<string, CartItem[]> = {};
+      getItemsByVendor: () => {
+        const items = get().items;
+        const grouped: Record<string, CartItem[]> = {};
+      
+        items.forEach((item) => {
+          const vendorId = item.shopId || 'platform'; // fallback to 'platform' for old products
+          if (!grouped[vendorId]) {
+            grouped[vendorId] = [];
+          }
+          grouped[vendorId].push(item);
+        });
+      
+        return grouped;
+      },
 
-  items.forEach((item) => {
-    const vendorId = item.shopId || 'platform'; // fallback to 'platform' for old products
-    if (!grouped[vendorId]) {
-      grouped[vendorId] = [];
-    }
-    grouped[vendorId].push(item);
-  });
-
-  return grouped;
-},
-
-      // ✅ NEW: Get total for specific vendor
       getVendorTotal: (shopId: string) => {
-  return get().items
-    .filter((item) => item.shopId === shopId || (!item.shopId && shopId === 'platform'))
-    .reduce((total, item) => {
-      const price = item.selectedSize
-        ? item.selectedSize.discountPrice || item.selectedSize.price
-        : item.discountPrice || item.price;
-      return total + price * item.quantity;
-    }, 0);
-},
+        return get().items
+          .filter((item) => item.shopId === shopId || (!item.shopId && shopId === 'platform'))
+          .reduce((total, item) => {
+            const price = item.selectedSize
+              ? item.selectedSize.discountPrice || item.selectedSize.price
+              : item.discountPrice || item.price;
+            return total + price * item.quantity;
+          }, 0);
+      },
 
-
-      // ✅ NEW: Calculate commission breakdown
-getCommissionBreakdown: () => {
-  const items = get().items;
-  const itemsByVendor = get().getItemsByVendor();
-  
-  let subtotal = 0;
-  let totalCommission = 0;
-  const byVendor: Array<{
-    shopId: string;
-    shopName: string;
-    subtotal: number;
-    commission: number;
-    earnings: number;
-    commissionRate: number;
-  }> = [];
-
-  Object.entries(itemsByVendor).forEach(([shopId, vendorItems]) => {
-    const vendorSubtotal = vendorItems.reduce((sum, item) => {
-      const price = item.selectedSize
-        ? item.selectedSize.discountPrice || item.selectedSize.price
-        : item.discountPrice || item.price;
-      return sum + price * item.quantity;
-    }, 0);
-
-    const commissionRate = vendorItems[0]?.commissionRate || 10; // Default 10%
-    const commission = (vendorSubtotal * commissionRate) / 100;
-    const earnings = vendorSubtotal - commission;
-
-    subtotal += vendorSubtotal;
-    totalCommission += commission;
-
-    byVendor.push({
-      shopId,
-      shopName: vendorItems[0]?.shopName || 'LinkAndSmile Platform',
-      subtotal: vendorSubtotal,
-      commission,
-      earnings,
-      commissionRate,
-    });
-  });
-
-  return {
-    subtotal,
-    totalCommission,
-    vendorEarnings: subtotal - totalCommission,
-    byVendor,
-  };
-},
+      getCommissionBreakdown: () => {
+        const items = get().items;
+        const itemsByVendor = get().getItemsByVendor();
+        
+        let subtotal = 0;
+        let totalCommission = 0;
+        const byVendor: Array<{
+          shopId: string;
+          shopName: string;
+          subtotal: number;
+          commission: number;
+          earnings: number;
+          commissionRate: number;
+        }> = [];
+      
+        Object.entries(itemsByVendor).forEach(([shopId, vendorItems]) => {
+          const vendorSubtotal = vendorItems.reduce((sum, item) => {
+            const price = item.selectedSize
+              ? item.selectedSize.discountPrice || item.selectedSize.price
+              : item.discountPrice || item.price;
+            return sum + price * item.quantity;
+          }, 0);
+      
+          const commissionRate = vendorItems[0]?.commissionRate || 10; // Default 10%
+          const commission = (vendorSubtotal * commissionRate) / 100;
+          const earnings = vendorSubtotal - commission;
+      
+          subtotal += vendorSubtotal;
+          totalCommission += commission;
+      
+          byVendor.push({
+            shopId,
+            shopName: vendorItems[0]?.shopName || 'LinkAndSmile Platform',
+            subtotal: vendorSubtotal,
+            commission,
+            earnings,
+            commissionRate,
+          });
+        });
+      
+        return {
+          subtotal,
+          totalCommission,
+          vendorEarnings: subtotal - totalCommission,
+          byVendor,
+        };
+      },
     }),
     {
       name: 'cart-storage',

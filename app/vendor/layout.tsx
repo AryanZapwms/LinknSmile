@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, Package, ShoppingCart, 
   DollarSign, Star, Settings, Menu, LogOut,
@@ -13,7 +12,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { signOut } from 'next-auth/react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,15 +21,39 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export default function VendorLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function VendorLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
+  const router = useRouter();
   const pathname = usePathname();
 
-  if (status === 'loading') {
+  // 1️⃣ Hooks always declared first
+  const [isApproved, setIsApproved] = useState<boolean | null>(null);
+
+  // 2️⃣ Fetch shop approval status
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (!session) return;
+
+      try {
+        const res = await fetch('/api/vendor/status');
+        const data = await res.json();
+        if (data.success) setIsApproved(data.isApproved);
+      } catch (error) {
+        console.error('Failed to check shop status:', error);
+      }
+    };
+    checkStatus();
+  }, [session]);
+
+  // 3️⃣ Handle redirect safely after hooks
+  useEffect(() => {
+    if (status !== 'loading' && (!session || session.user.role !== 'shop_owner')) {
+      router.push('/auth/login');
+    }
+  }, [status, session, router]);
+
+  // 4️⃣ Render loading state
+  if (status === 'loading' || !session) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -39,27 +61,7 @@ export default function VendorLayout({
     );
   }
 
-  if (!session || session.user.role !== 'shop_owner') {
-    redirect('/auth/login');
-  }
-
-  const [isApproved, setIsApproved] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const res = await fetch('/api/vendor/status');
-        const data = await res.json();
-        if (data.success) {
-          setIsApproved(data.isApproved);
-        }
-      } catch (error) {
-        console.error('Failed to check shop status:', error);
-      }
-    };
-    if (session) checkStatus();
-  }, [session]);
-
+  // Navigation items, filtered by approval
   const navigation = [
     { name: 'Dashboard', href: '/vendor', icon: LayoutDashboard },
     { name: 'Products', href: '/vendor/products', icon: Package, requiresApproval: true },
@@ -69,12 +71,7 @@ export default function VendorLayout({
     { name: 'Settings', href: '/vendor/settings', icon: Settings },
   ].filter(item => !item.requiresApproval || isApproved);
 
-  const isActive = (path: string) => {
-    if (path === '/vendor') {
-      return pathname === path;
-    }
-    return pathname.startsWith(path);
-  };
+  const isActive = (path: string) => (path === '/vendor' ? pathname === path : pathname.startsWith(path));
 
   const Sidebar = () => (
     <div className="flex h-full flex-col gap-2">
@@ -86,23 +83,20 @@ export default function VendorLayout({
       </div>
       <div className="flex-1 overflow-y-auto">
         <nav className="grid items-start px-2 py-4 text-sm font-medium lg:px-4 gap-1">
-          {navigation.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
-                  active
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-primary hover:bg-muted'
-                }`}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </Link>
-            );
-          })}
+          {navigation.map(item => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
+                isActive(item.href)
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-primary hover:bg-muted'
+              }`}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.name}
+            </Link>
+          ))}
         </nav>
       </div>
       <div className="mt-auto p-4 border-t">
@@ -166,9 +160,7 @@ export default function VendorLayout({
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{session.user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {session.user.email}
-                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -195,9 +187,7 @@ export default function VendorLayout({
         </header>
 
         {/* Main Content */}
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-          {children}
-        </main>
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">{children}</main>
       </div>
     </div>
   );

@@ -12,18 +12,12 @@ import { ArrowLeft, X, Upload } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
-interface Company {
-  _id: string
-  name: string
-}
-
 interface Category {
   _id: string
   name: string
   slug: string
   parent?: { name: string; slug: string; _id?: string }
   subCategories?: Category[]
-  company?: string
 }
 
 interface Size {
@@ -39,7 +33,6 @@ interface Size {
 export default function AddProductPage() {
   const router = useRouter()
   const { data: session } = useSession()
-  const [companies, setCompanies] = useState<Company[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -55,7 +48,6 @@ export default function AddProductPage() {
     discountPrice: "",
     category: "",
     mainCategory: "",
-    company: "",
     stock: "",
     sku: "",
     ingredients: "",
@@ -84,32 +76,14 @@ export default function AddProductPage() {
       return
     }
 
-    fetchCompaniesAndCategories()
+    fetchCategories()
   }, [session, router])
 
-  const fetchCompaniesAndCategories = async () => {
+  const fetchCategories = async () => {
     try {
-      const companiesRes = await fetch("/api/companies")
-      const companiesData = companiesRes.ok ? await companiesRes.json() : []
-      setCompanies(companiesData)
-    } catch (error) {
-      console.error("Error fetching companies:", error)
-      setCompanies([])
-    }
-  }
-
-  const fetchCategoriesForCompany = async (companyId: string) => {
-    try {
-      // Fetch categories for the selected company
-      const categoriesRes = await fetch(`/api/categories?company=${companyId}`)
+      const categoriesRes = await fetch("/api/categories")
       const categoriesData = categoriesRes.ok ? await categoriesRes.json() : []
       setCategories(categoriesData)
-      // Reset category selections when company changes
-      setFormData((prev) => ({
-        ...prev,
-        mainCategory: "",
-        category: "",
-      }))
     } catch (error) {
       console.error("Error fetching categories:", error)
       setCategories([])
@@ -118,11 +92,6 @@ export default function AddProductPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
-    
-    // Fetch categories when company changes
-    if (name === "company" && value) {
-      fetchCategoriesForCompany(value)
-    }
     
     setFormData((prev) => ({
       ...prev,
@@ -256,10 +225,6 @@ export default function AddProductPage() {
         })),
       }
       
-      // console.log("📤 Sending product data:", bodyData)
-      // console.log("🎨 Results being sent:", results)
-      // console.log("✅ Suitable For being sent:", bodyData.suitableFor)
-
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -267,14 +232,12 @@ export default function AddProductPage() {
       })
 
       const responseData = await res.json()
-      console.log("📥 API Response:", responseData)
 
       if (!res.ok) {
         console.error("❌ API Error:", responseData)
         throw new Error(responseData.error || "Failed to create product")
       }
 
-      // console.log("✅ Product created:", responseData)
       setMessage("Product created successfully!")
       setTimeout(() => router.push("/admin/products"), 1500)
     } catch (error) {
@@ -330,25 +293,8 @@ export default function AddProductPage() {
                 </div>
               </div>
 
-              {/* Company & Category */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Company *</label>
-                  <select
-                    name="company"
-                    value={formData.company}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  >
-                    <option value="">Select Company</option>
-                    {companies.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Category */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Main Category *</label>
                   <select
@@ -801,27 +747,27 @@ export default function AddProductPage() {
                   {results.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">Added Results ({results.length})</label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {results.map((result, index) => (
-                          <div key={index} className="relative group border border-border rounded-lg p-3 bg-background">
-                            {result.image && (
-                              <div className="relative h-24 bg-muted rounded mb-2 overflow-hidden">
-                                <Image
-                                  src={result.image}
-                                  alt={result.title}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            )}
-                            <h4 className="font-medium text-sm text-foreground">{result.title}</h4>
-                            <p className="text-xs text-muted-foreground line-clamp-2">{result.text}</p>
+                          <div key={index} className="relative group border border-border rounded-lg p-3 bg-background flex gap-3">
+                            <div className="relative w-16 h-16 bg-muted rounded overflow-hidden shrink-0">
+                              <Image
+                                src={result.image}
+                                alt={result.title}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm text-foreground truncate">{result.title}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{result.text}</p>
+                            </div>
                             <button
                               type="button"
                               onClick={() => setResults(results.filter((_, i) => i !== index))}
-                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                              className="bg-destructive text-destructive-foreground p-1 rounded-full w-6 h-6 flex items-center justify-center absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition"
                             >
-                              <X className="w-4 h-4" />
+                              <X className="w-3 h-3" />
                             </button>
                           </div>
                         ))}
@@ -831,32 +777,16 @@ export default function AddProductPage() {
                 </div>
               </div>
 
-              {/* Active Status */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onChange={handleChange}
-                  className="w-4 h-4"
-                />
-                <label className="text-sm font-medium text-foreground">Active</label>
+              <div className="flex justify-end gap-4 pt-4">
+                <Link href="/admin/products">
+                  <Button type="button" variant="outline">
+                    Cancel
+                  </Button>
+                </Link>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Creating..." : "Create Product"}
+                </Button>
               </div>
-
-              {/* Message */}
-              {message && (
-                <div
-                  className={`p-3 rounded text-sm ${message.includes("successfully") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                    }`}
-                >
-                  {message}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "Creating..." : "Create Product"}
-              </Button>
             </form>
           </CardContent>
         </Card>

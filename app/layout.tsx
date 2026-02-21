@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { AuthSessionProvider } from "@/components/auth/session-provider"
 import { Header } from "@/components/header"
 import { PromoBar } from "@/components/promo-bar"
+import { CartSync } from "@/components/cart-sync"
 import { Toaster } from "@/components/ui/toaster"
 import Footer from "@/components/footer"
 import GTMScripts from "@/components/gtm-scripts"
@@ -52,6 +53,7 @@ export default function RootLayout({
         </noscript>
 
         <AuthSessionProvider>
+          <CartSync />
           <PromoBar />
           <Header />
 

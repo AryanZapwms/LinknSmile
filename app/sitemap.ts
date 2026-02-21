@@ -42,14 +42,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const products = await Product.find({ isActive: true })
-    .select("_id updatedAt company")
-    .populate("company", "slug")
+    .select("_id updatedAt")
     .lean();
 
   const productRoutes = products
-    .filter((p: any) => p.company?.slug) // 👈 avoid null company errors
     .map((product: any) => ({
-      url: `${baseUrl}/shop/${product.company.slug}/product/${product._id}`,
+      url: `${baseUrl}/products/${product._id}`,
       lastModified: product.updatedAt || new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.6,

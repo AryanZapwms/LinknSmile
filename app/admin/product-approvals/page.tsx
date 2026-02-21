@@ -242,7 +242,7 @@ export default function ProductApprovalsPage() {
                   <TableHead className="text-center">Price</TableHead>
                   <TableHead className="text-center">Submitted</TableHead>
                   <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  {/* <TableHead className="text-center">Actions</TableHead> */}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -290,18 +290,18 @@ export default function ProductApprovalsPage() {
                       )}
                       {product.approvalStatus === 'approved' && (
                         <Badge variant="default" className="bg-green-500">
-                          <CheckCircle className="h-3 w-3 mr-1" />
+                          <CheckCircle className="h-3 w-3 text-center " />
                           Approved
                         </Badge>
                       )}
                       {product.approvalStatus === 'rejected' && (
                         <Badge variant="destructive">
-                          <XCircle className="h-3 w-3 mr-1" />
+                          <XCircle className="h-3 w-3 text-center" />
                           Rejected
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className=" border">
+                    {/* <TableCell className=" border">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="outline"
@@ -340,7 +340,7 @@ export default function ProductApprovalsPage() {
                           </>
                         )}
                       </div>
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>

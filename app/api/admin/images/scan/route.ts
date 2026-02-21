@@ -66,7 +66,7 @@ async function checkImageUsage(images: ImageFile[]): Promise<ImageFile[]> {
   images.forEach(img => imageMap.set(img.path, img))
 
   // Check products
-  for (const product of products) {
+  for (const product of products as any[]) {
     // Check main image
     if (product.image && imageMap.has(product.image)) {
       const img = imageMap.get(product.image)!
@@ -98,16 +98,16 @@ async function checkImageUsage(images: ImageFile[]): Promise<ImageFile[]> {
   }
 
   // Check blogs
-  for (const blog of blogs) {
+  for (const blog of blogs as any[]) {
     if (blog.image && imageMap.has(blog.image)) {
       const img = imageMap.get(blog.image)!
       img.isUsed = true
       img.usedBy.push(`Blog: ${blog.title || blog._id}`)
     }
-  }
+  } 
 
   // Check companies
-  for (const company of companies) {
+  for (const company of companies as any[]) {
     // Check logo
     if (company.logo && imageMap.has(company.logo)) {
       const img = imageMap.get(company.logo)!

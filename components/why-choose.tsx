@@ -97,32 +97,7 @@ function LogoWithLoader({ img, index }: { img: StaticImageData; index: number })
 }
 
 export default function WhyChoose() {
-  const pathname = usePathname();
-  const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const pathParts = pathname?.split("/") || [];
-  const isOnShopPage = pathParts[1] === "shop" && pathParts[2];
-  const companySlug = pathParts[2];
-
-  useEffect(() => {
-    setIsLoading(true);
-    if (isOnShopPage && companySlug) {
-      fetch("/api/companies")
-        .then((res) => res.json())
-        .then((data) => {
-          const current = data.find((c: Company) => c.slug === companySlug);
-          if (current) setCurrentCompany(current);
-        })
-        .catch((err) => console.error("Error fetching companies:", err))
-        .finally(() => setIsLoading(false));
-    } else {
-      // simulate slight delay for better UX
-      setTimeout(() => setIsLoading(false), 600);
-    }
-  }, [isOnShopPage, companySlug]);
-
-  const displayName = currentCompany?.name || "Instapeel";
+  const displayName = "LinkAndSmile";
 
   const paymentLogos = [
     rupayImage,
@@ -133,28 +108,6 @@ export default function WhyChoose() {
     amexImage,
     onlineBankingImage,
   ];
-
-  if (isLoading) {
-    //  Full-page skeleton loader
-    return (
-      <div className="py-10 px-4 animate-pulse">
-        <div className="max-w-7xl mx-auto bg-purple-50 rounded-2xl border-2 border-purple-200 p-4 md:p-6 space-y-6">
-          {/* Feature placeholders */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-40 rounded-xl" />
-            ))}
-          </div>
-
-          {/* Payment & contact placeholders */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Skeleton className="h-52 rounded-xl" />
-            <Skeleton className="h-52 rounded-xl" />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="py-10 px-4">

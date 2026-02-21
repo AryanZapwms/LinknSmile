@@ -5,7 +5,7 @@ import { connectDB } from '@/lib/db';
 import Payout from '@/lib/models/payout';
 import { Order } from '@/lib/models/order';
 import Shop from '@/lib/models/shop';
-import User from '@/lib/models/user';
+import { LedgerService } from '@/lib/services/ledger-service';
 import { sendEmail, getPayoutStatusEmail } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
@@ -28,10 +28,7 @@ export async function GET(req: NextRequest) {
       .populate('shopId', 'shopName bankDetails')
       .sort({ createdAt: -1 });
 
-    return NextResponse.json({
-      success: true,
-      payouts
-    });
+    return NextResponse.json({ success: true, payouts });
   } catch (error: any) {
     console.error('Admin fetch payouts error:', error);
     return NextResponse.json(
@@ -58,33 +55,68 @@ export async function PUT(req: NextRequest) {
     }
 
     let nextStatus = payout.status;
-    let updateFields: any = {};
+    const updateFields: any = {};
 
     if (action === 'approve') {
-      nextStatus = 'processing';
+      // Approve → APPROVED state. LedgerService deducts balance now (locks it).
+      if (payout.status !== 'REQUESTED') {
+        return NextResponse.json({ message: 'Only REQUESTED payouts can be approved' }, { status: 400 });
+      }
+      nextStatus = 'APPROVED';
+      updateFields.approvedBy = session.user.id;
+      updateFields.approvedAt = new Date();
+
+      // Deduct from wallet via ledger (idempotent)
+      await LedgerService.requestPayout({
+        shopId: payout.shopId.toString(),
+        amount: payout.amount,
+        payoutId: payout._id.toString(),
+        adminId: session.user.id,
+      });
+
     } else if (action === 'complete') {
       if (!transactionId) {
-        return NextResponse.json({ message: 'Transaction ID is required for completion' }, { status: 400 });
+        return NextResponse.json({ message: 'Bank transaction ID is required' }, { status: 400 });
       }
-      nextStatus = 'completed';
-      updateFields = {
-        transactionId,
-        processedDate: new Date(),
-      };
-      
-      // Update associated orders to 'released'
+      if (!['APPROVED', 'PROCESSING'].includes(payout.status)) {
+        return NextResponse.json({ message: 'Only APPROVED or PROCESSING payouts can be completed' }, { status: 400 });
+      }
+      nextStatus = 'COMPLETED';
+      updateFields.transactionId = transactionId;
+      updateFields.processedAt = new Date();
+
+      // Mark ledger entry as CLEARED
+      await LedgerService.completePayout(payout._id.toString(), session.user.id, transactionId);
+
+      // Update associated order vendorPayout status
       await Order.updateMany(
         { _id: { $in: payout.orderIds }, 'vendorPayouts.shopId': payout.shopId },
         { $set: { 'vendorPayouts.$.status': 'released' } }
       );
+
     } else if (action === 'reject') {
       if (!failureReason) {
         return NextResponse.json({ message: 'Rejection reason is required' }, { status: 400 });
       }
-      nextStatus = 'failed';
-      updateFields = { failureReason };
+      if (payout.status === 'COMPLETED') {
+        return NextResponse.json({ message: 'Cannot reject a completed payout' }, { status: 400 });
+      }
+      nextStatus = 'FAILED';
+      updateFields.failureReason = failureReason;
 
-      // Revert associated orders to 'pending'
+      // Reverse ledger debit — restore withdrawable balance
+      // Only if wallet was already debited (i.e., was APPROVED or PROCESSING)
+      if (['APPROVED', 'PROCESSING'].includes(payout.status)) {
+        await LedgerService.rejectPayout(
+          payout._id.toString(),
+          payout.shopId.toString(),
+          payout.amount,
+          failureReason,
+          session.user.id
+        );
+      }
+
+      // Revert order payout status
       await Order.updateMany(
         { _id: { $in: payout.orderIds }, 'vendorPayouts.shopId': payout.shopId },
         { $set: { 'vendorPayouts.$.status': 'pending' } }
@@ -99,34 +131,31 @@ export async function PUT(req: NextRequest) {
       { new: true }
     );
 
-    // Send email to vendor
+    // Notify vendor via email
     try {
-        const vendorShop = await Shop.findById(payout.shopId).populate('ownerId');
-        if (vendorShop && (vendorShop.ownerId as any)?.email) {
-            await sendEmail({
-                to: (vendorShop.ownerId as any).email,
-                subject: `Payout Request Update: ${nextStatus.toUpperCase()}`,
-                html: getPayoutStatusEmail({
-                    shopName: vendorShop.shopName,
-                    amount: payout.amount,
-                    status: nextStatus,
-                    transactionId,
-                    failureReason
-                })
-            });
-        }
+      const vendorShop = await Shop.findById(payout.shopId).populate('ownerId');
+      if (vendorShop && (vendorShop.ownerId as any)?.email) {
+        await sendEmail({
+          to: (vendorShop.ownerId as any).email,
+          subject: `Payout Update: ${nextStatus}`,
+          html: getPayoutStatusEmail({
+            shopName: vendorShop.shopName,
+            amount: payout.amount,
+            status: nextStatus.toLowerCase(),
+            transactionId,
+            failureReason,
+          }),
+        });
+      }
     } catch (emailError) {
-        console.error('Failed to send payout status email to vendor:', emailError);
+      console.error('Failed to send payout status email:', emailError);
     }
-
-    console.log(`Payout ${payoutId} updated to ${nextStatus} by Admin`);
 
     return NextResponse.json({
       success: true,
-      message: `Payout request ${nextStatus} successfully`,
-      payout: updatedPayout
+      message: `Payout ${nextStatus.toLowerCase()} successfully`,
+      payout: updatedPayout,
     });
-
   } catch (error: any) {
     console.error('Admin update payout error:', error);
     return NextResponse.json(

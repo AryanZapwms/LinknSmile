@@ -1,6 +1,6 @@
 "use client"
 
-import { useCartStore, Size } from "@/lib/store/cart-store"
+import { useCartStore } from "@/lib/store/cart-store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
@@ -56,7 +56,7 @@ export default function CartPage() {
                     {/* Image */}
                     <div className="relative w-24 h-24 bg-muted rounded overflow-hidden flex-shrink-0">
                       {item.image ? (
-                        <Image src={item.image || "/companylogo.jpg"} alt={item.name} fill className="object-cover" />
+                        <Image src={item.image} alt={item.name} fill className="object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                           No image
@@ -68,9 +68,8 @@ export default function CartPage() {
                     <div className="flex-1">
                       <h3 className="font-semibold text-foreground">{item.name}</h3>
                       <p className="text-sm text-muted-foreground">
-  {item.company?.name ?? "Unknown Brand"}
-</p>
-
+                        Sold by: {item.shopName || "LinkAndSmile"}
+                      </p>
                       
                       {/* Size information */}
                       {item.selectedSize && (
@@ -82,7 +81,7 @@ export default function CartPage() {
                       <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center border border-border rounded">
                           <button
-                            onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1), item.selectedSize)}
+                            onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1), item.selectedSize?.size ? `${item.selectedSize.size}-${item.selectedSize.quantity}` : undefined)}
                             className="px-2 py-1 text-muted-foreground hover:bg-muted"
                           >
                             −
@@ -93,7 +92,7 @@ export default function CartPage() {
                               if (getTotalItems() >= 5) {
                                 setShowBulkOrderModal(true)
                               } else {
-                                updateQuantity(item.productId, item.quantity + 1, item.selectedSize)
+                                updateQuantity(item.productId, item.quantity + 1, item.selectedSize?.size ? `${item.selectedSize.size}-${item.selectedSize.quantity}` : undefined)
                               }
                             }}
                             className="px-2 py-1 text-muted-foreground hover:bg-muted"
@@ -113,7 +112,7 @@ export default function CartPage() {
 
                     {/* Remove */}
                     <button
-                      onClick={() => removeItem(item.productId, item.selectedSize)}
+                      onClick={() => removeItem(item.productId, item.selectedSize?.size ? `${item.selectedSize.size}-${item.selectedSize.quantity}` : undefined)}
                       className="text-destructive hover:bg-destructive/10 p-2 rounded cursor-pointer"
                     >
                       <Trash2 className="w-5 h-5" />

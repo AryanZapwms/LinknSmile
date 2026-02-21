@@ -13,6 +13,7 @@ interface CheckoutFormProps {
   totalAmount: number
   onSubmit: (address: any, paymentMethod: string) => Promise<void>
   availablePaymentMethods: string[]
+  isSubmitting?: boolean
   initialData?: {
     name?: string
     phone?: string
@@ -24,7 +25,7 @@ interface CheckoutFormProps {
   }
 }
 
-export function CheckoutForm({ totalAmount, onSubmit, availablePaymentMethods, initialData }: CheckoutFormProps) {
+export function CheckoutForm({ totalAmount, onSubmit, availablePaymentMethods, initialData, isSubmitting = false }: CheckoutFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     phone: initialData?.phone || "",
@@ -124,8 +125,8 @@ export function CheckoutForm({ totalAmount, onSubmit, availablePaymentMethods, i
             </RadioGroup>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading} size="lg">
-            {isLoading ? "Processing..." : `Proceed - ₹${totalAmount}`}
+          <Button type="submit" className="w-full" disabled={isLoading || isSubmitting} size="lg">
+            {(isLoading || isSubmitting) ? "Processing..." : `Proceed - ₹${totalAmount}`}
           </Button>
         </form>
       </CardContent>

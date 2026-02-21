@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import mongoose from 'mongoose';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { connectDB } from '@/lib/db';
 import { Order } from '@/lib/models/order';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -23,7 +25,15 @@ export async function GET(
       return NextResponse.json({ message: 'Shop not found' }, { status: 404 });
     }
 
-    const order = await Order.findById(params.id)
+    // Convert shopId string to ObjectId for proper comparison
+    let shopObjectId: mongoose.Types.ObjectId;
+    try {
+      shopObjectId = new mongoose.Types.ObjectId(shopId);
+    } catch {
+      return NextResponse.json({ message: 'Invalid shop ID' }, { status: 400 });
+    }
+
+    const order = await Order.findById(id)
       .populate('user', 'name email phone')
       .populate('items.product', 'name image price discountPrice')
       .lean();
@@ -32,9 +42,9 @@ export async function GET(
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
 
-    // Check if this order contains vendor's products
+    // Check if this order contains vendor's products (using ObjectId equality)
     const hasVendorItems = order.items.some(
-      (item: any) => item.shopId?.toString() === shopId
+      (item: any) => item.shopId && shopObjectId.equals(item.shopId)
     );
 
     if (!hasVendorItems) {
@@ -43,7 +53,7 @@ export async function GET(
 
     // Filter to show only vendor's items
     const vendorItems = order.items.filter(
-      (item: any) => item.shopId?.toString() === shopId
+      (item: any) => item.shopId && shopObjectId.equals(item.shopId)
     );
 
     // Calculate vendor's totals
@@ -52,7 +62,7 @@ export async function GET(
     }, 0);
 
     const vendorPayout = order.vendorPayouts?.find(
-      (p: any) => p.shopId?.toString() === shopId
+      (p: any) => p.shopId && shopObjectId.equals(p.shopId)
     );
 
     const vendorOrder = {
@@ -89,8 +99,9 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -109,15 +120,22 @@ export async function PATCH(
       return NextResponse.json({ message: 'Invalid status' }, { status: 400 });
     }
 
-    const order = await Order.findById(params.id);
+    let shopObjectId: mongoose.Types.ObjectId;
+    try {
+      shopObjectId = new mongoose.Types.ObjectId(shopId!);
+    } catch {
+      return NextResponse.json({ message: 'Invalid shop ID' }, { status: 400 });
+    }
+
+    const order = await Order.findById(id);
 
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
 
-    // Check if this order contains vendor's products
+    // Check if this order contains vendor's products (using ObjectId equality)
     const hasVendorItems = order.items.some(
-      (item: any) => item.shopId?.toString() === shopId
+      (item: any) => item.shopId && shopObjectId.equals(item.shopId)
     );
 
     if (!hasVendorItems) {

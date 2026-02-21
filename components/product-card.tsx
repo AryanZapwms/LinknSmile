@@ -29,12 +29,12 @@ interface ProductCardProps {
   price: number
   discountPrice?: number
   image?: string
-  company: { _id: string; name: string; slug: string }
+  slug: string
   size?: "sm" | "md"
   hasMultipleSizes?: boolean
   sizes?: Size[]
   stock?: number
-    shopId?: string;
+  shopId?: string;
   shopName?: string;
   commissionRate?: number;
 }
@@ -45,7 +45,7 @@ export function ProductCard({
   price,
   discountPrice,
   image,
-  company,
+  slug,
   size = "sm",
   hasMultipleSizes = false,
   sizes = [],
@@ -62,7 +62,7 @@ export function ProductCard({
   const [showQuickView, setShowQuickView] = useState(false)
   const discount = discountPrice ? Math.round(((price - discountPrice) / price) * 100) : 0
   const isSmall = size === "sm"
-const router = useRouter()
+  const router = useRouter()
 
   // Display lowest price if multiple sizes exist
   const displayPrice = hasMultipleSizes && sizes.length > 0
@@ -98,13 +98,12 @@ const router = useRouter()
         discountPrice: selectedSize.discountPrice,
         image,
         quantity: 1,
-        company,
-        slug: company.slug,
+        slug,
         stock: selectedSize.stock,
         selectedSize,
         shopId: (shopId || "default") as string,
-      shopName: shopName || 'LinkAndSmile',
-      commissionRate: commissionRate || 10,
+        shopName: shopName || 'LinkAndSmile',
+        commissionRate: commissionRate || 10,
       })
 
       toast({
@@ -120,10 +119,11 @@ const router = useRouter()
         discountPrice,
         image,
         quantity: 1,
-        company,
-        shopId: shopId || undefined,
-      shopName: shopName || 'LinkAndSmile',
-      commissionRate: commissionRate || 10,
+        slug,
+        stock,
+        shopId: shopId || "default",
+        shopName: shopName || 'LinkAndSmile',
+        commissionRate: commissionRate || 10,
       })
 
       toast({
@@ -152,13 +152,13 @@ const router = useRouter()
       style={{ backgroundColor: "#faf5ff" }}
     >
       <div
-  onClick={(e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setShowQuickView(true)
-  }}
-  className="flex-1 flex flex-col no-underline cursor-pointer relative"
->
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setShowQuickView(true)
+        }}
+        className="flex-1 flex flex-col no-underline cursor-pointer relative"
+      >
         <CardContent className="p-0">
           <div className={`relative w-full ${isSmall ? "h-36" : "h-44"} bg-muted overflow-hidden`}>
             {/* Quick View Overlay Button */}
@@ -200,13 +200,7 @@ const router = useRouter()
               <div className="absolute inset-0 flex items-center justify-center bg-muted">
                 <div className="flex flex-col items-center gap-2">
                   <div className={`${isSmall ? "w-20 h-20" : "w-28 h-28"} relative rounded-full overflow-hidden bg-white flex items-center justify-center shadow-sm`}>
-                    <Image
-                      src="/companylogo.jpg"
-                      alt="logo"
-                      fill
-                      className="object-contain"
-                      priority={false}
-                    />
+
                   </div>
 
                   {/* Show loading indicator only if still loading */}
@@ -237,10 +231,7 @@ const router = useRouter()
 
         <CardFooter className={`flex flex-col p-3 ${isSmall ? "pt-2 pb-3" : "pt-3 pb-4"} flex-1`}>
           <div className="w-full flex-1 flex flex-col">
-            <p className={`${isSmall ? "text-[10px]" : "text-xs"} text-muted-foreground mb-0.5 uppercase tracking-wide font-medium`}>
-            {company?.name || "Unknown Brand"}
 
-            </p>
 
             <h3
               className={`product-title ${isSmall ? "text-sm min-h-[2.5rem]" : "text-base min-h-[3rem]"} text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-tight mb-1`}
@@ -396,7 +387,7 @@ const router = useRouter()
           price,
           discountPrice,
           image,
-          company,
+          slug,
           sizes,
           stock,
           shopId,

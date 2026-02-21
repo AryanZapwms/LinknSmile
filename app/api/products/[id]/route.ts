@@ -19,7 +19,6 @@ export async function GET(
     // console.log(" GET /api/products/:id - Fetching product:", id);
 
     const product = await Product.findById(id)
-      .populate("company", "name slug")
       .populate("category", "name slug")
       .populate("shopId", "shopName commissionRate")
       .lean();
@@ -29,10 +28,9 @@ export async function GET(
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const productObj = product.toObject();
+    const productObj = product;
     const populatedProduct = {
       ...productObj,
-      company: product.company || { name: "Unknown", slug: "unknown" },
       category: product.category || {
         name: "Uncategorized",
         slug: "uncategorized",
@@ -81,7 +79,6 @@ export async function PUT(
       image,
       images,
       category,
-      company,
       stock,
       sku,
       ingredients,
@@ -102,7 +99,6 @@ export async function PUT(
       image: image || (images && images.length > 0 ? images[0] : undefined),
       images: images || (image ? [image] : []),
       category,
-      company,
       stock,
       sku,
       ingredients,
@@ -124,7 +120,6 @@ export async function PUT(
 
     const responseData = {
       ...updatedProduct,
-      company: product.company || { name: "Unknown", slug: "unknown" },
       category: product.category || { name: "Uncategorized", slug: "uncategorized" },
     };
 

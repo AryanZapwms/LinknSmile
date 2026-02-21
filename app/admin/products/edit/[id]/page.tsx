@@ -11,18 +11,12 @@ import { ArrowLeft, X, Upload, Loader2, Pencil } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
-interface Company {
-  _id: string
-  name: string
-}
-
 interface Category {
   _id: string
   name: string
   slug: string
   parent?: { name: string; slug: string; _id?: string }
   subCategories?: Category[]
-  company?: string
 }
 
 interface Result {
@@ -61,7 +55,6 @@ interface Product {
   image: string
   images?: string[]
   category: string
-  company: string
   stock: number
   sku: string
   ingredients: string[]
@@ -78,7 +71,6 @@ export default function EditProductPage() {
   const params = useParams()
   const { data: session } = useSession()
   const productId = params.id as string
-  const [companies, setCompanies] = useState<Company[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -98,7 +90,6 @@ export default function EditProductPage() {
     images: [],
     category: "",
     mainCategory: "",
-    company: "",
     stock: 0,
     sku: "",
     ingredients: [],
@@ -126,26 +117,20 @@ export default function EditProductPage() {
 
   const fetchData = async () => {
     try {
-      const [productRes, companiesRes] = await Promise.all([
+      const [productRes, categoriesRes] = await Promise.all([
         fetch(`/api/products/${productId}`),
-        fetch("/api/companies"),
+        fetch("/api/categories"),
       ])
 
       const productData = await productRes.json()
-      const companiesData = await companiesRes.json()
+      const categoriesData = categoriesRes.ok ? await categoriesRes.json() : []
 
-      // Extract company and category IDs if they are objects
-      const companyId = typeof productData.company === 'object' ? productData.company._id : productData.company
+      // Extract category ID if object
       const categoryId = typeof productData.category === 'object' ? productData.category._id : productData.category
-
-      // Fetch categories for the product's company
-      const categoriesRes = await fetch(`/api/categories?company=${companyId}`)
-      const categoriesData = await categoriesRes.json()
 
       // Prepare form data with extracted IDs
       const formDataWithIds = {
         ...productData,
-        company: companyId,
         category: categoryId,
       }
 
@@ -153,7 +138,6 @@ export default function EditProductPage() {
       setImageUrls(productData.images || (productData.image ? [productData.image] : []))
       setResults(productData.results || [])
       setSizes(productData.sizes || [])
-      setCompanies(companiesData)
       setCategories(categoriesData)
 
       // Set mainCategory and category based on product's category
@@ -187,31 +171,8 @@ export default function EditProductPage() {
     }
   }
 
-  const fetchCategoriesForCompany = async (companyId: string) => {
-    try {
-      // Fetch categories for the selected company
-      const categoriesRes = await fetch(`/api/categories?company=${companyId}`)
-      const categoriesData = categoriesRes.ok ? await categoriesRes.json() : []
-      setCategories(categoriesData)
-      // Reset category selections when company changes
-      setFormData((prev) => ({
-        ...prev,
-        mainCategory: "",
-        category: "",
-      }))
-    } catch (error) {
-      console.error("Error fetching categories:", error)
-      setCategories([])
-    }
-  }
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
-    
-    // Fetch categories when company changes
-    if (name === "company" && value) {
-      fetchCategoriesForCompany(value)
-    }
     
     setFormData((prev) => ({
       ...prev,
@@ -294,6 +255,7 @@ export default function EditProductPage() {
   const handleCancelEditSize = () => {
     setSizeInput(createEmptySize())
     setEditingSizeIndex(null)
+    setMessage("")
   }
 
   const handleResultFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -368,10 +330,6 @@ export default function EditProductPage() {
         })),
       }
 
-      // console.log("📤 Updating product with:", bodyData)
-      // console.log("🎨 Results being sent:", results)
-      // console.log("✅ Suitable For being sent:", bodyData.suitableFor)
-
       const res = await fetch(`/api/products/${productId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -379,14 +337,12 @@ export default function EditProductPage() {
       })
 
       const responseData = await res.json()
-      // console.log("📥 Update API Response:", responseData)
 
       if (!res.ok) {
         console.error("❌ Update API Error:", responseData)
         throw new Error(responseData.error || "Failed to update product")
       }
 
-      // console.log("✅ Product updated:", responseData)
       setMessage("Product updated successfully!")
       setTimeout(() => router.push("/admin/products"), 1500)
     } catch (error) {
@@ -450,25 +406,8 @@ export default function EditProductPage() {
                 </div>
               </div>
 
-              {/* Company & Category */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Company *</label>
-                  <select
-                    name="company"
-                    value={formData.company}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  >
-                    <option value="">Select Company</option>
-                    {companies.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Category */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Main Category *</label>
                   <select
@@ -801,10 +740,11 @@ export default function EditProductPage() {
                               <Button
                                 type="button"
                                 variant="destructive"
-                                className="flex-1 md:flex-none"
+                                size="icon"
+                                className="w-9 h-9"
                                 onClick={() => removeSize(index)}
                               >
-                                <X className="w-4 h-4 mr-1" /> Remove
+                                <X className="w-4 h-4" />
                               </Button>
                             </div>
                           </div>
@@ -823,7 +763,11 @@ export default function EditProductPage() {
                   </label>
                   <textarea
                     name="ingredients"
-                    value={Array.isArray(formData.ingredients) ? formData.ingredients.join(", ") : formData.ingredients}
+                    value={
+                      Array.isArray(formData.ingredients)
+                        ? formData.ingredients.join(", ")
+                        : formData.ingredients
+                    }
                     onChange={handleChange}
                     placeholder="Ingredient 1, Ingredient 2, Ingredient 3"
                     rows={3}
@@ -834,7 +778,11 @@ export default function EditProductPage() {
                   <label className="block text-sm font-medium text-foreground mb-2">Benefits (comma-separated)</label>
                   <textarea
                     name="benefits"
-                    value={Array.isArray(formData.benefits) ? formData.benefits.join(", ") : formData.benefits}
+                    value={
+                      Array.isArray(formData.benefits)
+                        ? formData.benefits.join(", ")
+                        : formData.benefits
+                    }
                     onChange={handleChange}
                     placeholder="Benefit 1, Benefit 2, Benefit 3"
                     rows={3}
@@ -861,7 +809,11 @@ export default function EditProductPage() {
                 <label className="block text-sm font-medium text-foreground mb-2">Suitable For (comma-separated)</label>
                 <textarea
                   name="suitableFor"
-                  value={Array.isArray(formData.suitableFor) ? formData.suitableFor.join(", ") : formData.suitableFor}
+                  value={
+                    Array.isArray(formData.suitableFor)
+                      ? formData.suitableFor.join(", ")
+                      : formData.suitableFor
+                  }
                   onChange={handleChange}
                   placeholder="Suitable for 1, Suitable for 2, Suitable for 3"
                   rows={3}
@@ -946,27 +898,27 @@ export default function EditProductPage() {
                   {results.length > 0 && (
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">Added Results ({results.length})</label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {results.map((result, index) => (
-                          <div key={index} className="relative group border border-border rounded-lg p-3 bg-background">
-                            {result.image && (
-                              <div className="relative h-24 bg-muted rounded mb-2 overflow-hidden">
-                                <Image
-                                  src={result.image}
-                                  alt={result.title}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            )}
-                            <h4 className="font-medium text-sm text-foreground">{result.title}</h4>
-                            <p className="text-xs text-muted-foreground line-clamp-2">{result.text}</p>
+                          <div key={index} className="relative group border border-border rounded-lg p-3 bg-background flex gap-3">
+                            <div className="relative w-16 h-16 bg-muted rounded overflow-hidden shrink-0">
+                              <Image
+                                src={result.image}
+                                alt={result.title}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm text-foreground truncate">{result.title}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{result.text}</p>
+                            </div>
                             <button
                               type="button"
                               onClick={() => setResults(results.filter((_, i) => i !== index))}
-                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                              className="bg-destructive text-destructive-foreground p-1 rounded-full w-6 h-6 flex items-center justify-center absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition"
                             >
-                              <X className="w-4 h-4" />
+                              <X className="w-3 h-3" />
                             </button>
                           </div>
                         ))}
@@ -976,32 +928,16 @@ export default function EditProductPage() {
                 </div>
               </div>
 
-              {/* Active Status */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="isActive"
-                  checked={formData.isActive}
-                  onChange={handleChange}
-                  className="w-4 h-4"
-                />
-                <label className="text-sm font-medium text-foreground">Active</label>
+              <div className="flex justify-end gap-4 pt-4">
+                <Link href="/admin/products">
+                  <Button type="button" variant="outline">
+                    Cancel
+                  </Button>
+                </Link>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Updating..." : "Update Product"}
+                </Button>
               </div>
-
-              {/* Message */}
-              {message && (
-                <div
-                  className={`p-3 rounded text-sm ${message.includes("successfully") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                    }`}
-                >
-                  {message}
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <Button type="submit" disabled={submitting} className="w-full">
-                {submitting ? "Updating..." : "Update Product"}
-              </Button>
             </form>
           </CardContent>
         </Card>

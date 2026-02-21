@@ -13,15 +13,16 @@ const categorySchema = new mongoose.Schema(
     },
     description: String,
     image: String,
-    company: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      required: true,
-    },
+
     parent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       default: null,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: false,
     },
     isActive: {
       type: Boolean,
@@ -34,12 +35,8 @@ const categorySchema = new mongoose.Schema(
     indexes: [
       // Index for slug lookups
       { slug: 1 },
-      // Index for company-based category queries
-      { company: 1, isActive: 1 },
       // Index for parent-child relationships
-      { parent: 1, company: 1 },
-      // Compound index for active categories by company
-      { company: 1, isActive: 1, parent: 1 },
+      { parent: 1 },
     ]
   }
 );

@@ -1,4 +1,5 @@
 import mongoose from "mongoose"
+import "@/lib/models/shop";
 
 const productSchema = new mongoose.Schema(
   {
@@ -24,21 +25,21 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
       required: false,
     },
-    company: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      required: true,
-    },
-      // ✅ ADD THESE NEW FIELDS
     shopId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Shop",
-      required: false, // Make it optional for migration (existing products won't have it)
+      required: true,
+      default: () => new mongoose.Types.ObjectId("699942a5a2b407e83b6d9ea8"),
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: false,
     },
     approvalStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],
-      default: "approved", // ✅ IMPORTANT: Default to "approved" for existing products
+      default: "approved",
     },
     rejectionReason: {
       type: String,
@@ -70,23 +71,22 @@ const productSchema = new mongoose.Schema(
         text: String,
       },
     ],
-    // New: Size variants with individual pricing and stock
     sizes: [
       {
-        size: String, // e.g., "50ml", "100ml", "1L"
+        size: String,
         unit: {
           type: String,
           enum: ["ml", "l", "g", "kg"],
           default: "ml",
         },
-        quantity: Number, // e.g., 50, 100, 1000
-        price: Number, // Individual price for this size
-        discountPrice: Number, // Individual discount price
+        quantity: Number,
+        price: Number,
+        discountPrice: Number,
         stock: {
           type: Number,
           default: 0,
         },
-        sku: String, // Optional SKU for this specific size
+        sku: String,
       },
     ],
     isActive: {
@@ -96,22 +96,15 @@ const productSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    indexes: [
-      { isActive: 1, company: 1, category: 1 },
-      { createdAt: -1 },
-      { slug: 1 },
-      { company: 1 }, 
-      { category: 1 },
-      { isActive: 1, createdAt: -1 },
-      { shopId: 1, approvalStatus: 1 },
-      { approvalStatus: 1 },
-    ]
-  },
+  }
 )
-
-// For Next.js development, delete the model if it exists to ensure new schema is used
-if (process.env.NODE_ENV === "development") {
-  delete mongoose.models.Product;
-}
+// Define indexes explicitly
+productSchema.index({ isActive: 1, category: 1 });
+productSchema.index({ createdAt: -1 });
+productSchema.index({ slug: 1 });
+productSchema.index({ category: 1 });
+productSchema.index({ isActive: 1, createdAt: -1 });
+productSchema.index({ shopId: 1, approvalStatus: 1 });
+productSchema.index({ approvalStatus: 1 });
 
 export const Product = mongoose.models.Product || mongoose.model("Product", productSchema)

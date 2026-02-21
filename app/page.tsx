@@ -3,7 +3,7 @@
   import { useEffect, useState, useMemo, useRef } from "react"
   import { ProductCard } from "@/components/product-card"
   import { HomeCarousel } from "@/components/home-carousel"
-  import { ShopByConcern } from "@/components/shop-by-concern"
+
   import WhyChoose from "@/components/why-choose"
   // import Testimonials from "@/components/testimonials"
   import { getCachedSync, fetchWithCache, invalidateCache } from "@/lib/cacheClient"
@@ -14,15 +14,10 @@
     price: number
     discountPrice?: number
     image: string
-    company: { _id: string; name: string; slug: string }
+    slug: string
   }
 
-  interface Company {
-    _id: string
-    name: string
-    slug: string
-    carouselImages?: Array<{ _id: string; url: string; title?: string; description?: string }>
-  }
+
 
   interface Review {
     id: string
@@ -32,13 +27,12 @@
     customerName: string
     rating: number
     comment: string
-    company: string
   }
 
   /* =========================
     Cache configuration
     ========================= */
-  const COMPANIES_KEY = "home:companies:all"
+
   const SUGGESTED_PRODUCTS_KEY = "home:products:suggested:8"
   const ALL_PRODUCTS_KEY = "home:products:all:100"
   const REVIEWS_KEY = "home:reviews:all"
@@ -50,14 +44,7 @@
     API fetchers
     ========================= */
 
-  async function fetchCompaniesAPI(): Promise<Company[]> {
-    const res = await fetch("/api/companies", { cache: "no-store" })
-    if (!res.ok) throw new Error("Failed to fetch companies")
-    const json = await res.json()
-    if (Array.isArray(json)) return json
-    if (Array.isArray(json?.data)) return json.data
-    return []
-  }
+
 
   async function fetchSuggestedProductsAPI(): Promise<Product[]> {
     const res = await fetch("/api/products?limit=8", { cache: "no-store" })
@@ -93,7 +80,6 @@
       customerName: r.userName || r.customerName || r.name || "Anonymous",
       rating: typeof r.rating === "number" ? r.rating : 5,
       comment: r.comment || r.review || "",
-      company: r.company || r.brand || "Instapeels",
     }))
   }
 
@@ -101,7 +87,6 @@
     Public cache invalidation
     ========================= */
   export function invalidateHomeCaches() {
-    invalidateCache(COMPANIES_KEY)
     invalidateCache(SUGGESTED_PRODUCTS_KEY)
     invalidateCache(ALL_PRODUCTS_KEY)
     invalidateCache(REVIEWS_KEY)
@@ -113,10 +98,6 @@
 
   export default function Home() {
     // Only read sync cache on client — avoid running getCachedSync during SSR
-    const initialCompanies = useMemo(
-      () => (typeof window === "undefined" ? [] : getCachedSync<Company[]>(COMPANIES_KEY, MAX_AGE) ?? []),
-      []
-    )
     const initialSuggestedProducts = useMemo(
       () => (typeof window === "undefined" ? [] : getCachedSync<Product[]>(SUGGESTED_PRODUCTS_KEY, MAX_AGE) ?? []),
       []
@@ -133,9 +114,7 @@
     // State
     const [suggestedProducts, setSuggestedProducts] = useState<Product[]>(initialSuggestedProducts)
     const [allProducts, setAllProducts] = useState<Product[]>(initialAllProducts)
-    const [companies, setCompanies] = useState<Company[]>(initialCompanies)
     const [loading, setLoading] = useState(initialAllProducts.length === 0)
-    const [selectedConcernCompany, setSelectedConcernCompany] = useState<Company | null>(null)
     const [reviews, setReviews] = useState<Review[]>(initialReviews)
     const [currentReviewIndex, setCurrentReviewIndex] = useState(0)
     const [showTopButton, setShowTopButton] = useState(false)
@@ -161,39 +140,11 @@
         customerName: "mihir",
         rating: 5,
         comment: "afgbaerbh",
-        company: "Instapeels",
+
       },
     ]
 
-    // Fetch companies
-    useEffect(() => {
-      let mounted = true
-      const loadCompanies = async () => {
-        try {
-          const data = await fetchWithCache<Company[]>(
-            COMPANIES_KEY,
-            fetchCompaniesAPI,
-            { ttlMs: TTL, maxAgeMs: MAX_AGE, backgroundRefresh: true, persistToStorage: true }
-          )
-          if (!mounted) return
-          setCompanies(data)
-          if (data.length > 0) {
-            const instaapeelsCompany = data.find((company: Company) =>
-              company.name.toLowerCase() === "instapeels" || company.slug === "instapeels"
-            )
-            setSelectedConcernCompany(instaapeelsCompany || data[0])
-          } else {
-            setSelectedConcernCompany(null)
-          }
-        } catch (err) {
-          console.error("Error fetching companies:", err)
-        }
-      }
-      loadCompanies()
-      return () => {
-        mounted = false
-      }
-    }, [])
+
 
     // Fetch suggested products
     useEffect(() => {
@@ -207,13 +158,7 @@
           )
           if (!mounted) return
           // Sort to show Instapeels products first
-          data.sort((a, b) => {
-            const aIsInstapeels = a.company.name.toLowerCase() === 'instapeels'
-            const bIsInstapeels = b.company.name.toLowerCase() === 'instapeels'
-            if (aIsInstapeels && !bIsInstapeels) return -1
-            if (!aIsInstapeels && bIsInstapeels) return 1
-            return 0
-          })
+
           setSuggestedProducts(data)
         } catch (err) {
           console.error("Error fetching suggested products:", err)
@@ -238,13 +183,7 @@
           )
           if (!mounted) return
           // Sort to show Instapeels products first
-          data.sort((a, b) => {
-            const aIsInstapeels = a.company.name.toLowerCase() === 'instapeels'
-            const bIsInstapeels = b.company.name.toLowerCase() === 'instapeels'
-            if (aIsInstapeels && !bIsInstapeels) return -1
-            if (!aIsInstapeels && bIsInstapeels) return 1
-            return 0
-          })
+
           setAllProducts(data)
         } catch (err) {
           console.error("Error fetching all products:", err)
@@ -382,7 +321,6 @@
                     price={product.price}
                     discountPrice={product.discountPrice}
                     image={product.image}
-                    company={product.company}
                   />
                 ))
               )}
@@ -390,12 +328,7 @@
           </div>
         </section>
 
-        {/* Shop By Concern Section */}
-        {selectedConcernCompany && (
-          <section className="bg-purple-50">
-            <ShopByConcern companyId={selectedConcernCompany._id} companySlug={selectedConcernCompany.slug} />
-          </section>
-        )}
+
 
         {/* Shop Section - All Products */}
         <section className="max-w-7xl mx-auto px-4 py-8 md:py-12">
@@ -428,7 +361,6 @@
                     price={product.price}
                     discountPrice={product.discountPrice}
                     image={product.image}
-                    company={product.company}
                     size="sm"
                   />
                 ))

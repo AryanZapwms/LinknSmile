@@ -139,6 +139,15 @@ export default function CheckoutPage() {
   const handleCheckout = async (shippingAddress: any, paymentMethod: string) => {
     setIsLoading(true)
 
+    // Helper: clear the server-side cart in DB immediately after order
+    const clearServerCart = async () => {
+      try {
+        await fetch("/api/cart", { method: "DELETE" })
+      } catch (e) {
+        console.warn("Could not clear server cart:", e)
+      }
+    }
+
     try {
       // Handle COD payment - Create order immediately
       if (paymentMethod === "cod") {
@@ -170,6 +179,7 @@ export default function CheckoutPage() {
         }
 
         clearCart()
+        await clearServerCart()
         setIsLoading(false)
         router.push(`/order-success/${orderData.orderId}`)
         return
@@ -226,6 +236,7 @@ export default function CheckoutPage() {
 
               if (verifyResponse.ok && verifyData.orderId) {
                 clearCart()
+                await clearServerCart()
                 setIsLoading(false)
                 router.push(`/order-success/${verifyData.orderId}`)
               } else {

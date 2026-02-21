@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import mongoose from 'mongoose';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { connectDB } from '@/lib/db';
 import { Order } from '@/lib/models/order';
@@ -20,6 +21,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: 'Shop not found' }, { status: 404 });
     }
 
+    // Convert shopId string to ObjectId for proper MongoDB query
+    let shopObjectId: mongoose.Types.ObjectId;
+    try {
+      shopObjectId = new mongoose.Types.ObjectId(shopId);
+    } catch {
+      return NextResponse.json({ message: 'Invalid shop ID' }, { status: 400 });
+    }
+
     // Get query parameters
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status'); // pending, processing, shipped, delivered, cancelled
@@ -28,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     // Build query - find orders that contain vendor's products
     const query: any = {
-      'items.shopId': shopId,
+      'items.shopId': shopObjectId,
     };
 
     if (status) {
@@ -51,9 +60,9 @@ export async function GET(req: NextRequest) {
 
     // Filter each order to show only vendor's items
     const vendorOrders = orders.map((order) => {
-      // Filter items to only show vendor's products
+      // Filter items to only show vendor's products (using ObjectId equality)
       const vendorItems = order.items.filter(
-        (item: any) => item.shopId?.toString() === shopId
+        (item: any) => item.shopId && shopObjectId.equals(item.shopId)
       );
 
       // Calculate vendor's subtotal for this order
@@ -63,7 +72,7 @@ export async function GET(req: NextRequest) {
 
       // Get vendor's payout info for this order
       const vendorPayout = order.vendorPayouts?.find(
-        (p: any) => p.shopId?.toString() === shopId
+        (p: any) => p.shopId && shopObjectId.equals(p.shopId)
       );
 
       return {

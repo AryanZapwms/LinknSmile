@@ -24,6 +24,8 @@ interface AdminReview {
   comment: string
   userName: string
   userEmail: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  isVerifiedBuyer: boolean
   createdAt: string
   product?: {
     id: string
@@ -117,6 +119,8 @@ function parseReview(review: any): AdminReview {
     comment: typeof review?.comment === "string" ? review.comment : "",
     userName: typeof review?.userName === "string" ? review.userName : "",
     userEmail: typeof review?.userEmail === "string" ? review.userEmail : "",
+    status: review?.status || 'PENDING',
+    isVerifiedBuyer: !!review?.isVerifiedBuyer,
     createdAt:
       typeof review?.createdAt === "string"
         ? review.createdAt
@@ -139,6 +143,28 @@ export default function AdminReviewsPage() {
   const [reviewsLoading, setReviewsLoading] = useState(false)
   const [replyMessages, setReplyMessages] = useState<Record<string, string>>({})
   const [replySubmitting, setReplySubmitting] = useState<string | null>(null)
+  const [statusUpdating, setStatusUpdating] = useState<string | null>(null)
+
+  const handleStatusUpdate = async (reviewId: string, status: 'APPROVED' | 'REJECTED') => {
+    setStatusUpdating(reviewId)
+    try {
+      const res = await fetch(`/api/admin/reviews/${reviewId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      })
+
+      if (!res.ok) throw new Error("Failed to update status")
+
+      setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, status } : r))
+      toast({ title: `Review ${status.toLowerCase()}`, description: `The review has been ${status.toLowerCase()}.` })
+    } catch (error) {
+      console.error(error)
+      toast({ title: "Error", description: "Failed to update review status.", variant: "destructive" })
+    } finally {
+      setStatusUpdating(null)
+    }
+  }
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -386,7 +412,19 @@ export default function AdminReviewsPage() {
                     <div key={review.id} className="border border-border rounded-lg p-4 space-y-4">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="font-semibold text-foreground">{review.userName || "Anonymous"}</p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-semibold text-foreground">{review.userName || "Anonymous"}</p>
+                            {review.isVerifiedBuyer && (
+                              <span className="bg-green-100 text-green-700 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">Verified Buyer</span>
+                            )}
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                              review.status === 'APPROVED' ? 'bg-blue-100 text-blue-700' :
+                              review.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {review.status}
+                            </span>
+                          </div>
                           <p className="text-xs text-muted-foreground">{review.userEmail}</p>
                           <p className="text-xs text-muted-foreground mt-1">{new Date(review.createdAt).toLocaleString()}</p>
                           {review.product && selectedCompany?.slug && (
@@ -402,13 +440,35 @@ export default function AdminReviewsPage() {
                           )}
 
                         </div>
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((rating) => (
-                            <Star
-                              key={rating}
-                              className={`h-4 w-4 ${review.rating >= rating ? "fill-yellow-400 stroke-yellow-400" : "stroke-muted-foreground"}`}
-                            />
-                          ))}
+                        <div className="flex flex-col items-end gap-2">
+                             <div className="flex items-center gap-1">
+                                {[1, 2, 3, 4, 5].map((rating) => (
+                                    <Star
+                                    key={rating}
+                                    className={`h-4 w-4 ${review.rating >= rating ? "fill-yellow-400 stroke-yellow-400" : "stroke-muted-foreground"}`}
+                                    />
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="h-7 text-xs border-green-200 text-green-700 hover:bg-green-50"
+                                    onClick={() => handleStatusUpdate(review.id, 'APPROVED')}
+                                    disabled={statusUpdating === review.id || review.status === 'APPROVED'}
+                                >
+                                    Approve
+                                </Button>
+                                <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="h-7 text-xs border-red-200 text-red-700 hover:bg-red-50"
+                                    onClick={() => handleStatusUpdate(review.id, 'REJECTED')}
+                                    disabled={statusUpdating === review.id || review.status === 'REJECTED'}
+                                >
+                                    Reject
+                                </Button>
+                            </div>
                         </div>
                       </div>
 
