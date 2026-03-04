@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, ShoppingCart, DollarSign, TrendingUp, AlertCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Package, ShoppingCart, DollarSign, TrendingUp, AlertCircle, CheckCircle, XCircle, Clock, CreditCard } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,10 +44,24 @@ export default function VendorDashboard() {
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bankDetailsComplete, setBankDetailsComplete] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchStats();
+    fetchBankStatus();
   }, []);
+
+  const fetchBankStatus = async () => {
+    try {
+      const res = await fetch('/api/vendor/bank-details');
+      if (res.ok) {
+        const data = await res.json();
+        setBankDetailsComplete(data.isComplete ?? false);
+      }
+    } catch {
+      // non-critical — silently ignore
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -119,6 +133,23 @@ export default function VendorDashboard() {
           Here's what's happening with your shop today.
         </p>
       </div>
+
+      {/* ── Bank details missing banner ────────────────────────────── */}
+      {bankDetailsComplete === false && (
+        <Alert className="bg-amber-50 border-amber-300">
+          <CreditCard className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-900 font-semibold">Complete Your Bank Details to Enable Payouts</AlertTitle>
+          <AlertDescription className="text-amber-800 flex flex-col sm:flex-row sm:items-center gap-3 mt-1">
+            <span className="flex-1">
+              Your bank account information is missing. Without it, payout requests cannot be
+              processed and your earnings will remain on hold.
+            </span>
+            <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-700 text-white shrink-0">
+              <Link href="/vendor/bank-details">Add Bank Details</Link>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Shop Status Alert */}
       {!shop.isApproved && (
@@ -285,7 +316,7 @@ export default function VendorDashboard() {
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card className={`transition-shadow ${!shop.isApproved ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg cursor-pointer'}`}>
           <Link href={shop.isApproved ? "/vendor/products/add" : "#"} onClick={(e) => !shop.isApproved && e.preventDefault()}>
             <CardHeader>
@@ -329,6 +360,29 @@ export default function VendorDashboard() {
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 Withdraw your earnings
+              </p>
+            </CardContent>
+          </Link>
+        </Card>
+
+        <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${
+          bankDetailsComplete === false ? 'ring-2 ring-amber-400 ring-offset-1' : ''
+        }`}>
+          <Link href="/vendor/bank-details">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Bank Details
+                {bankDetailsComplete === false && (
+                  <span className="ml-auto text-xs font-normal text-amber-600 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full">
+                    Incomplete
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                {bankDetailsComplete ? 'Manage payout account' : 'Required for payouts'}
               </p>
             </CardContent>
           </Link>

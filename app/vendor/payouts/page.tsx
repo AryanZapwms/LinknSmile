@@ -39,6 +39,10 @@ interface PayoutStats {
   payouts: PayoutRequest[];
 }
 
+// Formats a number as an Indian rupee string, defaulting to 0 if undefined/null
+const formatINR = (value: number | undefined | null) =>
+  `₹${(value ?? 0).toLocaleString('en-IN')}`;
+
 export default function VendorPayoutsPage() {
   const [data, setData] = useState<PayoutStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,7 +150,7 @@ export default function VendorPayoutsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{data?.availableBalance.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatINR(data?.availableBalance)}</div>
             <p className="text-xs text-muted-foreground mt-1">Ready to withdraw</p>
           </CardContent>
         </Card>
@@ -159,7 +163,7 @@ export default function VendorPayoutsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{data?.totalEarnings.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatINR(data?.totalEarnings)}</div>
             <p className="text-xs text-muted-foreground mt-1">All-time revenue</p>
           </CardContent>
         </Card>
@@ -172,7 +176,7 @@ export default function VendorPayoutsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{data?.pendingPayouts.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatINR(data?.pendingPayouts)}</div>
             <p className="text-xs text-muted-foreground mt-1">Under processing</p>
           </CardContent>
         </Card>
@@ -185,7 +189,7 @@ export default function VendorPayoutsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{data?.releasedPayouts.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatINR(data?.releasedPayouts)}</div>
             <p className="text-xs text-muted-foreground mt-1">Successfully paid</p>
           </CardContent>
         </Card>
@@ -302,7 +306,7 @@ export default function VendorPayoutsPage() {
                             year: 'numeric'
                           })}
                         </td>
-                        <td className="py-4 font-medium">₹{payout.amount.toLocaleString()}</td>
+                        <td className="py-4 font-medium">{formatINR(payout.amount)}</td>
                         <td className="py-4">{getStatusBadge(payout.status)}</td>
                         <td className="py-4">
                           {payout.transactionId ? (

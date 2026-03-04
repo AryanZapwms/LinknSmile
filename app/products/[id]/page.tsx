@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
-import { Star, ChevronDown, X, Phone, ChevronLeft, ChevronRight } from "lucide-react"
+import { Star, ChevronDown, X, Phone, ChevronLeft, ChevronRight, Store, Truck, ShieldCheck, Award, PackageCheck } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -113,6 +113,12 @@ interface Product {
   category?: { name: string }
   sizes?: Size[]
   mrp: string
+  company?: {
+    _id: string;
+    name: string;
+    slug: string;
+    logo?: string;
+  };
   shopId?: {
     _id: string;
     shopName: string;
@@ -861,6 +867,58 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                 >
                   {(selectedSize ? selectedSize.stock === 0 : product.stock === 0) ? "Out of Stock" : "Add to Cart"}
                 </Button>
+              </div>
+              
+              {/* Trust Badges & Vendor Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                {product.shopId && typeof product.shopId === 'object' && (
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-purple-50/50 border border-purple-100">
+                    <Store className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-semibold text-purple-900 uppercase tracking-wider">Sold By</p>
+                      <p className="text-sm font-bold text-gray-900">{(product.shopId as any).shopName}</p>
+                      <p className="text-[10px] text-purple-600 font-medium tracking-tight flex items-center gap-1">
+                        <ShieldCheck className="w-2.5 h-2.5" /> Verified Partner
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {product.company && typeof product.company === 'object' && (
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50/50 border border-blue-100">
+                    <Award className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-semibold text-blue-900 uppercase tracking-wider">Brand</p>
+                      <p className="text-sm font-bold text-gray-900">{(product.company as any).name}</p>
+                      <Link href={`/shop/${(product.company as any).slug}`} className="text-[10px] text-blue-600 font-medium hover:underline">View Brand Store</Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Delivery & Security */}
+              <div className="space-y-3 pt-4 border-t border-gray-100">
+                <div className="flex items-center gap-3 text-sm text-gray-700">
+                  <Truck className="w-5 h-5 text-green-600 shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold">Fast Delivery</span>
+                    <span className="text-xs text-gray-500">Delivered within 3-5 business days.</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-700">
+                  <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold">Authentic Product</span>
+                    <span className="text-xs text-gray-500">100% genuine products sourced directly.</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-700">
+                  <PackageCheck className="w-5 h-5 text-orange-600 shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold">Easy Returns</span>
+                    <span className="text-xs text-gray-500">7-day return policy for damaged items.</span>
+                  </div>
+                </div>
               </div>
 
               {/* Product Info Tabs - Using default Shadcn Tabs */}

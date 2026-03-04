@@ -10,6 +10,7 @@ import { useCartStore } from "@/lib/store/cart-store"
 import { useToast } from "@/hooks/use-toast"
 import { ShoppingCart, Star, Phone, Eye } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { ProductQuickView } from "./product-quick-view"
 
 
@@ -55,6 +56,7 @@ export function ProductCard({
   commissionRate, 
 }: ProductCardProps) {
   const { toast } = useToast()
+  const { data: session } = useSession()
   const addItem = useCartStore((state) => state.addItem)
   const getTotalItems = useCartStore((state) => state.getTotalItems)
   const [selectedSize, setSelectedSize] = useState<Size | null>(null)
@@ -72,6 +74,17 @@ export function ProductCard({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
+    // Require login to add to cart
+    if (!session?.user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add products to your cart.",
+        variant: "destructive",
+      })
+      router.push("/auth/login")
+      return
+    }
 
     // Check cart limit - max 5 products
     const totalItems = getTotalItems()
@@ -151,12 +164,8 @@ export function ProductCard({
       className={`group overflow-hidden hover:shadow-lg transition-all duration-200 border border-border bg-card w-full p-0 flex flex-col ${isSmall ? "rounded-md" : "rounded-lg"}`}
       style={{ backgroundColor: "#faf5ff" }}
     >
-      <div
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          setShowQuickView(true)
-        }}
+      <Link
+        href={`/products/${id}`}
         className="flex-1 flex flex-col no-underline cursor-pointer relative"
       >
         <CardContent className="p-0">
@@ -322,7 +331,7 @@ export function ProductCard({
             </Button>
           </div>
         </CardFooter>
-      </div>
+      </Link>
 
       {/* Bulk Order Modal */}
       <Dialog open={showBulkOrderModal} onOpenChange={setShowBulkOrderModal}>

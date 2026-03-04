@@ -31,6 +31,25 @@ export async function POST(request: Request) {
     const shop = await Shop.findOne({ ownerId: user._id });
     if (!shop) return NextResponse.json({ error: "Shop not found" }, { status: 404 });
 
+    // ── Bank details guard ──────────────────────────────────────────────────
+    // Payouts cannot be processed without a verified destination bank account.
+    const bd = shop.bankDetails;
+    const bankReady = !!(
+      bd?.accountHolderName?.trim() &&
+      bd?.accountNumber?.trim() &&
+      bd?.bankName?.trim() &&
+      (bd?.ifscCode?.trim() || bd?.swiftCode?.trim())
+    );
+    if (!bankReady) {
+      return NextResponse.json(
+        {
+          error:
+            "Bank details are incomplete. Please add your bank account information from the Bank Details section before requesting a payout.",
+        },
+        { status: 422 }
+      );
+    }
+
     const wallet = await Wallet.findOne({ shopId: shop._id, type: "VENDOR" });
     if (!wallet) return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
 

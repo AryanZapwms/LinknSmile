@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { CheckCircle, XCircle, Store, DollarSign, Package, ShoppingBag } from "lucide-react"
+import { CheckCircle, XCircle, Store, DollarSign, Package, ShoppingBag, CreditCard, Building2, Globe, ShieldCheck } from "lucide-react"
 
 export default function VendorDetailsPage() {
   const params = useParams()
@@ -46,6 +46,8 @@ export default function VendorDetailsPage() {
       if (!res.ok) throw new Error("Failed to fetch vendor")
 
       const data = await res.json()
+      console.log("Vendor API response:", data)
+
 
       // ✅ SAFE STATE ASSIGNMENTS
       setVendor(data?.shop ?? null)
@@ -225,6 +227,7 @@ export default function VendorDetailsPage() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="bank">Bank Details</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -313,6 +316,103 @@ export default function VendorDetailsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Bank Details tab ──────────────────────────────────────────── */}
+        <TabsContent value="bank" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-3 pb-3">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <CreditCard className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle>Payout Bank Account</CardTitle>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Sensitive — only visible to admin.
+                </p>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {vendor?.bankDetails?.accountNumber ? (
+                <div className="grid gap-6 md:grid-cols-2">
+                  {/* Account Holder */}
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Account Holder Name</p>
+                    <p className="font-semibold text-base">{vendor.bankDetails.accountHolderName || '—'}</p>
+                  </div>
+
+                  {/* Bank Name */}
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      <Building2 className="h-3 w-3" /> Bank Name
+                    </p>
+                    <p className="font-semibold text-base">{vendor.bankDetails.bankName || '—'}</p>
+                  </div>
+
+                  {/* Account Number — masked */}
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      <CreditCard className="h-3 w-3" /> Account Number
+                    </p>
+                    <p className="font-mono font-semibold text-base tracking-widest">
+                      {vendor.bankDetails.accountNumber
+                        ? '•'.repeat(Math.max(0, vendor.bankDetails.accountNumber.length - 4)) +
+                          vendor.bankDetails.accountNumber.slice(-4)
+                        : '—'}
+                    </p>
+                  </div>
+
+                  {/* IFSC */}
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">IFSC Code</p>
+                    <p className="font-mono font-semibold text-base tracking-wider">{vendor.bankDetails.ifscCode || '—'}</p>
+                  </div>
+
+                  {/* SWIFT */}
+                  {vendor.bankDetails.swiftCode && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                        <Globe className="h-3 w-3" /> SWIFT / BIC Code
+                      </p>
+                      <p className="font-mono font-semibold text-base tracking-wider">{vendor.bankDetails.swiftCode}</p>
+                    </div>
+                  )}
+
+                  {/* UPI */}
+                  {vendor.bankDetails.upiId && (
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">UPI ID</p>
+                      <p className="font-semibold text-base">{vendor.bankDetails.upiId}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+                  <div className="p-3 bg-gray-100 rounded-full">
+                    <CreditCard className="w-7 h-7 text-gray-400" />
+                  </div>
+                  <p className="font-medium text-muted-foreground">No bank details on file</p>
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    This vendor has not added their bank account information yet. Payouts cannot be
+                    processed until this is complete.
+                  </p>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-full">
+                    ⚠ Vendor must add bank details before payout
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Security note for admin */}
+          <div className="flex gap-2.5 items-start p-4 bg-blue-50 border border-blue-100 rounded-xl">
+            <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-700 leading-relaxed">
+              <strong>Admin Only:</strong> This bank information is encrypted and stored securely.
+              Account numbers are shown partially masked. Only use this data for legitimate payout
+              operations and dispute resolution. Do not share or copy these details.
+            </p>
+          </div>
         </TabsContent>
 
         <TabsContent value="settings">

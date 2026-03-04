@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { connectDB } from '@/lib/db';
 import { Product } from '@/lib/models/product';
+import { Company } from '@/lib/models/company'; 
+import { Category } from '@/lib/models/category';
 
 async function getShopIdForUser(userId: string, sessionShopId?: string) {
   await connectDB();
@@ -20,6 +22,8 @@ export async function GET(req: NextRequest) {
     if (!session || session.user.role !== 'shop_owner') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
+
+    await connectDB();
 
     // Get Shop model once
     const Shop = (await import('@/lib/models/shop')).default;
@@ -54,6 +58,10 @@ export async function GET(req: NextRequest) {
 
     // Pagination
     const skip = (page - 1) * limit;
+
+    // Ensure models are registered
+    const _category = Category;
+    const _company = Company;
 
     const [products, total] = await Promise.all([
       Product.find(query)

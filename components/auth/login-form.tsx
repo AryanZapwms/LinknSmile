@@ -7,6 +7,7 @@ import { signIn, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { User, Store } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Image from "next/image"
@@ -330,31 +331,31 @@ export function LoginForm() {
                 </div>
 
                 {/* Register Links */}
-                <div className="text-center space-y-3">
-                  <p className="text-base text-muted-foreground">
-                    Create a customer account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => router.push("/auth/register")}
-                      className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold hover:underline transition-colors duration-300 inline-flex items-center gap-1"
-                      disabled={isLoading}
-                    >
-                      Create one now →
-                    </button>
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+  <button
+    type="button"
+    onClick={() => router.push("/auth/register")}
+    disabled={isLoading}
+    className="flex items-center justify-center gap-3 border-2 rounded-xl py-4 px-6 
+               hover:bg-muted/50 transition-all duration-200 
+               hover:shadow-sm group"
+  >
+    <User className="w-5 h-5 text-purple-600 group-hover:scale-110 transition" />
+    <span className="font-medium">Customer Account</span>
+  </button>
 
-                  <p className="text-base text-muted-foreground">
-                    Create a vendor account?{" "}
-                    <button
-                      type="button"
-                      onClick={() => router.push("/auth/register-vendor")}
-                      className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold hover:underline transition-colors duration-300 inline-flex items-center gap-1"
-                      disabled={isLoading}
-                    >
-                      Create one now →
-                    </button>
-                  </p>
-                </div>
+  <button
+    type="button"
+    onClick={() => router.push("/auth/register-vendor")}
+    disabled={isLoading}
+    className="flex items-center justify-center gap-3 border-2 rounded-xl py-4 px-6 
+               hover:bg-muted/50 transition-all duration-200 
+               hover:shadow-sm group"
+  >
+    <Store className="w-5 h-5 text-purple-600 group-hover:scale-110 transition" />
+    <span className="font-medium">Vendor Account</span>
+  </button>
+</div>
 
                 {/* Security Note */}
                 <div className="lg:hidden mt-6 pt-6 border-t border-border">

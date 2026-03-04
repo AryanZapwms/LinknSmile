@@ -23,6 +23,9 @@ interface Vendor {
     totalRevenue: number
     totalOrders: number
   }
+  bankDetails?: {
+    accountNumber?: string
+  }
 }
 
 export default function VendorsPage() {
@@ -102,6 +105,9 @@ export default function VendorsPage() {
                       )}
                       {!vendor.isApproved && (
                         <Badge variant="destructive" className="ml-2">Pending Approval</Badge>
+                      )}
+                      {!vendor.bankDetails?.accountNumber && (
+                        <Badge variant="outline" className="ml-2 border-orange-400 text-orange-600">No Bank</Badge>
                       )}
                     </td>
                     <td className="py-3 px-4">{vendor.commissionRate}%</td>

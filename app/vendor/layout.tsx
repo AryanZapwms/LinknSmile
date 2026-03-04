@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { 
   LayoutDashboard, Package, ShoppingCart, 
   DollarSign, Star, Settings, Menu, LogOut,
-  Store, Bell
+  Store, Bell, Wallet, CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -66,8 +66,9 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
     { name: 'Dashboard', href: '/vendor', icon: LayoutDashboard },
     { name: 'Products', href: '/vendor/products', icon: Package, requiresApproval: true },
     { name: 'Orders', href: '/vendor/orders', icon: ShoppingCart, requiresApproval: true },
-    { name: 'Earnings', href: '/vendor/payouts', icon: DollarSign, requiresApproval: true },
+    { name: 'Wallet', href: '/vendor/wallet', icon: Wallet },
     { name: 'Reviews', href: '/vendor/reviews', icon: Star, requiresApproval: true },
+    { name: 'Bank Details', href: '/vendor/bank-details', icon: CreditCard },
     { name: 'Settings', href: '/vendor/settings', icon: Settings },
   ].filter(item => !item.requiresApproval || isApproved);
 

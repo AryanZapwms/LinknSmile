@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
     const shopId = session.user.shopId;
+    if (!shopId) return NextResponse.json({ message: 'Shop not found' }, { status: 404 });
     const body = await req.json();
     const { amount, notes } = body;
 
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest) {
       bankAccountNumber: shop.bankDetails?.accountNumber
         ? `****${shop.bankDetails.accountNumber.slice(-4)}`
         : undefined,
-      bankIfsc: shop.bankDetails?.ifsc,
+      bankIfsc: shop.bankDetails?.ifscCode,
       bankName: shop.bankDetails?.bankName,
       orderIds,
       notes,

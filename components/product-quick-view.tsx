@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge"
 import { ShoppingCart, Star, Info, Package, ShieldCheck, ClipboardList } from "lucide-react"
 import { useCartStore } from "@/lib/store/cart-store"
 import { useToast } from "@/hooks/use-toast"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Size {
@@ -51,6 +53,8 @@ interface ProductQuickViewProps {
 
 export function ProductQuickView({ product, open, onOpenChange }: ProductQuickViewProps) {
   const { toast } = useToast()
+  const { data: session } = useSession()
+  const router = useRouter()
   const addItem = useCartStore((state) => state.addItem)
   const getTotalItems = useCartStore((state) => state.getTotalItems)
   const [selectedSize, setSelectedSize] = useState<Size | null>(
@@ -90,6 +94,18 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
     : 0
 
   const handleAddToCart = () => {
+    // Require login to add to cart
+    if (!session?.user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to add products to your cart.",
+        variant: "destructive",
+      })
+      onOpenChange(false)
+      router.push("/auth/login")
+      return
+    }
+
     const totalItems = getTotalItems()
     if (totalItems >= 5) {
       toast({

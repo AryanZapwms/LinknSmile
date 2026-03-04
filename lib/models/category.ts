@@ -41,5 +41,6 @@ const categorySchema = new mongoose.Schema(
   }
 );
 
-delete mongoose.models.Category;
-export const Category = mongoose.model("Category", categorySchema);
+
+export const Category =
+  mongoose.models.Category || mongoose.model("Category", categorySchema);

@@ -40,6 +40,7 @@ interface ShopSettings {
     accountNumber: string;
     ifscCode: string;
     bankName: string;
+    swiftCode?: string;
     upiId?: string;
   };
   commissionRate: number;
@@ -66,7 +67,7 @@ export default function VendorSettingsPage() {
           description: shop.description || '',
           contactInfo: shop.contactInfo || { phone: '', email: '' },
           address: shop.address || { street: '', city: '', state: '', pincode: '', country: 'India' },
-          bankDetails: shop.bankDetails || { accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '', upiId: '' },
+          bankDetails: shop.bankDetails || { accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '', swiftCode: '', upiId: '' },
           commissionRate: shop.commissionRate || 10
         });
       } else {
@@ -309,9 +310,21 @@ export default function VendorSettingsPage() {
                     <Input 
                       value={settings.bankDetails.ifscCode} 
                       onChange={(e) => setSettings({...settings, bankDetails: {...settings.bankDetails, ifscCode: e.target.value.toUpperCase()}})}
-                      placeholder="ABCD0123456"
+                      placeholder="e.g. HDFC0001234"
+                      className="font-mono tracking-wider"
                       required
                     />
+                    <p className="text-xs text-muted-foreground">11-character Indian bank branch code.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">SWIFT / BIC Code <span className="font-normal text-muted-foreground">(Optional)</span></label>
+                    <Input 
+                      value={settings.bankDetails.swiftCode ?? ''} 
+                      onChange={(e) => setSettings({...settings, bankDetails: {...settings.bankDetails, swiftCode: e.target.value.toUpperCase()}})}
+                      placeholder="e.g. HDFCINBBXXX"
+                      className="font-mono tracking-wider"
+                    />
+                    <p className="text-xs text-muted-foreground">Required for international payouts.</p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">UPI ID (Optional)</label>

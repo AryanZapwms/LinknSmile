@@ -1,5 +1,7 @@
 import mongoose from "mongoose"
 import "@/lib/models/shop";
+import "@/lib/models/category";
+import "@/lib/models/company";
 
 const productSchema = new mongoose.Schema(
   {

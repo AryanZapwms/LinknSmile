@@ -4,6 +4,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import logo from "@/public/LinkAndSmileLogo.png";
 
 
 export default function NotFound() {
@@ -44,21 +46,14 @@ export default function NotFound() {
             <section className="p-8 sm:p-10 lg:p-14 flex flex-col justify-center gap-6 border">
               {/* Logo */}
               <div className="flex items-center gap-3">
-                <img
-                  src="../public/LinkAndSmile2.png"
-                  alt="LinkAndSmile"
-                  className="h-12 w-auto object-contain rounded-md shadow-sm"
-                  onError={(e) => {
-                    // fallback to text if image missing
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-neutral-500">LinkAndSmile</p>
-                  <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                    Premium Healthcare & Wellness
-                  </p>
-                </div>
+                <Image
+  src={logo}
+  alt="LinkAndSmile"
+  width={150}
+  height={48}
+  className="h-12 w-auto object-contain rounded-md shadow-sm"
+/>
+               
               </div>
 
               <h1 className="text-7xl sm:text-8xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-50 leading-none">

@@ -60,14 +60,18 @@ export async function PUT(req: NextRequest) {
 
     // Simple validation for bank details if provided
     if (updates.bankDetails) {
-      const { accountNumber, ifscCode, accountHolderName, bankName } = updates.bankDetails;
+      const { accountNumber, ifscCode, swiftCode, accountHolderName, bankName } = updates.bankDetails;
       
       if (accountNumber && (accountNumber.length < 9 || accountNumber.length > 18)) {
         return NextResponse.json({ message: 'Invalid bank account number length' }, { status: 400 });
       }
 
       if (ifscCode && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifscCode)) {
-        return NextResponse.json({ message: 'Invalid IFSC code format (e.g. SBIN0012345)' }, { status: 400 });
+        return NextResponse.json({ message: 'Invalid IFSC code format (e.g. HDFC0001234)' }, { status: 400 });
+      }
+
+      if (swiftCode && !/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(swiftCode)) {
+        return NextResponse.json({ message: 'Invalid SWIFT/BIC code format (e.g. HDFCINBBXXX)' }, { status: 400 });
       }
 
       if (!accountHolderName || !bankName) {

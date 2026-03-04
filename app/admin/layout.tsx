@@ -41,7 +41,8 @@ const navItems: NavItem[] = [
   { href: "/admin/product-approvals", label: "Product Approvals", icon: <Package className="w-5 h-5" /> },
   { href: "/admin/vendors", label: "Vendors", icon: <Users className="w-5 h-5" /> },
   { href: "/admin/setup", label: "Setup", icon: <Settings className="w-5 h-5" /> },
-  { href: "/admin/payouts", label: "Payouts", icon: <DollarSign className="w-5 h-5" /> },
+  { href: "/admin/wallet", label: "Finance", icon: <DollarSign className="w-5 h-5" /> },
+  { href: "/admin/payouts", label: "Vendor Payouts", icon: <DollarSign className="w-5 h-5" /> },
   { href: "/admin/settings", label: "Payment Settings", icon: <Settings className="w-5 h-5" /> },
 ]
 
@@ -84,7 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
 
-  if (!session || status === "unauthenticated") return null
+  if (!session) return null
 
   const isAdmin = (session.user as any)?.role === "admin"
 

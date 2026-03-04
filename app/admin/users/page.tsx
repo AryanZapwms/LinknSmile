@@ -161,7 +161,7 @@ export default function UsersPage() {
                               onChange={(e) =>
                                 setEditRole(e.target.value as "user" | "admin")
                               }
-                              className="px-2 py-1 border border-border rounded bg-background text-foreground"
+                              className="px-2 py-1 border border-border rounded bg-background "
                             >
                               <option value="user">User</option>
                               <option value="admin">Admin</option>
@@ -169,8 +169,9 @@ export default function UsersPage() {
                           ) : (
                             <Badge
                               variant={
-                                user.role === "admin" ? "default" : "secondary"
+                                user.role === "admin" ? "primary" : "secondary"
                               }
+
                             >
                               {user.role}
                             </Badge>

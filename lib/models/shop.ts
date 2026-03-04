@@ -31,6 +31,7 @@ export interface IShop extends Document {
     accountNumber: string;
     ifscCode: string;
     bankName: string;
+    swiftCode?: string;
     upiId?: string;
   };
   ratings: {
@@ -78,6 +79,7 @@ const ShopSchema = new Schema<IShop>(
       accountNumber: { type: String },
       ifscCode: { type: String },
       bankName: { type: String },
+      swiftCode: { type: String },
       upiId: { type: String },
     },
     ratings: {

@@ -218,14 +218,14 @@ export default function VendorProductsPage() {
             </div>
           ) : (
             <Table>
-              <TableHeader>
+              <TableHeader className=''>
                 <TableRow>
-                  <TableHead>Product</TableHead>
+                  <TableHead className='text-center'>Product</TableHead>
                   <TableHead>Price</TableHead>
                   <TableHead>Stock</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -265,7 +265,7 @@ export default function VendorProductsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={product.stock > 0 ? 'default' : 'destructive'}>
+                      <Badge className='text-blue-700' variant={product.stock > 0 ? 'default' : 'destructive'}>
                         {product.stock} units
                       </Badge>
                     </TableCell>
@@ -284,11 +284,11 @@ export default function VendorProductsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" asChild>
+                        {/* <Button variant="outline" size="sm" asChild>
                           <Link href={`/shop/${product.company?.name || 'brand'}/product/${product._id}`}>
                             <Eye className="h-4 w-4" />
                           </Link>
-                        </Button>
+                        </Button> */}
                         <Button variant="outline" size="sm" asChild>
                           <Link href={`/vendor/products/edit/${product._id}`}>
                             <Edit className="h-4 w-4" />

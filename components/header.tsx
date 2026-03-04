@@ -91,7 +91,7 @@ if (!mounted) return null
               </Link>
             </nav>
 
-            <CartIcon />
+            {session?.user && <CartIcon />}
 
             {session?.user ? (
               <DropdownMenu>

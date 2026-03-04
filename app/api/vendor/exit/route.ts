@@ -98,7 +98,7 @@ export async function POST() {
         bankAccountNumber: shop.bankDetails?.accountNumber
           ? `****${shop.bankDetails.accountNumber.slice(-4)}`
           : undefined,
-        bankIfsc: shop.bankDetails?.ifsc,
+        bankIfsc: shop.bankDetails?.ifscCode,
         bankName: shop.bankDetails?.bankName,
         notes: "FINAL EXIT SETTLEMENT — Minimum threshold overridden",
         isExitSettlement: true,
