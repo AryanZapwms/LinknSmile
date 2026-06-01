@@ -1,0 +1,9 @@
+
+{
+  "crons": [
+    {
+      "path": "/api/cron/clear-pending-funds",
+      "schedule": "30 20 * * *"
+    }
+  ]
+}

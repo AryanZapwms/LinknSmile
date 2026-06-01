@@ -1,0 +1,11 @@
+node_modules
+.next
+dist
+.vscode
+.git
+.env
+.env.local
+.env
+pnpm-store
+npm-debug.log
+yarn-error.log

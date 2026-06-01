@@ -1,0 +1,102 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage
+*.lcov
+.nyc_output
+
+# Build tools
+.grunt
+bower_components
+.lock-wscript
+build/Release
+
+# Dependencies
+node_modules/
+jspm_packages/
+web_modules/
+
+# TypeScript
+*.tsbuildinfo
+
+# npm / yarn / pnpm
+.npm
+.eslintcache
+.stylelintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+pnpm-lock.yaml
+
+# Env files — never commit secrets
+.env
+.env.*
+!.env.example
+
+# Next.js
+.next
+out
+
+# Nuxt / Gatsby / Vite / other frameworks
+.nuxt
+dist
+.cache
+.parcel-cache
+.vuepress/dist
+.temp
+.svelte-kit/
+**/.vitepress/dist
+**/.vitepress/cache
+.docusaurus
+
+# Serverless / cloud
+.serverless/
+.fusebox/
+.dynamodb/
+.firebase/
+
+# Editor
+.vscode-test
+.tern-port
+
+# Expo — not needed for a Next.js web project
+.expo
+
+# Debug & temporary files — these were accidentally committed and should stay out
+errors.txt
+final_errors.txt
+final_errors_v2.txt
+remaining_errors.txt
+ts_errors.txt
+tsc_output.txt
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Archives
+*.zip
+
+# yarn v3
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
