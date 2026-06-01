@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ProductQuickView } from "./product-quick-view"
+import  FavouriteButton  from "@/components/FavouriteButton";
 
 interface Size {
   size: string
@@ -62,7 +63,7 @@ export function ProductCard({
   const [showQuickView, setShowQuickView] = useState(false)
   const [imgLoaded, setImgLoaded] = useState(false)
   const [imgError, setImgError] = useState(false)
-  const [wishlisted, setWishlisted] = useState(false)
+
   const router = useRouter()
 
   const discount = discountPrice ? Math.round(((price - discountPrice) / price) * 100) : 0
@@ -170,15 +171,11 @@ export function ProductCard({
           )}
 
           {/* Wishlist button — top right, always visible softly */}
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setWishlisted((w) => !w) }}
-            className="absolute top-2.5 right-2.5 z-20 w-7 h-7 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm border border-stone-100 hover:border-amber-200 transition-all duration-200"
-            aria-label="Wishlist"
-          >
-            <Heart
-              className={`w-3.5 h-3.5 transition-colors duration-200 ${wishlisted ? "fill-rose-400 text-rose-400" : "text-stone-400"}`}
-            />
-          </button>
+         <FavouriteButton
+  type="product"
+  refId={id}
+  className="absolute top-2.5 right-2.5 z-20"
+/>
 
           {/* Hover overlay — quick view */}
           <div className="absolute inset-0 bg-gradient-to-t from-stone-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex items-end justify-center pb-3">

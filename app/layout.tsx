@@ -8,6 +8,7 @@ import { Header } from "@/components/header"
 import { PromoBar } from "@/components/promo-bar"
 import { CartSync } from "@/components/cart-sync"
 import { Toaster } from "@/components/ui/toaster"
+import FavouritesLoader from "@/components/FavouritesLoader"
 import Footer from "@/components/footer"
 import GTMScripts from "@/components/gtm-scripts"
 import "./globals.css"
@@ -20,6 +21,7 @@ const getBaseUrl = () => {
   if (process.env.NODE_ENV === "production") return "https://linknsmile.com"
   return `http://localhost:${process.env.PORT || 3004}`
 }
+
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
@@ -55,6 +57,7 @@ export default function RootLayout({
 
         <AuthSessionProvider>
           <CartSync />
+          <FavouritesLoader />
           <PromoBar />
           <Header />
 

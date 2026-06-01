@@ -20,6 +20,25 @@ export async function GET(request: NextRequest) {
     // Only return approved + active shops
     const query = { isApproved: true, isActive: true };
 
+    // ── Ids filter (for favourites page) ────────────────────
+const ids = searchParams.get("ids");
+if (ids) {
+  const mongoose = (await import("mongoose")).default;
+  const idList = ids
+    .split(",")
+    .filter((i) => mongoose.Types.ObjectId.isValid(i))
+    .map((i) => new mongoose.Types.ObjectId(i));
+
+  if (idList.length === 0) {
+    return withCORS(NextResponse.json({
+      shops: [],
+      pagination: { total: 0, page: 1, limit: 0, pages: 0 },
+    }));
+  }
+
+  query._id = { $in: idList };
+}
+
     const [shops, total] = await Promise.all([
       Shop.find(query)
         .select("shopName slug logo description address ratings stats")

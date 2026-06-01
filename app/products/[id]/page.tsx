@@ -6,9 +6,10 @@ import { useParams, useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
+import FavouriteButton from "@/components/FavouriteButton"
 import {
   Star, X, Phone, ChevronRight, Store, Truck,
-  ShieldCheck, Award, PackageCheck, Heart, ZoomIn, Minus, Plus
+  ShieldCheck, Award, PackageCheck, ZoomIn, Minus, Plus
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -112,34 +113,10 @@ const ProductDetailPage = memo(function ProductDetailPage() {
   const [expanded, setExpanded] = useState(false)
   const [showImageModal, setShowImageModal] = useState(false)
   const [showBulkModal, setShowBulkModal] = useState(false)
-  const [isInWishlist, setIsInWishlist] = useState(false)
-  const [wishlistLoading, setWishlistLoading] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const reviewsFetchRef = useRef(false)
 
-  // Wishlist
-  useEffect(() => {
-    if (status !== "authenticated" || !id) return
-    fetch("/api/wishlist").then(r => r.json()).then((items: any[]) => {
-      setIsInWishlist(items.some(i => i.productId === id))
-    }).catch(() => {})
-  }, [id, status])
 
-  const toggleWishlist = async () => {
-    if (status !== "authenticated") { toast({ title: "Login required", variant: "destructive" }); router.push(`/auth/login?callback=/products/${id}`); return }
-    setWishlistLoading(true)
-    try {
-      if (isInWishlist) {
-        await fetch(`/api/wishlist/${id}`, { method: "DELETE" })
-        setIsInWishlist(false)
-        toast({ title: "Removed from wishlist" })
-      } else {
-        await fetch("/api/wishlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: id }) })
-        setIsInWishlist(true)
-        toast({ title: "Saved to wishlist" })
-      }
-    } catch { toast({ title: "Error", variant: "destructive" }) } finally { setWishlistLoading(false) }
-  }
 
   // Load product
   useEffect(() => {
@@ -398,17 +375,9 @@ const ProductDetailPage = memo(function ProductDetailPage() {
               </button>
 
               {/* Wishlist */}
-              <button
-                onClick={toggleWishlist}
-                disabled={wishlistLoading}
-                className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center transition-all duration-150 ${
-                  isInWishlist
-                    ? "border-red-200 bg-red-50 hover:bg-red-100"
-                    : "border-stone-200 hover:border-red-200 hover:bg-red-50"
-                }`}
-              >
-                <Heart className={`w-5 h-5 transition-all ${isInWishlist ? "fill-red-500 text-red-500" : "text-stone-400"}`} />
-              </button>
+             <div className="w-12 h-12 rounded-xl border-2 border-stone-200 hover:border-red-200 flex items-center justify-center transition-all">
+  <FavouriteButton type="product" refId={id} />
+</div>
             </div>
 
             {/* Trust badges */}

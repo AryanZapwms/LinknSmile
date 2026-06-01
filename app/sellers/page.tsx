@@ -4,6 +4,7 @@ import Shop from "@/lib/models/shop";
 import Link from "next/link";
 import Image from "next/image";
 import { ShieldCheck, Package, Star, MapPin, ArrowRight } from "lucide-react";
+import SellerFavouriteButton from "@/components/SellerFavouriteButton"
 
 async function getShops() {
   await connectDB();
@@ -73,6 +74,9 @@ export default async function SellersPage() {
                   href={`/shop/${shop.slug}`}
                   className="group bg-white rounded-2xl border border-stone-100 hover:border-amber-200 hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
                 >
+
+                    <SellerFavouriteButton shopId={shop._id} />
+
                   {/* Top accent */}
                   <div className="h-1 w-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300 opacity-0 group-hover:opacity-100 transition-opacity" />
 

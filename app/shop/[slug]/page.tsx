@@ -7,6 +7,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { Star, Globe, Phone, Mail, MapPin, Package, ArrowLeft, ShieldCheck } from "lucide-react"
 import { notFound } from "next/navigation"
+import SellerFavouriteButton from "@/components/SellerFavouriteButton"
+
 
 async function getShopData(slug: string) {
   await connectDB()
@@ -82,15 +84,21 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
           </div>
 
           <div className="flex-1 min-w-0">
+
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-stone-900 tracking-tight">
-                {shop.shopName}
-              </h1>
-              {shop.isApproved && (
-                <span className="flex items-center gap-1 bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-200">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Verified Seller
-                </span>
-              )}
+  <h1 className="text-2xl md:text-3xl font-bold text-stone-900 tracking-tight">
+    {shop.shopName}
+  </h1>
+  {shop.isApproved && (
+    <span className="flex items-center gap-1 bg-amber-50 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-200">
+      <ShieldCheck className="w-3.5 h-3.5" /> Verified Seller
+    </span>
+  )}
+  {/* Favourite this seller */}
+  <div className="flex items-center gap-1.5 bg-stone-50 border border-stone-200 rounded-full px-2.5 py-1">
+    <SellerFavouriteButton shopId={shop._id} />
+    <span className="text-xs text-stone-500 font-medium">Save Seller</span>
+  </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">

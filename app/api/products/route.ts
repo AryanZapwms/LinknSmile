@@ -83,9 +83,27 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Shop filter ──────────────────────────────────────────
-    if (shopId && mongoose.Types.ObjectId.isValid(shopId)) {
-      query.shopId = shopId;
-    }
+      if (shopId && mongoose.Types.ObjectId.isValid(shopId)) {
+        query.shopId = shopId;
+      }
+
+      // ── Ids filter (for favourites page) ────────────────────
+      const ids = searchParams.get("ids");
+        if (ids) {
+          const idList = ids
+           .split(",")
+           .filter((i) => mongoose.Types.ObjectId.isValid(i))
+           .map((i) => new mongoose.Types.ObjectId(i));
+
+       if (idList.length === 0) {
+           return withCORS(NextResponse.json({
+             products: [],
+             pagination: { total: 0, page: 1, limit: 0, pages: 0 },
+          }));
+      }
+
+       query._id = { $in: idList };
+      }
 
     // ── Exclude a specific product ───────────────────────────
     if (exclude && mongoose.Types.ObjectId.isValid(exclude)) {
