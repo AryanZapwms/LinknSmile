@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { ProductCard } from "@/components/product-card";
 
 const CATEGORY_LABELS: Record<string, string> = {
   "organic-products": "🌿 Organic Products",
@@ -8,10 +7,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   "home-living": "🏡 Home & Living",
 };
 
-export default async function CategoryPage({ params }: { params: { slug: string } }) {
-  const label = CATEGORY_LABELS[params.slug];
+export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const label = CATEGORY_LABELS[slug];
   if (!label) notFound();
-
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="mb-6 text-3xl font-bold">{label}</h1>
