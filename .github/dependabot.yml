@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    # Group all non-breaking updates into one PR to reduce noise
+    groups:
+      radix-ui:
+        patterns:
+          - "@radix-ui/*"
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    # Always open individual PRs for these — they need manual testing
+    ignore:
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "next-auth"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "mongoose"
+        update-types: ["version-update:semver-major"]
+    open-pull-requests-limit: 5
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
