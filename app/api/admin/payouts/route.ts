@@ -83,7 +83,7 @@ export async function PUT(req: NextRequest) {
       await LedgerService.requestPayout({
         shopId: payout.shopId.toString(),
         amount: payout.amount,
-        payoutId: payout._id.toString(),
+        payoutId: (payout._id as any).toString(),
         adminId: session.user.id,
       });
     } else if (action === "complete") {
@@ -104,7 +104,7 @@ export async function PUT(req: NextRequest) {
       updateFields.transactionId = transactionId;
       updateFields.processedAt = new Date();
 
-      await LedgerService.completePayout(payout._id.toString(), session.user.id, transactionId);
+      await LedgerService.completePayout((payout._id as any).toString(), session.user.id, transactionId);
 
       await Order.updateMany(
         { _id: { $in: payout.orderIds }, "vendorPayouts.shopId": payout.shopId },
@@ -126,7 +126,7 @@ export async function PUT(req: NextRequest) {
 
       if (["APPROVED", "PROCESSING"].includes(payout.status)) {
         await LedgerService.rejectPayout(
-          payout._id.toString(),
+          (payout._id as any).toString(),
           payout.shopId.toString(),
           payout.amount,
           failureReason,

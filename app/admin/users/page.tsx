@@ -163,7 +163,7 @@ export default function UsersPage() {
                               <option value="admin">Admin</option>
                             </select>
                           ) : (
-                            <Badge variant={user.role === "admin" ? "primary" : "secondary"}>
+                            <Badge variant={user.role === "admin" ? "default" : "secondary"}>
                               {user.role}
                             </Badge>
                           )}

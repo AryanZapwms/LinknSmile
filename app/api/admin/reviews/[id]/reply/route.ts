@@ -55,8 +55,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         reply: {
           message,
           repliedAt: new Date(),
-          repliedBy: session.user.id,
-          repliedByName: session.user.name || "Admin",
+          repliedBy: session!.user.id,
+          repliedByName: session!.user.name || "Admin",
         },
       },
       { new: true }

@@ -1,3 +1,4 @@
+// app/admin/products/edit/[id]/page.tsx
 "use client";
 
 import type React from "react";
@@ -57,13 +58,19 @@ interface Product {
   category: string;
   stock: number;
   sku: string;
-  ingredients: string[];
-  benefits: string[];
+  ingredients: string | string[];
+  benefits: string | string[];
   usage: string;
-  suitableFor?: string[];
+  suitableFor?: string | string[];
   results?: Result[];
   sizes?: Size[];
   isActive: boolean;
+}
+
+function toArray(value: string | string[] | undefined): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  return value.split(",").map((s) => s.trim()).filter(Boolean);
 }
 
 export default function EditProductPage() {
@@ -111,7 +118,6 @@ export default function EditProductPage() {
       router.push("/auth/login");
       return;
     }
-
     fetchData();
   }, [session, router]);
 
@@ -125,15 +131,10 @@ export default function EditProductPage() {
       const productData = await productRes.json();
       const categoriesData = categoriesRes.ok ? await categoriesRes.json() : [];
 
-      // Extract category ID if object
       const categoryId =
         typeof productData.category === "object" ? productData.category._id : productData.category;
 
-      // Prepare form data with extracted IDs
-      const formDataWithIds = {
-        ...productData,
-        category: categoryId,
-      };
+      const formDataWithIds = { ...productData, category: categoryId };
 
       setFormData(formDataWithIds);
       setImageUrls(productData.images || (productData.image ? [productData.image] : []));
@@ -141,27 +142,16 @@ export default function EditProductPage() {
       setSizes(productData.sizes || []);
       setCategories(categoriesData);
 
-      // Set mainCategory and category based on product's category
-      // Search through all categories including nested subCategories
-      let foundCategory: Category | null = null;
-      let mainCategoryId = "";
-
-      // First check main categories
       const mainCat = categoriesData.find((c: Category) => c._id === categoryId);
       if (mainCat) {
-        foundCategory = mainCat;
-        mainCategoryId = mainCat._id;
-        setFormData((prev) => ({ ...prev, mainCategory: mainCategoryId, category: "" }));
+        setFormData((prev) => ({ ...prev, mainCategory: mainCat._id, category: "" }));
       } else {
-        // Check subCategories within main categories
         for (const main of categoriesData) {
           const subCat = main.subCategories?.find((sub: Category) => sub._id === categoryId);
           if (subCat) {
-            foundCategory = subCat;
-            mainCategoryId = main._id;
             setFormData((prev) => ({
               ...prev,
-              mainCategory: mainCategoryId,
+              mainCategory: main._id,
               category: subCat._id,
             }));
             break;
@@ -180,7 +170,6 @@ export default function EditProductPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
@@ -190,21 +179,12 @@ export default function EditProductPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-
     setUploading(true);
     try {
       const formDataToSend = new FormData();
-      Array.from(files).forEach((file) => {
-        formDataToSend.append("files", file);
-      });
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formDataToSend,
-      });
-
+      Array.from(files).forEach((file) => formDataToSend.append("files", file));
+      const res = await fetch("/api/upload", { method: "POST", body: formDataToSend });
       if (!res.ok) throw new Error("Upload failed");
-
       const data = await res.json();
       setImageUrls((prev) => [...prev, ...data.urls]);
     } catch (error) {
@@ -232,14 +212,12 @@ export default function EditProductPage() {
       setMessage("Please fill in all size fields with valid values");
       return;
     }
-
     setSizes((prev) => {
       if (editingSizeIndex !== null) {
         return prev.map((size, index) => (index === editingSizeIndex ? { ...sizeInput } : size));
       }
       return [...prev, { ...sizeInput }];
     });
-
     setSizeInput(createEmptySize());
     setEditingSizeIndex(null);
     setMessage("");
@@ -254,8 +232,7 @@ export default function EditProductPage() {
   };
 
   const handleEditSize = (index: number) => {
-    const sizeToEdit = sizes[index];
-    setSizeInput({ ...sizeToEdit });
+    setSizeInput({ ...sizes[index] });
     setEditingSizeIndex(index);
   };
 
@@ -268,25 +245,14 @@ export default function EditProductPage() {
   const handleResultFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-
     setUploadingResult(true);
     try {
       const formDataToSend = new FormData();
-      Array.from(files).forEach((file) => {
-        formDataToSend.append("files", file);
-      });
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formDataToSend,
-      });
-
+      Array.from(files).forEach((file) => formDataToSend.append("files", file));
+      const res = await fetch("/api/upload", { method: "POST", body: formDataToSend });
       if (!res.ok) throw new Error("Upload failed");
-
       const data = await res.json();
-      if (data.urls && data.urls[0]) {
-        setResultImageUrl(data.urls[0]);
-      }
+      if (data.urls && data.urls[0]) setResultImageUrl(data.urls[0]);
     } catch (error) {
       setMessage("Error uploading result image. Please try again.");
       console.error("Error:", error);
@@ -298,15 +264,12 @@ export default function EditProductPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (imageUrls.length === 0) {
       setMessage("Please add at least one image.");
       return;
     }
-
     setSubmitting(true);
     setMessage("");
-
     try {
       const bodyData = {
         ...formData,
@@ -315,27 +278,9 @@ export default function EditProductPage() {
         price: Number(formData.price),
         discountPrice: formData.discountPrice ? Number(formData.discountPrice) : undefined,
         stock: Number(formData.stock),
-        ingredients:
-          typeof formData.ingredients === "string"
-            ? formData.ingredients
-                .split(",")
-                .map((i) => i.trim())
-                .filter(Boolean)
-            : formData.ingredients,
-        benefits:
-          typeof formData.benefits === "string"
-            ? formData.benefits
-                .split(",")
-                .map((b) => b.trim())
-                .filter(Boolean)
-            : formData.benefits,
-        suitableFor:
-          typeof formData.suitableFor === "string"
-            ? formData.suitableFor
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean)
-            : formData.suitableFor,
+        ingredients: toArray(formData.ingredients),
+        benefits: toArray(formData.benefits),
+        suitableFor: toArray(formData.suitableFor),
         results,
         sizes: sizes.map((s) => ({
           ...s,
@@ -353,11 +298,7 @@ export default function EditProductPage() {
       });
 
       const responseData = await res.json();
-
-      if (!res.ok) {
-        console.error("❌ Update API Error:", responseData);
-        throw new Error(responseData.error || "Failed to update product");
-      }
+      if (!res.ok) throw new Error(responseData.error || "Failed to update product");
 
       setMessage("Product updated successfully!");
       setTimeout(() => router.push("/admin/products"), 1500);
@@ -552,7 +493,6 @@ export default function EditProductPage() {
                         />
                       </label>
                     </div>
-
                     <div>
                       <label className="text-foreground mb-2 block text-sm font-medium">
                         Add Image URL
@@ -565,16 +505,7 @@ export default function EditProductPage() {
                           onChange={(e) => setImageUrlInput(e.target.value)}
                           className="bg-background border-border flex-1"
                         />
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            if (imageUrlInput.trim()) {
-                              setImageUrls((prev) => [...prev, imageUrlInput.trim()]);
-                              setImageUrlInput("");
-                            }
-                          }}
-                          variant="outline"
-                        >
+                        <Button type="button" onClick={handleAddImageUrl} variant="outline">
                           Add
                         </Button>
                       </div>
@@ -638,7 +569,6 @@ export default function EditProductPage() {
                   Product Sizes (Optional - Add size variants)
                 </label>
                 <div className="border-border bg-muted/50 space-y-4 rounded-lg border p-4">
-                  {/* Add Size Form */}
                   <div className="border-border space-y-3 border-b pb-4">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
@@ -774,7 +704,6 @@ export default function EditProductPage() {
                     </div>
                   </div>
 
-                  {/* Display Added Sizes */}
                   {sizes.length > 0 && (
                     <div>
                       <label className="text-foreground mb-2 block text-sm font-medium">
@@ -902,7 +831,6 @@ export default function EditProductPage() {
                   Product Results
                 </label>
                 <div className="border-border bg-muted/50 space-y-4 rounded-lg border p-4">
-                  {/* Add Result Form */}
                   <div className="border-border space-y-3 border-b pb-4">
                     <div>
                       <label className="text-foreground mb-2 block text-sm font-medium">
@@ -916,7 +844,6 @@ export default function EditProductPage() {
                         className="bg-background border-border"
                       />
                     </div>
-
                     <div>
                       <label className="text-foreground mb-2 block text-sm font-medium">
                         Result Description
@@ -929,7 +856,6 @@ export default function EditProductPage() {
                         className="border-border bg-background text-foreground w-full rounded-md border px-3 py-2"
                       />
                     </div>
-
                     <div>
                       <label className="text-foreground mb-2 block text-sm font-medium">
                         Result Image
@@ -986,7 +912,6 @@ export default function EditProductPage() {
                     </div>
                   </div>
 
-                  {/* Display Added Results */}
                   {results.length > 0 && (
                     <div>
                       <label className="text-foreground mb-2 block text-sm font-medium">

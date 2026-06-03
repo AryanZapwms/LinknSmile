@@ -70,10 +70,10 @@ export async function GET(request: NextRequest) {
       return withCORS(
         NextResponse.json({
           reviews: reviews.map((review) => ({
-            id: review._id.toString(),
+            id: (review._id as any).toString(),
             product: review.product
               ? {
-                  id: review.product._id.toString(),
+                  id: (review.product._id as any).toString(),
                   name: review.product.name,
                   image: review.product.image || "",
                   slug: review.product.slug,

@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
     }
 
     await connectDB();
-    const cart = await Cart.findOne({ userId }).lean();
+    const cart = await Cart.findOne({ userId }).lean() as any;
 
     return withCORS(
       NextResponse.json({

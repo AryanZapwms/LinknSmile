@@ -208,7 +208,7 @@ export default function AdminWalletOverview() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number | undefined) => formatINR(value ?? 0)} />
+                <Tooltip formatter={(value: any) => formatINR(value ?? 0)} />
                 <Legend />
               </RechartsPieChart>
             </ResponsiveContainer>
@@ -227,7 +227,7 @@ export default function AdminWalletOverview() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" />
                 <YAxis tickFormatter={(v) => `₹${v / 1000}k`} />
-                <Tooltip formatter={(value: number | undefined) => formatINR(value ?? 0)} />
+                <Tooltip formatter={(value: any) => formatINR(value ?? 0)} />
                 <Bar dataKey="amount" fill="#7c3aed" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

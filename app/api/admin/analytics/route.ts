@@ -567,7 +567,7 @@ export async function GET(request: NextRequest) {
         paymentStatusBreakdown,
         topCustomers: await Promise.all(
           topCustomersResult.map(async (customer) => {
-            const userDoc = await User.findById(customer._id).select("name email").lean();
+            const userDoc = await User.findById(customer._id).select("name email").lean() as any;
             return {
               userId: customer._id.toString(),
               name: userDoc?.name ?? "Unknown",
