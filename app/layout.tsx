@@ -54,10 +54,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartSync />
           <FavouritesLoader />
 
-           <div className="pt-5">
+
     <PromoBar />
     <Header />
-  </div>
+
 
           {/* ✅ Client-only analytics scripts */}
           <GTMScripts />
