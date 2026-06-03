@@ -72,7 +72,7 @@ async function fetchReviewsAPI(): Promise<Review[]> {
   }));
 }
 
-export function invalidateHomeCaches() {
+function invalidateHomeCaches() {
   invalidateCache(SUGGESTED_PRODUCTS_KEY);
   invalidateCache(ALL_PRODUCTS_KEY);
   invalidateCache(REVIEWS_KEY);
