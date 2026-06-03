@@ -1,47 +1,47 @@
-// lib/models/review.ts
-import mongoose from "mongoose";
+import { withCORS } from "@/lib/cors";
+import { NextResponse, type NextRequest } from "next/server";
+import { connectDB } from "@/lib/db";
+import { Review } from "@/lib/models/review";
+import "@/lib/models/product";   // registers Product ref
+import "@/lib/models/company";   // registers Company ref
 
-const replySchema = new mongoose.Schema(
-  {
-    message: { type: String, required: true },
-    repliedAt: { type: Date, default: Date.now },
-    repliedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    repliedByName: { type: String, required: true },
-  },
-  { _id: false }
-);
+export async function GET(request: NextRequest) {
+  if (request.method === "OPTIONS") {
+    return withCORS(new NextResponse(null));
+  }
 
-const reviewSchema = new mongoose.Schema(
-  {
-    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-    company: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    rating: { type: Number, required: true, min: 1, max: 5 },
-    comment: { type: String, required: true },
-    userName: { type: String, required: true },
-    userEmail: { type: String, required: true },
-    status: {
-      type: String,
-      enum: ["PENDING", "APPROVED", "REJECTED"],
-      default: "PENDING",
-      index: true,
-    },
-    isVerifiedBuyer: { type: Boolean, default: false },
-    moderatedAt: { type: Date },
-    moderatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    auditLog: [
-      {
-        action: { type: String, required: true },
-        timestamp: { type: Date, default: Date.now },
-        metadata: { type: mongoose.Schema.Types.Mixed },
-      },
-    ],
-    isDeleted: { type: Boolean, default: false },
-    reply: replySchema,
-  },
-  { timestamps: true }
-);
+  try {
+    await connectDB();
 
-reviewSchema.index({ product: 1, user: 1 }, { unique: true });
+    const reviews = await Review.find({ isDeleted: { $ne: true } })
+      .populate({ path: "product", select: "name image" })
+      .populate({ path: "company", select: "name" })
+      .sort({ createdAt: -1 })
+      .lean();
 
-export const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema);
+    const mappedReviews = reviews.map((review: any) => ({
+      id: review._id.toString(),
+      productId: review.product?._id?.toString() ?? "",
+      productName: review.product?.name ?? "Unknown Product",
+      productImage: review.product?.image ?? "/placeholder.jpg",
+      companyId: review.company?._id?.toString() ?? "",
+      company: review.company?.name ?? "Unknown Company",
+      customerName: review.userName ?? "Anonymous",
+      rating: review.rating ?? 5,
+      comment: review.comment ?? "",
+      createdAt: review.createdAt,
+    }));
+
+    return withCORS(NextResponse.json({
+      success: true,
+      reviews: mappedReviews,
+      count: mappedReviews.length,
+    }));
+  } catch (error) {
+    console.error("Error fetching all reviews:", error);
+    return withCORS(NextResponse.json(
+      { success: false, error: "Failed to fetch reviews", reviews: [] },
+      { status: 500 }
+    ));
+  }
+}

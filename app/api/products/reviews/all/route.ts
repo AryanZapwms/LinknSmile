@@ -1,3 +1,4 @@
+// app/api/products/reviews/all
 import { withCORS } from "@/lib/cors";
 import mongoose from "mongoose";
 import { NextResponse, type NextRequest } from "next/server";

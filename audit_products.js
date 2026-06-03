@@ -1,3 +1,4 @@
+// audit_products.js
 const mongoose = require("mongoose");
 const MONGODB_URI =
   "mongodb+srv://work_db_user:work_db_user@cluster0.crwv2s7.mongodb.net/?appName=Cluster0";

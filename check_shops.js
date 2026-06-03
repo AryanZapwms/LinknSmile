@@ -1,3 +1,4 @@
+// check_shops.js
 const mongoose = require("mongoose");
 require("dotenv").config({ path: ".env.local" });
 
