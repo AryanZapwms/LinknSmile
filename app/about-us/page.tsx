@@ -103,16 +103,16 @@ const sellerBenefits = [
 ];
 
 const categories = [
-  "🌿 Organic Products",
-  "🏠 Handmade Items",
-  "👗 Fashion & Apparel",
-  "🏡 Home & Living",
-  "💄 Beauty & Care",
-  "🍽️ Food & Beverages",
-  "📱 Electronics",
-  "👶 Kids & Baby",
-  "🎁 Gifts & Crafts",
-  "🛠️ Business Supplies",
+  "Organic Products",
+  "Handmade Items",
+  "Fashion & Apparel",
+  "Home & Living",
+  "Beauty & Care",
+  "Food & Beverages",
+  "Electronics",
+  "Kids & Baby",
+  "Gifts & Crafts",
+  "Business Supplies",
 ];
 
 const socials = [

@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  "organic-products": "🌿 Organic Products",
-  "handmade-items": "🏠 Handmade Items",
-  "fashion-apparel": "👗 Fashion & Apparel",
-  "home-living": "🏡 Home & Living",
+  "organic-products": "Organic Products",
+  "handmade-items": "Handmade Items",
+  "fashion-apparel": "Fashion & Apparel",
+  "home-living": "Home & Living",
 };
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {

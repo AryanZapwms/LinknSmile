@@ -7,10 +7,10 @@ import Image from "next/image";
 import LinkAndSmileLogo from "@/public/LinkAndSmile2.png";
 
 const categories = [
-  { href: "/categories/organic-products", label: "🌿 Organic Products" },
-  { href: "/categories/handmade-items", label: "🏠 Handmade Items" },
-  { href: "/categories/fashion-apparel", label: "👗 Fashion & Apparel" },
-  { href: "/categories/home-living", label: "🏡 Home & Living" },
+  { href: "/categories/organic-products", label: "Organic Products" },
+  { href: "/categories/handmade-items", label: "Handmade Items" },
+  { href: "/categories/fashion-apparel", label: "Fashion & Apparel" },
+  { href: "/categories/home-living", label: "Home & Living" },
 ];
 
 const quickLinks = [
