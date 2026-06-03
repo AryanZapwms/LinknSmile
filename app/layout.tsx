@@ -53,8 +53,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthSessionProvider>
           <CartSync />
           <FavouritesLoader />
-          <PromoBar />
-          <Header />
+
+           <div className="pt-5">
+    <PromoBar />
+    <Header />
+  </div>
 
           {/* ✅ Client-only analytics scripts */}
           <GTMScripts />

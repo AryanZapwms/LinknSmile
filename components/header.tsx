@@ -346,14 +346,15 @@ export function Header() {
       <div className="h-0.5 w-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex h-20 items-center justify-between gap-4">
+        <div className="flex h-15 items-center justify-between gap-4">
           {/* Logo */}
           <button
             onClick={() => router.push("/")}
             className="group flex shrink-0 items-center gap-2.5 focus:outline-none"
             aria-label="Go to home"
           >
-            <div className="relative h-20 w-35 overflow-hidden rounded-xl  transition-all duration-200 group-hover:ring-amber-400">
+
+            <div className="relative h-15 w-40 mt-4  overflow-hidden rounded-xl bg-white transition-all duration-200 group-hover:ring-amber-400">
               <Image
                 src={LinkAndSmileLogo}
                 alt="LinkAndSmile"
@@ -362,10 +363,7 @@ export function Header() {
                 priority
               />
             </div>
-            {/* <div className="hidden sm:flex flex-col leading-none">
-              <span className="text-[15px] font-bold tracking-tight text-stone-900">LinkAndSmile</span>
-              <span className="text-[10px] text-stone-400 tracking-widest uppercase font-medium">India's Marketplace</span>
-            </div> */}
+         
           </button>
 
           {/* Desktop Nav */}
