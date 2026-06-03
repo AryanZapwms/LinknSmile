@@ -1,5 +1,5 @@
 // lib/models/shop.ts
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IShop extends Document {
   ownerId: mongoose.Types.ObjectId;
@@ -50,10 +50,10 @@ export interface IShop extends Document {
 
 const ShopSchema = new Schema<IShop>(
   {
-    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+    ownerId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },
     shopName: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true },
-    description: { type: String, default: '' },
+    description: { type: String, default: "" },
     logo: { type: String },
     coverImage: { type: String },
     address: {
@@ -61,7 +61,7 @@ const ShopSchema = new Schema<IShop>(
       city: { type: String, required: true },
       state: { type: String, required: true },
       pincode: { type: String, required: true },
-      country: { type: String, default: 'India' },
+      country: { type: String, default: "India" },
     },
     contactInfo: {
       phone: { type: String, required: true },
@@ -100,9 +100,6 @@ const ShopSchema = new Schema<IShop>(
 // ShopSchema.index({ ownerId: 1 });
 ShopSchema.index({ isApproved: 1, isActive: 1 });
 
-
-
-const Shop: Model<IShop> =
-  mongoose.models.Shop || mongoose.model<IShop>("Shop", ShopSchema);
+const Shop: Model<IShop> = mongoose.models.Shop || mongoose.model<IShop>("Shop", ShopSchema);
 
 export default Shop;

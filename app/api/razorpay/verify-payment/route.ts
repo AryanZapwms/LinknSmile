@@ -1,60 +1,71 @@
 import { withCORS } from "@/lib/cors";
-import { connectDB } from "@/lib/db"
-import { Order } from "@/lib/models/order"
-import { Product } from "@/lib/models/product"
-import { User } from "@/lib/models/user"
-import Shop from "@/lib/models/shop"
-import { Cart } from "@/lib/models/cart"
-import { getServerSession } from "next-auth"
-import { type NextRequest, NextResponse } from "next/server"
-import crypto from "crypto"
-import { sendEmail, getOrderConfirmationEmail, getAdminOrderNotificationEmail } from "@/lib/email"
+import { connectDB } from "@/lib/db";
+import { Order } from "@/lib/models/order";
+import { Product } from "@/lib/models/product";
+import { User } from "@/lib/models/user";
+import Shop from "@/lib/models/shop";
+import { Cart } from "@/lib/models/cart";
+import { getServerSession } from "next-auth";
+import { type NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+import { sendEmail, getOrderConfirmationEmail, getAdminOrderNotificationEmail } from "@/lib/email";
+import { paymentLimiter } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  const { success } = paymentLimiter(ip);
+
+  if (!success) {
+    return Response.json(
+      { error: "Too many requests. Please wait a minute before trying again." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
+
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
   try {
-    const { 
-      razorpayOrderId, 
-      razorpayPaymentId, 
-      razorpaySignature, 
-      items, 
-      shippingAddress, 
-      totalAmount 
-    } = await request.json()
+    const {
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      items,
+      shippingAddress,
+      totalAmount,
+    } = await request.json();
 
     // Verify signature
-    const body = razorpayOrderId + "|" + razorpayPaymentId
+    const body = razorpayOrderId + "|" + razorpayPaymentId;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
       .update(body)
-      .digest("hex")
+      .digest("hex");
 
     if (expectedSignature !== razorpaySignature) {
-      return withCORS(NextResponse.json({ error: "Invalid signature" }, { status: 400 }))
+      return withCORS(NextResponse.json({ error: "Invalid signature" }, { status: 400 }));
     }
 
-    await connectDB()
+    await connectDB();
 
     // Get current user session
-    const session = await getServerSession()
+    const session = await getServerSession();
 
     if (!session?.user?.email) {
-      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }))
+      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
 
-    const user = await User.findOne({ email: session.user.email })
+    const user = await User.findOne({ email: session.user.email });
 
     if (!user) {
-      return withCORS(NextResponse.json({ error: "User not found" }, { status: 404 }))
+      return withCORS(NextResponse.json({ error: "User not found" }, { status: 404 }));
     }
 
     // Check if order already exists with this Razorpay payment ID (idempotency)
-    let existingOrder = await Order.findOne({ razorpayPaymentId })
+    let existingOrder = await Order.findOne({ razorpayPaymentId });
     if (existingOrder) {
-      return withCORS(NextResponse.json({ success: true, orderId: existingOrder._id }))
+      return withCORS(NextResponse.json({ success: true, orderId: existingOrder._id }));
     }
 
     // Check if order was already created via /api/orders with pending status
@@ -63,39 +74,42 @@ export async function POST(request: NextRequest) {
       paymentMethod: "razorpay",
       paymentStatus: "pending",
       totalAmount,
-    }).sort({ createdAt: -1 })
+    }).sort({ createdAt: -1 });
 
     // ✅ NEW: Process items with vendor information
-    const processedItems = []
-    const vendorPayouts: Record<string, {
-      shopId: string;
-      shopName: string;
-      amount: number;
-      items: any[];
-    }> = {}
+    const processedItems = [];
+    const vendorPayouts: Record<
+      string,
+      {
+        shopId: string;
+        shopName: string;
+        amount: number;
+        items: any[];
+      }
+    > = {};
 
     for (const item of items) {
       const product = await Product.findById(item.product)
-        .populate('shopId', 'shopName commissionRate')
-        .lean()
+        .populate("shopId", "shopName commissionRate")
+        .lean();
 
       if (!product) {
-        console.error(`Product ${item.product} not found`)
-        continue // Skip missing products instead of failing entire order
+        console.error(`Product ${item.product} not found`);
+        continue; // Skip missing products instead of failing entire order
       }
 
       // ✅ Calculate commission and vendor earnings - STRICT VALIDATION
       const dbShopId = product.shopId?._id || product.shopId;
-      
+
       if (!dbShopId) {
         console.error(`Product ${product.name} is missing a vendorId and cannot be processed.`);
         continue; // Or handle as an error
       }
 
       const shopId = dbShopId.toString();
-      const shopName = product.shopId?.shopName || 'LinkAndSmile Platform';
+      const shopName = product.shopId?.shopName || "LinkAndSmile Platform";
       const commissionRate = product.shopId?.commissionRate ?? 10;
-      
+
       const itemTotal = item.price * item.quantity;
       const platformCommission = (itemTotal * commissionRate) / 100;
       const vendorEarnings = itemTotal - platformCommission;
@@ -106,12 +120,12 @@ export async function POST(request: NextRequest) {
         price: item.price,
         selectedSize: item.selectedSize,
         // ✅ Vendor tracking
-        shopId: dbShopId, 
+        shopId: dbShopId,
         shopName: shopName,
         platformCommission: platformCommission,
         vendorEarnings: vendorEarnings,
         commissionRate: commissionRate,
-      })
+      });
 
       // ✅ Group by vendor for payout tracking
       if (!vendorPayouts[shopId]) {
@@ -120,19 +134,19 @@ export async function POST(request: NextRequest) {
           shopName: shopName,
           amount: 0,
           items: [],
-        }
+        };
       }
-      vendorPayouts[shopId].amount += vendorEarnings
+      vendorPayouts[shopId].amount += vendorEarnings;
       vendorPayouts[shopId].items.push({
         productId: item.product,
         productName: product.name,
         quantity: item.quantity,
         price: item.price,
         earnings: vendorEarnings,
-      })
+      });
     }
 
-    let order
+    let order;
 
     if (existingOrder) {
       // Update existing order with payment details
@@ -144,17 +158,17 @@ export async function POST(request: NextRequest) {
           paymentStatus: "completed",
           orderStatus: "processing",
           items: processedItems, // ✅ Update with vendor info
-          vendorPayouts: Object.values(vendorPayouts).map(v => ({
+          vendorPayouts: Object.values(vendorPayouts).map((v) => ({
             shopId: v.shopId,
             amount: v.amount,
             status: "pending",
           })),
         },
         { new: true }
-      )
+      );
     } else {
       // Create new order
-      const orderNumber = `ORD-${Date.now()}`
+      const orderNumber = `ORD-${Date.now()}`;
 
       order = await Order.create({
         orderNumber,
@@ -178,18 +192,18 @@ export async function POST(request: NextRequest) {
         razorpayOrderId,
         razorpayPaymentId,
         // ✅ Add vendor payouts
-        vendorPayouts: Object.values(vendorPayouts).map(v => ({
+        vendorPayouts: Object.values(vendorPayouts).map((v) => ({
           shopId: v.shopId,
           amount: v.amount,
           status: "pending",
         })),
-      })
+      });
     }
 
     // ✅ Update product stock (handle size variants)
     await Promise.all(
       items.map(async (item: any) => {
-        const quantity = item.quantity ?? 0
+        const quantity = item.quantity ?? 0;
         if (quantity && item.product) {
           if (item.selectedSize) {
             // Update size-specific stock
@@ -208,26 +222,26 @@ export async function POST(request: NextRequest) {
                   },
                 ],
               }
-            )
+            );
           } else {
             // Update general stock
-            await Product.findByIdAndUpdate(item.product, { 
-              $inc: { stock: -quantity } 
-            })
+            await Product.findByIdAndUpdate(item.product, {
+              $inc: { stock: -quantity },
+            });
           }
         }
       })
-    )
+    );
 
     // ✅ Update shop stats for each vendor
     for (const [shopId, payoutInfo] of Object.entries(vendorPayouts)) {
-      if (shopId !== '699942a5a2b407e83b6d9ea8') {
+      if (shopId !== "699942a5a2b407e83b6d9ea8") {
         await Shop.findByIdAndUpdate(shopId, {
           $inc: {
-            'stats.totalOrders': 1,
-            'stats.totalRevenue': payoutInfo.amount,
+            "stats.totalOrders": 1,
+            "stats.totalRevenue": payoutInfo.amount,
           },
-        })
+        });
       }
     }
 
@@ -246,29 +260,29 @@ export async function POST(request: NextRequest) {
 
     // ✅ NEW: Record entry in Ledger System
     try {
-      const ledgerItems = processedItems.map(item => ({
+      const ledgerItems = processedItems.map((item) => ({
         shopId: item.shopId,
         vendorEarnings: item.vendorEarnings,
-        commission: item.platformCommission
+        commission: item.platformCommission,
       }));
-      
+
       const { LedgerService } = await import("@/lib/services/ledger-service");
       await LedgerService.recordSale({
         orderId: order._id.toString(),
         totalAmount,
-        items: ledgerItems
+        items: ledgerItems,
       });
     } catch (ledgerError) {
       console.error("Ledger recording failed, but payment succeeded:", ledgerError);
-      // We log but don't fail here to avoid inconsistencies, 
+      // We log but don't fail here to avoid inconsistencies,
       // though in a perfect world this should be part of a distributed transaction.
     }
 
-    const orderDate = new Date(order.createdAt).toLocaleDateString('en-IN', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    })
+    const orderDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
     const mappedAddress = {
       name: shippingAddress.name,
@@ -280,13 +294,11 @@ export async function POST(request: NextRequest) {
       zipCode: shippingAddress.zipCode,
       pincode: shippingAddress.zipCode,
       country: shippingAddress.country,
-    }
+    };
 
     // Send confirmation emails
     try {
-      const populatedOrder = await Order.findById(order._id)
-        .populate("items.product")
-        .lean()
+      const populatedOrder = await Order.findById(order._id).populate("items.product").lean();
 
       if (populatedOrder) {
         const itemsData = populatedOrder.items.map((item: any) => ({
@@ -295,7 +307,7 @@ export async function POST(request: NextRequest) {
           price: item.price,
           selectedSize: item.selectedSize,
           shopName: item.shopName, // ✅ Include vendor name
-        }))
+        }));
 
         // 1. Send confirmation email to customer
         const confirmationEmailHtml = getOrderConfirmationEmail({
@@ -305,13 +317,13 @@ export async function POST(request: NextRequest) {
           total: order.totalAmount,
           orderDate: orderDate,
           paymentStatus: "completed",
-        })
+        });
 
         await sendEmail({
           to: user.email,
           subject: `Order Confirmation - ${order.orderNumber}`,
           html: confirmationEmailHtml,
-        })
+        });
 
         // 2. Send admin notification email
         const adminEmailHtml = getAdminOrderNotificationEmail({
@@ -325,20 +337,20 @@ export async function POST(request: NextRequest) {
           paymentMethod: order.paymentMethod,
           shippingAddress: mappedAddress,
           orderDate: orderDate,
-        })
+        });
 
         await sendEmail({
           to: process.env.GMAIL_EMAIL || "instapeels@gmail.com",
           subject: `🚨 NEW ORDER - ${order.orderNumber}`,
           html: adminEmailHtml,
-        })
+        });
 
         // ✅ 3. NEW: Send notification to each vendor
         for (const [shopId, payoutInfo] of Object.entries(vendorPayouts)) {
-          if (shopId === 'platform') continue // Skip platform items
+          if (shopId === "platform") continue; // Skip platform items
 
           // Get shop owner email
-          const shop = await Shop.findById(shopId).populate('ownerId', 'email name').lean()
+          const shop = await Shop.findById(shopId).populate("ownerId", "email name").lean();
           if (shop && shop.ownerId) {
             const vendorEmailHtml = `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -368,7 +380,9 @@ export async function POST(request: NextRequest) {
                     </tr>
                   </thead>
                   <tbody>
-                    ${payoutInfo.items.map((item: any) => `
+                    ${payoutInfo.items
+                      .map(
+                        (item: any) => `
                       <tr>
                         <td style="padding: 12px; border: 1px solid #e2e8f0;">${item.productName}</td>
                         <td style="padding: 12px; text-align: center; border: 1px solid #e2e8f0;">${item.quantity}</td>
@@ -376,7 +390,9 @@ export async function POST(request: NextRequest) {
                           ₹${item.earnings.toFixed(2)}
                         </td>
                       </tr>
-                    `).join('')}
+                    `
+                      )
+                      .join("")}
                   </tbody>
                   <tfoot>
                     <tr style="background: #ecfdf5;">
@@ -414,27 +430,29 @@ export async function POST(request: NextRequest) {
                   📧 For support, reply to this email or contact admin.
                 </p>
               </div>
-            `
+            `;
 
             await sendEmail({
               to: (shop.ownerId as any).email,
               subject: `🎉 New Paid Order - ${order.orderNumber} - ${payoutInfo.shopName}`,
               html: vendorEmailHtml,
-            })
+            });
           }
         }
       }
     } catch (emailError) {
-      console.error("Failed to send order emails:", emailError)
+      console.error("Failed to send order emails:", emailError);
       // Don't fail the order creation if email fails
     }
 
-    return withCORS(NextResponse.json({
-      success: true,
-      orderId: order._id,
-    }))
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        orderId: order._id,
+      })
+    );
   } catch (error) {
-    console.error("Payment verification error:", error)
-    return withCORS(NextResponse.json({ error: "Payment verification failed" }, { status: 500 }))
+    console.error("Payment verification error:", error);
+    return withCORS(NextResponse.json({ error: "Payment verification failed" }, { status: 500 }));
   }
 }

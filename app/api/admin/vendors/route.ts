@@ -8,7 +8,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -21,9 +21,7 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    const shops = await Shop.find()
-      .populate("ownerId", "name email")
-      .sort({ createdAt: -1 });
+    const shops = await Shop.find().populate("ownerId", "name email").sort({ createdAt: -1 });
 
     return withCORS(NextResponse.json(shops));
   } catch (error) {

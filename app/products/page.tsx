@@ -1,22 +1,35 @@
 // app/products/page.tsx
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { ProductCard } from '@/components/product-card';
-import { Input } from '@/components/ui/input';
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { ProductCard } from "@/components/product-card";
+import { Input } from "@/components/ui/input";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { Search, Package, SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Package, SlidersHorizontal, X, ChevronDown, ChevronUp } from "lucide-react";
 
 interface Product {
-  _id: string; name: string; price: number; discountPrice?: number;
-  image: string; slug: string; stock: number;
+  _id: string;
+  name: string;
+  price: number;
+  discountPrice?: number;
+  image: string;
+  slug: string;
+  stock: number;
   category?: { _id: string; name: string; slug: string };
   origin?: "made-in-india" | "foreign-made" | "unspecified";
 }
-interface Category { _id: string; name: string; slug: string }
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+}
 
 export default function ProductsPage() {
   return (
@@ -29,31 +42,46 @@ export default function ProductsPage() {
 function ProductsSkeleton() {
   return (
     <div className="min-h-screen bg-stone-50">
-      <div className="h-36 bg-stone-100 animate-pulse" />
-      <div className="max-w-7xl mx-auto px-4 py-8 flex gap-6">
+      <div className="h-36 animate-pulse bg-stone-100" />
+      <div className="mx-auto flex max-w-7xl gap-6 px-4 py-8">
         <div className="w-56 shrink-0 space-y-3">
-          {[...Array(6)].map((_, i) => <div key={i} className="h-8 bg-stone-100 animate-pulse rounded-xl" />)}
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-8 animate-pulse rounded-xl bg-stone-100" />
+          ))}
         </div>
-        <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-5">
-          {[...Array(6)].map((_, i) => <div key={i} className="aspect-square bg-stone-100 animate-pulse rounded-2xl" />)}
+        <div className="grid flex-1 grid-cols-2 gap-5 md:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="aspect-square animate-pulse rounded-2xl bg-stone-100" />
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-function FilterSection({ title, children, defaultOpen = true }: {
-  title: string; children: React.ReactNode; defaultOpen?: boolean;
+function FilterSection({
+  title,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-stone-100 pb-4 mb-4 last:border-0 last:mb-0 last:pb-0">
-      <button type="button" onClick={() => setOpen(v => !v)} className="flex items-center justify-between w-full mb-3 group">
-        <span className="text-xs font-bold text-stone-500 tracking-widest uppercase">{title}</span>
-        {open
-          ? <ChevronUp className="w-4 h-4 text-stone-400 group-hover:text-stone-600 transition-colors" />
-          : <ChevronDown className="w-4 h-4 text-stone-400 group-hover:text-stone-600 transition-colors" />
-        }
+    <div className="mb-4 border-b border-stone-100 pb-4 last:mb-0 last:border-0 last:pb-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="group mb-3 flex w-full items-center justify-between"
+      >
+        <span className="text-xs font-bold tracking-widest text-stone-500 uppercase">{title}</span>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-stone-400 transition-colors group-hover:text-stone-600" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-stone-400 transition-colors group-hover:text-stone-600" />
+        )}
       </button>
       {open && children}
     </div>
@@ -62,31 +90,41 @@ function FilterSection({ title, children, defaultOpen = true }: {
 
 function ProductsContent() {
   const searchParams = useSearchParams();
-  const categoryParam = searchParams.get('category');
-  const originParam = searchParams.get('origin');
+  const categoryParam = searchParams.get("category");
+  const originParam = searchParams.get("origin");
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryParam ? [categoryParam] : []);
-  const [selectedOrigins, setSelectedOrigins] = useState<string[]>(originParam ? [originParam] : []);
-  const [sortBy, setSortBy] = useState('newest');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    categoryParam ? [categoryParam] : []
+  );
+  const [selectedOrigins, setSelectedOrigins] = useState<string[]>(
+    originParam ? [originParam] : []
+  );
+  const [sortBy, setSortBy] = useState("newest");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  useEffect(() => { if (categoryParam) setSelectedCategories([categoryParam]) }, [categoryParam]);
-  useEffect(() => { if (originParam) setSelectedOrigins([originParam]) }, [originParam]);
+  useEffect(() => {
+    if (categoryParam) setSelectedCategories([categoryParam]);
+  }, [categoryParam]);
+  useEffect(() => {
+    if (originParam) setSelectedOrigins([originParam]);
+  }, [originParam]);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      fetch('/api/products?limit=100').then(r => r.json()),
-      fetch('/api/categories?flat=true').then(r => r.json()),
+      fetch("/api/products?limit=100").then((r) => r.json()),
+      fetch("/api/categories?flat=true").then((r) => r.json()),
     ])
       .then(([productsData, categoriesData]) => {
         const prods = Array.isArray(productsData)
           ? productsData
-          : Array.isArray(productsData?.products) ? productsData.products : [];
+          : Array.isArray(productsData?.products)
+            ? productsData.products
+            : [];
         setProducts(prods);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       })
@@ -95,50 +133,69 @@ function ProductsContent() {
   }, []);
 
   function toggleCategory(id: string) {
-    setSelectedCategories(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+    setSelectedCategories((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+    );
   }
   function toggleOrigin(val: string) {
-    setSelectedOrigins(prev => prev.includes(val) ? prev.filter(o => o !== val) : [...prev, val]);
+    setSelectedOrigins((prev) =>
+      prev.includes(val) ? prev.filter((o) => o !== val) : [...prev, val]
+    );
   }
-  function clearAll() { setSearchQuery(''); setSelectedCategories([]); setSelectedOrigins([]); }
+  function clearAll() {
+    setSearchQuery("");
+    setSelectedCategories([]);
+    setSelectedOrigins([]);
+  }
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
-    if (searchQuery) result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    if (selectedCategories.length > 0) result = result.filter(p => p.category && selectedCategories.includes(p.category._id));
-    if (selectedOrigins.length > 0) result = result.filter(p => {
-      const o = p.origin || "unspecified";
-      return selectedOrigins.includes(o);
-    });
-    if (sortBy === 'price-low') result.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
-    else if (sortBy === 'price-high') result.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+    if (searchQuery)
+      result = result.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    if (selectedCategories.length > 0)
+      result = result.filter((p) => p.category && selectedCategories.includes(p.category._id));
+    if (selectedOrigins.length > 0)
+      result = result.filter((p) => {
+        const o = p.origin || "unspecified";
+        return selectedOrigins.includes(o);
+      });
+    if (sortBy === "price-low")
+      result.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
+    else if (sortBy === "price-high")
+      result.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
     else result.reverse();
     return result;
   }, [products, searchQuery, selectedCategories, selectedOrigins, sortBy]);
 
-  const activeFilterCount = (searchQuery ? 1 : 0) + selectedCategories.length + selectedOrigins.length;
-  const selectedCategoryNames = categories.filter(c => selectedCategories.includes(c._id)).map(c => c.name);
+  const activeFilterCount =
+    (searchQuery ? 1 : 0) + selectedCategories.length + selectedOrigins.length;
+  const selectedCategoryNames = categories
+    .filter((c) => selectedCategories.includes(c._id))
+    .map((c) => c.name);
 
   const ORIGINS = [
-    { value: "made-in-india",  label: "Made in India",       emoji: "🇮🇳" },
-    { value: "foreign-made",   label: "International",       emoji: "🌍" },
-    { value: "unspecified",    label: "Other",               emoji: "🏷️" },
+    { value: "made-in-india", label: "Made in India", emoji: "🇮🇳" },
+    { value: "foreign-made", label: "International", emoji: "🌍" },
+    { value: "unspecified", label: "Other", emoji: "🏷️" },
   ];
 
   const Sidebar = () => (
     <aside className="w-full">
-      <div className="flex items-center justify-between mb-5">
+      <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-stone-500" />
+          <SlidersHorizontal className="h-4 w-4 text-stone-500" />
           <span className="text-sm font-bold text-stone-700">Filters</span>
           {activeFilterCount > 0 && (
-            <span className="bg-amber-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
               {activeFilterCount}
             </span>
           )}
         </div>
         {activeFilterCount > 0 && (
-          <button onClick={clearAll} className="text-xs text-amber-600 hover:text-amber-700 font-semibold transition-colors">
+          <button
+            onClick={clearAll}
+            className="text-xs font-semibold text-amber-600 transition-colors hover:text-amber-700"
+          >
             Clear all
           </button>
         )}
@@ -150,23 +207,23 @@ function ProductsContent() {
           <button
             type="button"
             onClick={() => setSelectedCategories([])}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+            className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
               selectedCategories.length === 0
-                ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                : 'bg-white text-stone-600 border-stone-200 hover:border-amber-300 hover:text-amber-700'
+                ? "border-amber-500 bg-amber-500 text-white shadow-sm"
+                : "border-stone-200 bg-white text-stone-600 hover:border-amber-300 hover:text-amber-700"
             }`}
           >
             All
           </button>
-          {categories.map(cat => (
+          {categories.map((cat) => (
             <button
               key={cat._id}
               type="button"
               onClick={() => toggleCategory(cat._id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+              className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
                 selectedCategories.includes(cat._id)
-                  ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                  : 'bg-white text-stone-600 border-stone-200 hover:border-amber-300 hover:text-amber-700'
+                  ? "border-amber-500 bg-amber-500 text-white shadow-sm"
+                  : "border-stone-200 bg-white text-stone-600 hover:border-amber-300 hover:text-amber-700"
               }`}
             >
               {cat.name}
@@ -183,17 +240,15 @@ function ProductsContent() {
               key={value}
               type="button"
               onClick={() => toggleOrigin(value)}
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium border transition-all text-left ${
+              className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-all ${
                 selectedOrigins.includes(value)
-                  ? 'bg-amber-50 text-amber-700 border-amber-300 font-semibold'
-                  : 'bg-white text-stone-600 border-stone-100 hover:border-amber-200 hover:bg-amber-50/50'
+                  ? "border-amber-300 bg-amber-50 font-semibold text-amber-700"
+                  : "border-stone-100 bg-white text-stone-600 hover:border-amber-200 hover:bg-amber-50/50"
               }`}
             >
               <span className="text-base">{emoji}</span>
               {label}
-              {selectedOrigins.includes(value) && (
-                <X className="w-3 h-3 ml-auto text-amber-500" />
-              )}
+              {selectedOrigins.includes(value) && <X className="ml-auto h-3 w-3 text-amber-500" />}
             </button>
           ))}
         </div>
@@ -204,16 +259,18 @@ function ProductsContent() {
         <FilterSection title="Sort By">
           <div className="flex flex-col gap-1">
             {[
-              { value: 'newest', label: 'Newest First' },
-              { value: 'price-low', label: 'Price: Low → High' },
-              { value: 'price-high', label: 'Price: High → Low' },
-            ].map(opt => (
+              { value: "newest", label: "Newest First" },
+              { value: "price-low", label: "Price: Low → High" },
+              { value: "price-high", label: "Price: High → Low" },
+            ].map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setSortBy(opt.value)}
-                className={`text-left px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  sortBy === opt.value ? 'bg-amber-50 text-amber-700 font-semibold' : 'text-stone-600 hover:bg-stone-50'
+                className={`rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors ${
+                  sortBy === opt.value
+                    ? "bg-amber-50 font-semibold text-amber-700"
+                    : "text-stone-600 hover:bg-stone-50"
                 }`}
               >
                 {opt.label}
@@ -227,43 +284,61 @@ function ProductsContent() {
 
   return (
     <div className="min-h-screen bg-stone-50">
-
       {/* Page header */}
-      <div className="bg-white border-b border-stone-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-10">
-          <p className="text-xs font-semibold text-amber-600 uppercase tracking-widest mb-1.5">LinkAndSmile</p>
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+      <div className="border-b border-stone-100 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-10">
+          <p className="mb-1.5 text-xs font-semibold tracking-widest text-amber-600 uppercase">
+            LinkAndSmile
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-stone-900 tracking-tight">
+              <h1 className="text-2xl font-bold tracking-tight text-stone-900 md:text-3xl">
                 {selectedCategoryNames.length === 1
                   ? selectedCategoryNames[0]
                   : selectedOrigins.includes("made-in-india") && selectedOrigins.length === 1
-                  ? "🇮🇳 Made in India"
-                  : selectedOrigins.includes("foreign-made") && selectedOrigins.length === 1
-                  ? "🌍 International Products"
-                  : "All Products"}
+                    ? "🇮🇳 Made in India"
+                    : selectedOrigins.includes("foreign-made") && selectedOrigins.length === 1
+                      ? "🌍 International Products"
+                      : "All Products"}
               </h1>
-              <p className="text-sm text-stone-400 mt-1">
-                {loading ? "Loading…" : `${filteredProducts.length} product${filteredProducts.length !== 1 ? "s" : ""} from our curated collection`}
+              <p className="mt-1 text-sm text-stone-400">
+                {loading
+                  ? "Loading…"
+                  : `${filteredProducts.length} product${filteredProducts.length !== 1 ? "s" : ""} from our curated collection`}
               </p>
             </div>
             {activeFilterCount > 0 && (
-              <div className="hidden sm:flex flex-wrap gap-2">
+              <div className="hidden flex-wrap gap-2 sm:flex">
                 {searchQuery && (
-                  <span className="flex items-center gap-1 bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-100">
-                    "{searchQuery}" <button onClick={() => setSearchQuery('')}><X className="w-3 h-3" /></button>
+                  <span className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                    "{searchQuery}"{" "}
+                    <button onClick={() => setSearchQuery("")}>
+                      <X className="h-3 w-3" />
+                    </button>
                   </span>
                 )}
                 {selectedCategoryNames.map((name, i) => (
-                  <span key={i} className="flex items-center gap-1 bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-100">
-                    {name} <button onClick={() => toggleCategory(selectedCategories[i])}><X className="w-3 h-3" /></button>
+                  <span
+                    key={i}
+                    className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                  >
+                    {name}{" "}
+                    <button onClick={() => toggleCategory(selectedCategories[i])}>
+                      <X className="h-3 w-3" />
+                    </button>
                   </span>
                 ))}
-                {selectedOrigins.map(o => {
-                  const found = ORIGINS.find(x => x.value === o);
+                {selectedOrigins.map((o) => {
+                  const found = ORIGINS.find((x) => x.value === o);
                   return found ? (
-                    <span key={o} className="flex items-center gap-1 bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-100">
-                      {found.emoji} {found.label} <button onClick={() => toggleOrigin(o)}><X className="w-3 h-3" /></button>
+                    <span
+                      key={o}
+                      className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                    >
+                      {found.emoji} {found.label}{" "}
+                      <button onClick={() => toggleOrigin(o)}>
+                        <X className="h-3 w-3" />
+                      </button>
                     </span>
                   ) : null;
                 })}
@@ -273,38 +348,42 @@ function ProductsContent() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8">
-
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 md:py-8">
         {/* Top bar */}
-        <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-3 mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div className="mb-6 flex flex-col items-stretch gap-3 rounded-2xl border border-stone-100 bg-white p-3 shadow-sm sm:flex-row sm:items-center">
           <button
             type="button"
-            onClick={() => setMobileSidebarOpen(v => !v)}
-            className="sm:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl border border-stone-200 text-sm font-semibold text-stone-600 bg-stone-50 hover:bg-stone-100 transition-colors"
+            onClick={() => setMobileSidebarOpen((v) => !v)}
+            className="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm font-semibold text-stone-600 transition-colors hover:bg-stone-100 sm:hidden"
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <SlidersHorizontal className="h-4 w-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="bg-amber-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{activeFilterCount}</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
+                {activeFilterCount}
+              </span>
             )}
           </button>
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-stone-400" />
             <Input
               placeholder="Search products…"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-10 h-10 rounded-xl border-stone-200 focus:ring-amber-300 focus:border-amber-300 text-sm bg-stone-50"
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-10 rounded-xl border-stone-200 bg-stone-50 pl-10 text-sm focus:border-amber-300 focus:ring-amber-300"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                <X className="w-3.5 h-3.5" />
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+              >
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
           <div className="hidden sm:block">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="h-10 w-48 rounded-xl border-stone-200 text-sm bg-stone-50 focus:ring-amber-300">
+              <SelectTrigger className="h-10 w-48 rounded-xl border-stone-200 bg-stone-50 text-sm focus:ring-amber-300">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent className="rounded-xl border-stone-200">
@@ -314,34 +393,39 @@ function ProductsContent() {
               </SelectContent>
             </Select>
           </div>
-          <span className="hidden md:flex items-center text-xs text-stone-400 font-medium shrink-0 whitespace-nowrap">
+          <span className="hidden shrink-0 items-center text-xs font-medium whitespace-nowrap text-stone-400 md:flex">
             {loading ? "…" : `${filteredProducts.length} results`}
           </span>
         </div>
 
-        <div className="flex gap-6 items-start">
-
+        <div className="flex items-start gap-6">
           {/* Desktop sidebar */}
-          <div className="hidden md:block w-56 shrink-0 bg-white rounded-2xl border border-stone-100 shadow-sm p-5 sticky top-24">
+          <div className="sticky top-24 hidden w-56 shrink-0 rounded-2xl border border-stone-100 bg-white p-5 shadow-sm md:block">
             <Sidebar />
           </div>
 
           {/* Mobile sidebar drawer */}
           {mobileSidebarOpen && (
-            <div className="md:hidden fixed inset-0 z-40 flex">
-              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setMobileSidebarOpen(false)} />
-              <div className="relative ml-auto w-72 max-w-full bg-white h-full shadow-2xl p-5 overflow-y-auto">
-                <div className="flex items-center justify-between mb-4">
+            <div className="fixed inset-0 z-40 flex md:hidden">
+              <div
+                className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+                onClick={() => setMobileSidebarOpen(false)}
+              />
+              <div className="relative ml-auto h-full w-72 max-w-full overflow-y-auto bg-white p-5 shadow-2xl">
+                <div className="mb-4 flex items-center justify-between">
                   <span className="font-bold text-stone-800">Filters</span>
-                  <button onClick={() => setMobileSidebarOpen(false)} className="p-1 rounded-lg hover:bg-stone-100 text-stone-500">
-                    <X className="w-5 h-5" />
+                  <button
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className="rounded-lg p-1 text-stone-500 hover:bg-stone-100"
+                  >
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
                 <Sidebar />
                 <button
                   type="button"
                   onClick={() => setMobileSidebarOpen(false)}
-                  className="w-full mt-4 py-2.5 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors"
+                  className="mt-4 w-full rounded-xl bg-amber-500 py-2.5 text-sm font-bold text-white transition-colors hover:bg-amber-600"
                 >
                   Show {filteredProducts.length} Results
                 </button>
@@ -350,45 +434,59 @@ function ProductsContent() {
           )}
 
           {/* Product grid */}
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             {loading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="rounded-2xl bg-white border border-stone-100 overflow-hidden">
-                    <div className="aspect-square bg-stone-100 animate-pulse" />
-                    <div className="p-3 space-y-2">
-                      <div className="h-3.5 bg-stone-100 animate-pulse rounded-lg w-3/4" />
-                      <div className="h-3 bg-stone-100 animate-pulse rounded-lg w-1/2" />
-                      <div className="h-8 bg-stone-100 animate-pulse rounded-xl mt-2" />
+                  <div
+                    key={i}
+                    className="overflow-hidden rounded-2xl border border-stone-100 bg-white"
+                  >
+                    <div className="aspect-square animate-pulse bg-stone-100" />
+                    <div className="space-y-2 p-3">
+                      <div className="h-3.5 w-3/4 animate-pulse rounded-lg bg-stone-100" />
+                      <div className="h-3 w-1/2 animate-pulse rounded-lg bg-stone-100" />
+                      <div className="mt-2 h-8 animate-pulse rounded-xl bg-stone-100" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                 {filteredProducts.map((product, i) => (
                   <div
                     key={product._id}
-                    style={{ opacity: 0, animation: `productFadeIn 0.3s ease forwards`, animationDelay: `${Math.min(i * 30, 300)}ms` }}
+                    style={{
+                      opacity: 0,
+                      animation: `productFadeIn 0.3s ease forwards`,
+                      animationDelay: `${Math.min(i * 30, 300)}ms`,
+                    }}
                   >
                     <ProductCard
-                      id={product._id} name={product.name} price={product.price}
-                      discountPrice={product.discountPrice} image={product.image}
-                      slug={product.slug} stock={product.stock}
+                      id={product._id}
+                      name={product.name}
+                      price={product.price}
+                      discountPrice={product.discountPrice}
+                      image={product.image}
+                      slug={product.slug}
+                      stock={product.stock}
                     />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border border-dashed border-stone-200">
-                <div className="w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center mb-4">
-                  <Package className="w-7 h-7 text-stone-300" />
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white py-24">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
+                  <Package className="h-7 w-7 text-stone-300" />
                 </div>
-                <h3 className="text-base font-bold text-stone-700 mb-1">No products found</h3>
-                <p className="text-sm text-stone-400 text-center max-w-xs mb-5">
+                <h3 className="mb-1 text-base font-bold text-stone-700">No products found</h3>
+                <p className="mb-5 max-w-xs text-center text-sm text-stone-400">
                   Try adjusting your filters or search term.
                 </p>
-                <button onClick={clearAll} className="text-sm font-semibold text-amber-600 hover:text-amber-700 underline underline-offset-2">
+                <button
+                  onClick={clearAll}
+                  className="text-sm font-semibold text-amber-600 underline underline-offset-2 hover:text-amber-700"
+                >
                   Clear filters
                 </button>
               </div>
@@ -399,8 +497,14 @@ function ProductsContent() {
 
       <style jsx global>{`
         @keyframes productFadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}</style>
     </div>

@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, Loader2 } from "lucide-react"
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Upload, Loader2 } from "lucide-react";
 
 interface ImageUploadFieldProps {
-  value: string
-  onChange: (url: string) => void
-  label?: string
-  folder?: string
-  required?: boolean
-  placeholder?: string
+  value: string;
+  onChange: (url: string) => void;
+  label?: string;
+  folder?: string;
+  required?: boolean;
+  placeholder?: string;
 }
 
 export function ImageUploadField({
@@ -24,57 +24,57 @@ export function ImageUploadField({
   required = false,
   placeholder = "https://...",
 }: ImageUploadFieldProps) {
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      setUploadError("Please select a valid image file")
-      return
+      setUploadError("Please select a valid image file");
+      return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setUploadError("Image size must be less than 5MB")
-      return
+      setUploadError("Image size must be less than 5MB");
+      return;
     }
 
-    setIsUploading(true)
-    setUploadError(null)
+    setIsUploading(true);
+    setUploadError(null);
 
     try {
-      const formData = new FormData()
-      formData.append("files", file)
-      formData.append("folder", folder)
+      const formData = new FormData();
+      formData.append("files", file);
+      formData.append("folder", folder);
 
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
-      })
+      });
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Upload failed")
+        const error = await response.json();
+        throw new Error(error.error || "Upload failed");
       }
 
-      const data = await response.json()
+      const data = await response.json();
       if (data.urls && data.urls.length > 0) {
-        onChange(data.urls[0])
+        onChange(data.urls[0]);
       }
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : "Upload failed")
+      setUploadError(error instanceof Error ? error.message : "Upload failed");
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        fileInputRef.current.value = "";
       }
     }
-  }
+  };
 
   return (
     <div>
@@ -115,12 +115,12 @@ export function ImageUploadField({
             >
               {isUploading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Uploading...
                 </>
               ) : (
                 <>
-                  <Upload className="w-4 h-4 mr-2" />
+                  <Upload className="mr-2 h-4 w-4" />
                   Choose Image
                 </>
               )}
@@ -133,17 +133,17 @@ export function ImageUploadField({
       {/* Preview */}
       {value && (
         <div className="mt-3">
-          <p className="text-sm text-muted-foreground mb-2">Preview</p>
+          <p className="text-muted-foreground mb-2 text-sm">Preview</p>
           <img
             src={value}
             alt="preview"
-            className="h-32 w-48 object-cover rounded border"
+            className="h-32 w-48 rounded border object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "/companylogo.jpg"
+              (e.target as HTMLImageElement).src = "/companylogo.jpg";
             }}
           />
         </div>
       )}
     </div>
-  )
+  );
 }

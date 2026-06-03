@@ -8,68 +8,66 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 import mongoose from "mongoose";
 
-
-
 // ── Config ────────────────────────────────────────────────────────────────────
 const MONGODB_URI = process.env.MONGODB_URI!;
 
 // Your real category IDs from DB
 const CATEGORIES = {
-  "sustainable-shopping":    "69ae7001535bc9abecb6bb31",
+  "sustainable-shopping": "69ae7001535bc9abecb6bb31",
   "organic-products-online": "69ae7001535bc9abecb6bb28",
-  "organic-food-online":     "69ae7001535bc9abecb6bb2d",
-  "chemical-free-products":  "69ae7001535bc9abecb6bb30",
-  "artisan-products":        "69ae7001535bc9abecb6bb2f",
-  "eco-friendly-products":   "69ae7001535bc9abecb6bb2c",
-  "natural-products":        "69ae7001535bc9abecb6bb2b",
-  "handmade-crafts":         "69ae7001535bc9abecb6bb2e",
-  "handmade-products":       "69ae7001535bc9abecb6bb29",
+  "organic-food-online": "69ae7001535bc9abecb6bb2d",
+  "chemical-free-products": "69ae7001535bc9abecb6bb30",
+  "artisan-products": "69ae7001535bc9abecb6bb2f",
+  "eco-friendly-products": "69ae7001535bc9abecb6bb2c",
+  "natural-products": "69ae7001535bc9abecb6bb2b",
+  "handmade-crafts": "69ae7001535bc9abecb6bb2e",
+  "handmade-products": "69ae7001535bc9abecb6bb29",
 };
 
 // Use existing shop IDs from your DB
 const SHOPS = {
-  bhavya:  "69a7e51a8967d5c3d9e8961d",   // Bhavya ki Dukan
-  varun:   "6996a7fdfdcbb4173e7f46cd",    // Varun Ki Dukan
-  mihir:   "6996dde8fdcbb4173e7f4a10",    // Mihir ki Dukan
+  bhavya: "69a7e51a8967d5c3d9e8961d", // Bhavya ki Dukan
+  varun: "6996a7fdfdcbb4173e7f46cd", // Varun Ki Dukan
+  mihir: "6996dde8fdcbb4173e7f4a10", // Mihir ki Dukan
 };
 
 // Placeholder images (free Unsplash URLs)
 const IMAGES = {
-  tote:        "https://images.unsplash.com/photo-1597484661643-2f5fef640dd1?w=600",
-  bamboo:      "https://images.unsplash.com/photo-1610552050890-fe99536c2615?w=600",
-  seedKit:     "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600",
-  orgSerum:    "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600",
-  orgFace:     "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600",
+  tote: "https://images.unsplash.com/photo-1597484661643-2f5fef640dd1?w=600",
+  bamboo: "https://images.unsplash.com/photo-1610552050890-fe99536c2615?w=600",
+  seedKit: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600",
+  orgSerum: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600",
+  orgFace: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=600",
   herbShampoo: "https://images.unsplash.com/photo-1585232350473-21a0e2c4a571?w=600",
-  honey:       "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600",
-  spices:      "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600",
-  tea:         "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600",
-  ghee:        "https://images.unsplash.com/photo-1631452180519-e0e4be9e8d9e?w=600",
-  cleanser:    "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600",
-  toothpaste:  "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=600",
-  deodorant:   "https://images.unsplash.com/photo-1585435557343-3b092031a831?w=600",
-  pottery:     "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600",
-  blockPrint:  "https://images.unsplash.com/photo-1599598425947-5202edd56bdb?w=600",
-  woodArt:     "https://images.unsplash.com/photo-1609372332255-611485350f25?w=600",
-  jute:        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600",
+  honey: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600",
+  spices: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600",
+  tea: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600",
+  ghee: "https://images.unsplash.com/photo-1631452180519-e0e4be9e8d9e?w=600",
+  cleanser: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600",
+  toothpaste: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=600",
+  deodorant: "https://images.unsplash.com/photo-1585435557343-3b092031a831?w=600",
+  pottery: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600",
+  blockPrint: "https://images.unsplash.com/photo-1599598425947-5202edd56bdb?w=600",
+  woodArt: "https://images.unsplash.com/photo-1609372332255-611485350f25?w=600",
+  jute: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600",
   bambooStraw: "https://images.unsplash.com/photo-1611735341450-74d61e660ad2?w=600",
-  soapBar:     "https://images.unsplash.com/photo-1600857544200-b2f468e9b2c6?w=600",
-  essOil:      "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600",
-  aloeVera:    "https://images.unsplash.com/photo-1596178060810-72c7ee5b4e9d?w=600",
-  candle:      "https://images.unsplash.com/photo-1602607144568-e4a4d9e8e28b?w=600",
-  macrame:     "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600",
-  jewelry:     "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600",
-  embroidery:  "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600",
+  soapBar: "https://images.unsplash.com/photo-1600857544200-b2f468e9b2c6?w=600",
+  essOil: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600",
+  aloeVera: "https://images.unsplash.com/photo-1596178060810-72c7ee5b4e9d?w=600",
+  candle: "https://images.unsplash.com/photo-1602607144568-e4a4d9e8e28b?w=600",
+  macrame: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600",
+  jewelry: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600",
+  embroidery: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600",
 };
 
 // ── Products ──────────────────────────────────────────────────────────────────
 const SEED_PRODUCTS = [
-
   // ── 1. Sustainable Shopping (5 products) ────────────────────────────────────
   {
     name: "Organic Cotton Tote Bag",
     slug: "organic-cotton-tote-bag",
-    description: "100% organic cotton tote bag — durable, washable, and perfect for everyday shopping. Replace plastic bags with this eco-conscious choice.",
+    description:
+      "100% organic cotton tote bag — durable, washable, and perfect for everyday shopping. Replace plastic bags with this eco-conscious choice.",
     price: 349,
     discountPrice: 249,
     image: IMAGES.tote,
@@ -84,7 +82,8 @@ const SEED_PRODUCTS = [
   {
     name: "Bamboo Toothbrush Set of 4",
     slug: "bamboo-toothbrush-set-of-4",
-    description: "Biodegradable bamboo toothbrushes with charcoal-infused bristles. Plastic-free packaging. A small switch that makes a big difference.",
+    description:
+      "Biodegradable bamboo toothbrushes with charcoal-infused bristles. Plastic-free packaging. A small switch that makes a big difference.",
     price: 299,
     discountPrice: 199,
     image: IMAGES.bamboo,
@@ -93,13 +92,18 @@ const SEED_PRODUCTS = [
     shopId: SHOPS.varun,
     origin: "made-in-india",
     stock: 150,
-    benefits: ["100% biodegradable handle", "Charcoal bristles for deep clean", "Plastic-free packaging"],
+    benefits: [
+      "100% biodegradable handle",
+      "Charcoal bristles for deep clean",
+      "Plastic-free packaging",
+    ],
     suitableFor: ["All age groups", "Eco-conscious households"],
   },
   {
     name: "Seed Starter Kit — Grow Your Own Herbs",
     slug: "seed-starter-kit-grow-your-own-herbs",
-    description: "Everything you need to start your kitchen garden. Includes 6 herb seed packets, coco-peat pots, and a growing guide.",
+    description:
+      "Everything you need to start your kitchen garden. Includes 6 herb seed packets, coco-peat pots, and a growing guide.",
     price: 599,
     discountPrice: 449,
     image: IMAGES.seedKit,
@@ -114,7 +118,8 @@ const SEED_PRODUCTS = [
   {
     name: "Reusable Beeswax Food Wraps — Set of 3",
     slug: "reusable-beeswax-food-wraps-set-of-3",
-    description: "Natural beeswax wraps to replace cling film and zip-lock bags. Keeps food fresh, washable, and reusable for up to a year.",
+    description:
+      "Natural beeswax wraps to replace cling film and zip-lock bags. Keeps food fresh, washable, and reusable for up to a year.",
     price: 449,
     discountPrice: 349,
     image: IMAGES.jute,
@@ -123,13 +128,18 @@ const SEED_PRODUCTS = [
     shopId: SHOPS.bhavya,
     origin: "made-in-india",
     stock: 120,
-    benefits: ["Replaces single-use plastic wrap", "Reusable for 1 year", "Natural beeswax coating"],
+    benefits: [
+      "Replaces single-use plastic wrap",
+      "Reusable for 1 year",
+      "Natural beeswax coating",
+    ],
     suitableFor: ["Food storage", "Lunch boxes", "Zero-waste kitchens"],
   },
   {
     name: "Jute Shopping Bag with Zipper",
     slug: "jute-shopping-bag-with-zipper",
-    description: "Sturdy jute bag with a secure zipper and inner lining. Ideal for groceries, market visits, or casual outings.",
+    description:
+      "Sturdy jute bag with a secure zipper and inner lining. Ideal for groceries, market visits, or casual outings.",
     price: 279,
     discountPrice: 199,
     image: IMAGES.jute,
@@ -144,7 +154,8 @@ const SEED_PRODUCTS = [
   {
     name: "Organic Vitamin C Face Serum",
     slug: "organic-vitamin-c-face-serum",
-    description: "A potent 15% Vitamin C serum made with cold-pressed rosehip oil and plant-derived ingredients. Brightens skin, reduces pigmentation, and boosts collagen.",
+    description:
+      "A potent 15% Vitamin C serum made with cold-pressed rosehip oil and plant-derived ingredients. Brightens skin, reduces pigmentation, and boosts collagen.",
     price: 899,
     discountPrice: 649,
     image: IMAGES.orgSerum,
@@ -160,7 +171,8 @@ const SEED_PRODUCTS = [
   {
     name: "Organic Aloe Vera Face Gel",
     slug: "organic-aloe-vera-face-gel",
-    description: "Pure 99% organic aloe vera gel — no fragrance, no parabens. Soothes, hydrates, and calms irritated skin.",
+    description:
+      "Pure 99% organic aloe vera gel — no fragrance, no parabens. Soothes, hydrates, and calms irritated skin.",
     price: 349,
     discountPrice: 249,
     image: IMAGES.aloeVera,
@@ -176,7 +188,8 @@ const SEED_PRODUCTS = [
   {
     name: "Herbal Anti-Hairfall Shampoo",
     slug: "herbal-anti-hairfall-shampoo",
-    description: "Ayurvedic shampoo with bhringraj, amla, and shikakai. Strengthens roots, reduces breakage, and promotes healthy hair growth.",
+    description:
+      "Ayurvedic shampoo with bhringraj, amla, and shikakai. Strengthens roots, reduces breakage, and promotes healthy hair growth.",
     price: 499,
     discountPrice: 379,
     image: IMAGES.herbShampoo,
@@ -192,7 +205,8 @@ const SEED_PRODUCTS = [
   {
     name: "Organic Neem & Tulsi Face Wash",
     slug: "organic-neem-tulsi-face-wash",
-    description: "Gentle foaming face wash with neem and tulsi extracts. Controls acne, deep cleans pores, and balances oil.",
+    description:
+      "Gentle foaming face wash with neem and tulsi extracts. Controls acne, deep cleans pores, and balances oil.",
     price: 299,
     discountPrice: 219,
     image: IMAGES.orgFace,
@@ -210,7 +224,8 @@ const SEED_PRODUCTS = [
   {
     name: "Raw Forest Honey — 500g",
     slug: "raw-forest-honey-500g",
-    description: "Unprocessed, unfiltered raw honey sourced from forest beehives in Uttarakhand. Rich in enzymes, antioxidants, and natural goodness.",
+    description:
+      "Unprocessed, unfiltered raw honey sourced from forest beehives in Uttarakhand. Rich in enzymes, antioxidants, and natural goodness.",
     price: 599,
     discountPrice: 449,
     image: IMAGES.honey,
@@ -225,7 +240,8 @@ const SEED_PRODUCTS = [
   {
     name: "Organic Masala Chai Blend — 100g",
     slug: "organic-masala-chai-blend-100g",
-    description: "A handcrafted blend of organic Assam tea, cardamom, ginger, cinnamon, and cloves. Brew a perfect cup every time.",
+    description:
+      "A handcrafted blend of organic Assam tea, cardamom, ginger, cinnamon, and cloves. Brew a perfect cup every time.",
     price: 349,
     discountPrice: 279,
     image: IMAGES.tea,
@@ -241,7 +257,8 @@ const SEED_PRODUCTS = [
   {
     name: "Cold-Pressed Coconut Oil — 500ml",
     slug: "cold-pressed-coconut-oil-500ml",
-    description: "Virgin coconut oil extracted using traditional cold-press method. No heat, no chemicals — retains full nutrition for cooking, hair, and skin.",
+    description:
+      "Virgin coconut oil extracted using traditional cold-press method. No heat, no chemicals — retains full nutrition for cooking, hair, and skin.",
     price: 449,
     discountPrice: 349,
     image: IMAGES.ghee,
@@ -256,7 +273,8 @@ const SEED_PRODUCTS = [
   {
     name: "Organic Turmeric Powder — 200g",
     slug: "organic-turmeric-powder-200g",
-    description: "Single-origin organic turmeric from Erode, Tamil Nadu. High curcumin content, naturally dried and ground. No additives.",
+    description:
+      "Single-origin organic turmeric from Erode, Tamil Nadu. High curcumin content, naturally dried and ground. No additives.",
     price: 199,
     discountPrice: 149,
     image: IMAGES.spices,
@@ -271,7 +289,8 @@ const SEED_PRODUCTS = [
   {
     name: "Mixed Dry Fruits & Nuts Box — 500g",
     slug: "mixed-dry-fruits-nuts-box-500g",
-    description: "Premium mix of almonds, cashews, raisins, pistachios, and walnuts. No added salt or sugar. Sourced from Kashmir and South India.",
+    description:
+      "Premium mix of almonds, cashews, raisins, pistachios, and walnuts. No added salt or sugar. Sourced from Kashmir and South India.",
     price: 799,
     discountPrice: 649,
     image: IMAGES.honey,
@@ -288,7 +307,8 @@ const SEED_PRODUCTS = [
   {
     name: "Chemical-Free Charcoal Face Cleanser",
     slug: "chemical-free-charcoal-face-cleanser",
-    description: "A 100% chemical-free cleanser with activated charcoal and kaolin clay. Draws out impurities without stripping natural oils.",
+    description:
+      "A 100% chemical-free cleanser with activated charcoal and kaolin clay. Draws out impurities without stripping natural oils.",
     price: 399,
     discountPrice: 299,
     image: IMAGES.cleanser,
@@ -304,7 +324,8 @@ const SEED_PRODUCTS = [
   {
     name: "Natural Fluoride-Free Toothpaste",
     slug: "natural-fluoride-free-toothpaste",
-    description: "Ayurvedic toothpaste with neem, clove, and mint. No fluoride, no SLS, no artificial colours. Gentle on enamel, tough on bacteria.",
+    description:
+      "Ayurvedic toothpaste with neem, clove, and mint. No fluoride, no SLS, no artificial colours. Gentle on enamel, tough on bacteria.",
     price: 249,
     discountPrice: 179,
     image: IMAGES.toothpaste,
@@ -320,7 +341,8 @@ const SEED_PRODUCTS = [
   {
     name: "Aluminium-Free Natural Deodorant",
     slug: "aluminium-free-natural-deodorant",
-    description: "Baking soda and coconut oil based deodorant. No aluminium, no parabens. Keeps you fresh for 8–10 hours naturally.",
+    description:
+      "Baking soda and coconut oil based deodorant. No aluminium, no parabens. Keeps you fresh for 8–10 hours naturally.",
     price: 349,
     discountPrice: 279,
     image: IMAGES.deodorant,
@@ -338,7 +360,8 @@ const SEED_PRODUCTS = [
   {
     name: "Handpainted Blue Pottery Mug",
     slug: "handpainted-blue-pottery-mug",
-    description: "Traditional Jaipur blue pottery mug, hand-painted by local artisans. Each piece is unique. Holds 250ml. Food-safe glaze.",
+    description:
+      "Traditional Jaipur blue pottery mug, hand-painted by local artisans. Each piece is unique. Holds 250ml. Food-safe glaze.",
     price: 599,
     discountPrice: 449,
     image: IMAGES.pottery,
@@ -353,7 +376,8 @@ const SEED_PRODUCTS = [
   {
     name: "Block Print Cotton Cushion Cover",
     slug: "block-print-cotton-cushion-cover",
-    description: "Hand block-printed cushion cover from Sanganer, Rajasthan. Natural dyes, 100% cotton. 16x16 inch.",
+    description:
+      "Hand block-printed cushion cover from Sanganer, Rajasthan. Natural dyes, 100% cotton. 16x16 inch.",
     price: 449,
     discountPrice: 329,
     image: IMAGES.blockPrint,
@@ -368,7 +392,8 @@ const SEED_PRODUCTS = [
   {
     name: "Madhubani Art Wall Frame — A4",
     slug: "madhubani-art-wall-frame-a4",
-    description: "Original Madhubani painting on handmade paper, framed in natural wood. Artwork by certified artisans from Mithila, Bihar.",
+    description:
+      "Original Madhubani painting on handmade paper, framed in natural wood. Artwork by certified artisans from Mithila, Bihar.",
     price: 1299,
     discountPrice: 999,
     image: IMAGES.woodArt,
@@ -383,7 +408,8 @@ const SEED_PRODUCTS = [
   {
     name: "Terracotta Hanging Planter — Set of 2",
     slug: "terracotta-hanging-planter-set-of-2",
-    description: "Handcrafted terracotta planters with macrame hangers. Ideal for succulents, small herbs, or trailing plants.",
+    description:
+      "Handcrafted terracotta planters with macrame hangers. Ideal for succulents, small herbs, or trailing plants.",
     price: 699,
     discountPrice: 549,
     image: IMAGES.pottery,
@@ -400,7 +426,8 @@ const SEED_PRODUCTS = [
   {
     name: "Bamboo Drinking Straws — Pack of 12",
     slug: "bamboo-drinking-straws-pack-of-12",
-    description: "Reusable bamboo straws with a cleaning brush. Natural, biodegradable, and chemical-free alternative to plastic straws.",
+    description:
+      "Reusable bamboo straws with a cleaning brush. Natural, biodegradable, and chemical-free alternative to plastic straws.",
     price: 249,
     discountPrice: 179,
     image: IMAGES.bambooStraw,
@@ -415,7 +442,8 @@ const SEED_PRODUCTS = [
   {
     name: "Recycled Newspaper Gift Bags — Set of 6",
     slug: "recycled-newspaper-gift-bags-set-of-6",
-    description: "Beautifully crafted gift bags made from recycled newspapers. Strong, stylish, and 100% plastic-free.",
+    description:
+      "Beautifully crafted gift bags made from recycled newspapers. Strong, stylish, and 100% plastic-free.",
     price: 199,
     discountPrice: 149,
     image: IMAGES.jute,
@@ -430,7 +458,8 @@ const SEED_PRODUCTS = [
   {
     name: "Natural Loofah Bath Scrubber",
     slug: "natural-loofah-bath-scrubber",
-    description: "100% natural dried loofah — grown and harvested in India. Exfoliates skin naturally and decomposes completely after use.",
+    description:
+      "100% natural dried loofah — grown and harvested in India. Exfoliates skin naturally and decomposes completely after use.",
     price: 149,
     discountPrice: 99,
     image: IMAGES.soapBar,
@@ -447,7 +476,8 @@ const SEED_PRODUCTS = [
   {
     name: "Pure Lavender Essential Oil — 15ml",
     slug: "pure-lavender-essential-oil-15ml",
-    description: "Steam-distilled pure lavender essential oil. Calming, soothing, and versatile — for aromatherapy, diffusers, and DIY skincare.",
+    description:
+      "Steam-distilled pure lavender essential oil. Calming, soothing, and versatile — for aromatherapy, diffusers, and DIY skincare.",
     price: 499,
     discountPrice: 379,
     image: IMAGES.essOil,
@@ -462,7 +492,8 @@ const SEED_PRODUCTS = [
   {
     name: "Neem & Charcoal Detox Soap Bar",
     slug: "neem-charcoal-detox-soap-bar",
-    description: "Cold-process soap with activated charcoal, neem oil, and tea tree. Deep cleanses, detoxifies, and controls acne.",
+    description:
+      "Cold-process soap with activated charcoal, neem oil, and tea tree. Deep cleanses, detoxifies, and controls acne.",
     price: 199,
     discountPrice: 149,
     image: IMAGES.soapBar,
@@ -478,7 +509,8 @@ const SEED_PRODUCTS = [
   {
     name: "Rose & Sandalwood Body Butter",
     slug: "rose-sandalwood-body-butter",
-    description: "Rich body butter with shea, cocoa butter, rose essential oil, and sandalwood. Deeply nourishes and leaves skin silky smooth.",
+    description:
+      "Rich body butter with shea, cocoa butter, rose essential oil, and sandalwood. Deeply nourishes and leaves skin silky smooth.",
     price: 549,
     discountPrice: 399,
     image: IMAGES.orgSerum,
@@ -496,7 +528,8 @@ const SEED_PRODUCTS = [
   {
     name: "Macrame Wall Hanging — Boho Style",
     slug: "macrame-wall-hanging-boho-style",
-    description: "Handcrafted macrame wall hanging made with natural cotton cord. Bohemian aesthetic, perfect for living rooms and bedrooms.",
+    description:
+      "Handcrafted macrame wall hanging made with natural cotton cord. Bohemian aesthetic, perfect for living rooms and bedrooms.",
     price: 899,
     discountPrice: 699,
     image: IMAGES.macrame,
@@ -511,7 +544,8 @@ const SEED_PRODUCTS = [
   {
     name: "Handmade Soy Wax Candle — Vanilla",
     slug: "handmade-soy-wax-candle-vanilla",
-    description: "Pure soy wax candle with natural vanilla fragrance. Cotton wick, no paraffin, burns clean for 40+ hours.",
+    description:
+      "Pure soy wax candle with natural vanilla fragrance. Cotton wick, no paraffin, burns clean for 40+ hours.",
     price: 399,
     discountPrice: 299,
     image: IMAGES.candle,
@@ -526,7 +560,8 @@ const SEED_PRODUCTS = [
   {
     name: "Hand-Embroidered Coin Purse",
     slug: "hand-embroidered-coin-purse",
-    description: "Colourful hand-embroidered coin purse from Kutch, Gujarat. Traditional mirror work, zip closure, and cotton lining.",
+    description:
+      "Colourful hand-embroidered coin purse from Kutch, Gujarat. Traditional mirror work, zip closure, and cotton lining.",
     price: 299,
     discountPrice: 219,
     image: IMAGES.embroidery,
@@ -541,7 +576,8 @@ const SEED_PRODUCTS = [
   {
     name: "Resin Art Coasters — Set of 4",
     slug: "resin-art-coasters-set-of-4",
-    description: "Handcrafted resin coasters with pressed flowers and gold foil. Each set is unique. Heat and water resistant.",
+    description:
+      "Handcrafted resin coasters with pressed flowers and gold foil. Each set is unique. Heat and water resistant.",
     price: 599,
     discountPrice: 449,
     image: IMAGES.woodArt,
@@ -558,7 +594,8 @@ const SEED_PRODUCTS = [
   {
     name: "Handmade Lavender Goat Milk Soap",
     slug: "handmade-lavender-goat-milk-soap",
-    description: "Cold-process soap made with goat milk, lavender oil, and oat flour. Gentle, moisturising, and suitable for sensitive skin.",
+    description:
+      "Cold-process soap made with goat milk, lavender oil, and oat flour. Gentle, moisturising, and suitable for sensitive skin.",
     price: 249,
     discountPrice: 179,
     image: IMAGES.soapBar,
@@ -574,7 +611,8 @@ const SEED_PRODUCTS = [
   {
     name: "Handmade Beaded Bracelet — Boho",
     slug: "handmade-beaded-bracelet-boho",
-    description: "Hand-strung bracelet with natural stone beads — amethyst, lapis, and turquoise. Adjustable cord closure. Each piece is one-of-a-kind.",
+    description:
+      "Hand-strung bracelet with natural stone beads — amethyst, lapis, and turquoise. Adjustable cord closure. Each piece is one-of-a-kind.",
     price: 349,
     discountPrice: 249,
     image: IMAGES.jewelry,
@@ -589,7 +627,8 @@ const SEED_PRODUCTS = [
   {
     name: "Home Made Rose & Honey Face Pack — 100g",
     slug: "home-made-rose-honey-face-pack-100g",
-    description: "Freshly made face pack with dried rose petals, raw honey, and multani mitti. No preservatives — made in small batches.",
+    description:
+      "Freshly made face pack with dried rose petals, raw honey, and multani mitti. No preservatives — made in small batches.",
     price: 299,
     discountPrice: 219,
     image: IMAGES.orgFace,
@@ -605,7 +644,8 @@ const SEED_PRODUCTS = [
   {
     name: "Handmade Crochet Plant Hanger",
     slug: "handmade-crochet-plant-hanger",
-    description: "Hand-crocheted plant hanger in natural cotton. Holds pots up to 6 inch. Adds a cosy, handmade touch to your space.",
+    description:
+      "Hand-crocheted plant hanger in natural cotton. Holds pots up to 6 inch. Adds a cosy, handmade touch to your space.",
     price: 399,
     discountPrice: 299,
     image: IMAGES.macrame,
@@ -657,7 +697,9 @@ async function run() {
     created++;
   }
 
-  console.log(`\n🎉 Done! Created: ${created} | Skipped: ${skipped} | Total: ${SEED_PRODUCTS.length}`);
+  console.log(
+    `\n🎉 Done! Created: ${created} | Skipped: ${skipped} | Total: ${SEED_PRODUCTS.length}`
+  );
   await mongoose.disconnect();
   process.exit(0);
 }

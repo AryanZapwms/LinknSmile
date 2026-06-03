@@ -7,7 +7,7 @@ import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
 
 export async function GET(req: NextRequest) {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -16,10 +16,7 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== "admin") {
-      return withCORS(NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      ));
+      return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
 
     // 🗄 Connect DB
@@ -32,8 +29,7 @@ export async function GET(req: NextRequest) {
 
     // 📌 Get status from query
     const { searchParams } = new URL(req.url);
-    const status =
-      searchParams.get("status") || "pending"; // pending | approved | rejected
+    const status = searchParams.get("status") || "pending"; // pending | approved | rejected
 
     // 📦 Fetch Products
     const products = await Product.find({
@@ -45,21 +41,25 @@ export async function GET(req: NextRequest) {
       .sort({ submittedAt: -1 })
       .lean();
 
-    return withCORS(NextResponse.json({
-      success: true,
-      count: products.length,
-      products,
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        count: products.length,
+        products,
+      })
+    );
   } catch (error: any) {
     console.error("Pending products fetch error:", error);
 
-    return withCORS(NextResponse.json(
-      {
-        success: false,
-        message: "Failed to fetch products",
-        error: error.message,
-      },
-      { status: 500 }
-    ));
+    return withCORS(
+      NextResponse.json(
+        {
+          success: false,
+          message: "Failed to fetch products",
+          error: error.message,
+        },
+        { status: 500 }
+      )
+    );
   }
 }

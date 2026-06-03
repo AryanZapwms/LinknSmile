@@ -3,21 +3,21 @@
 // Releases vendor payouts that have been pending for 7+ days after delivery
 // Also updates wallet balances accordingly
 
-import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
-import { Order } from '@/lib/models/order';
-import { Wallet } from '@/lib/models/wallet';
-import { LedgerEntry } from '@/lib/models/ledger';
-import mongoose from 'mongoose';
+import { NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import { Order } from "@/lib/models/order";
+import { Wallet } from "@/lib/models/wallet";
+import { LedgerEntry } from "@/lib/models/ledger";
+import mongoose from "mongoose";
 
 const HOLD_DAYS = 7;
 
 export async function GET(req: NextRequest) {
   // Protect the cron endpoint
-  const authHeader = req.headers.get('authorization');
+  const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -28,8 +28,8 @@ export async function GET(req: NextRequest) {
 
     // Find delivered orders with pending payouts where delivery was 7+ days ago
     const orders = await Order.find({
-      orderStatus: 'delivered',
-      'vendorPayouts.status': 'pending',
+      orderStatus: "delivered",
+      "vendorPayouts.status": "pending",
       updatedAt: { $lte: cutoffDate },
     });
 
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
       try {
         await session.withTransaction(async () => {
           for (const payout of order.vendorPayouts as any[]) {
-            if (payout.status !== 'pending') continue;
+            if (payout.status !== "pending") continue;
             if (!payout.shopId) continue;
 
             // Check if the order was updated (delivered) 7+ days ago
@@ -51,23 +51,23 @@ export async function GET(req: NextRequest) {
             if (daysSinceDelivery < HOLD_DAYS) continue;
 
             // Mark payout as released
-            payout.status = 'released';
+            payout.status = "released";
             payout.releasedAt = new Date();
 
             // Find or create wallet for this vendor
             let wallet = await Wallet.findOne({
               shopId: payout.shopId,
-              type: 'VENDOR',
+              type: "VENDOR",
             }).session(session);
 
             if (!wallet) {
               [wallet] = await Wallet.create(
-                [{ shopId: payout.shopId, type: 'VENDOR', status: 'ACTIVE' }],
+                [{ shopId: payout.shopId, type: "VENDOR", status: "ACTIVE" }],
                 { session }
               );
             }
 
-            if (wallet.status === 'FROZEN' || wallet.status === 'CLOSED') continue;
+            if (wallet.status === "FROZEN" || wallet.status === "CLOSED") continue;
 
             // Move amount from pending → withdrawable
             const amount = payout.amount || 0;
@@ -81,11 +81,11 @@ export async function GET(req: NextRequest) {
               [
                 {
                   accountId: wallet._id,
-                  type: 'CREDIT',
+                  type: "CREDIT",
                   amount,
-                  status: 'CLEARED',
+                  status: "CLEARED",
                   description: `Order #${order.orderNumber} — earnings released`,
-                  referenceType: 'ORDER',
+                  referenceType: "ORDER",
                   referenceId: order._id,
                 },
               ],
@@ -115,7 +115,7 @@ export async function GET(req: NextRequest) {
       message: `Released ${released} vendor payouts`,
     });
   } catch (error: any) {
-    console.error('[CronClearFunds] Fatal error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error("[CronClearFunds] Fatal error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

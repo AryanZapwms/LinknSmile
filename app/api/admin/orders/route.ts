@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
 
     //  SECURITY CHECK: Only admins can access this endpoint
     if (dbUser.role !== "admin") {
-      return withCORS(NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 })
+      );
     }
 
     // Fetch all orders for admin
@@ -39,9 +41,6 @@ export async function GET(request: NextRequest) {
     return withCORS(NextResponse.json(orders));
   } catch (error) {
     console.error("Error fetching admin orders:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to fetch orders" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 }));
   }
 }

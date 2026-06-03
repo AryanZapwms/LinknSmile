@@ -1,10 +1,10 @@
 import { withCORS } from "@/lib/cors";
-  import mongoose from "mongoose"
-import { NextResponse, type NextRequest } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
-import { connectDB } from "@/lib/db"
-import { Review } from "@/lib/models/review"
+import mongoose from "mongoose";
+import { NextResponse, type NextRequest } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { connectDB } from "@/lib/db";
+import { Review } from "@/lib/models/review";
 
 function mapReview(review: any) {
   return {
@@ -26,28 +26,28 @@ function mapReview(review: any) {
       : null,
     createdAt: review.createdAt,
     updatedAt: review.updatedAt,
-  }
+  };
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
   try {
-    const { id: reviewId } = await params
-    const session = await getServerSession(authOptions)
+    const { id: reviewId } = await params;
+    const session = await getServerSession(authOptions);
     if (!mongoose.Types.ObjectId.isValid(reviewId)) {
-      return withCORS(NextResponse.json({ error: "Invalid review id" }, { status: 400 }))
+      return withCORS(NextResponse.json({ error: "Invalid review id" }, { status: 400 }));
     }
 
-    const body = await request.json()
-    const message = typeof body.message === "string" ? body.message.trim() : ""
+    const body = await request.json();
+    const message = typeof body.message === "string" ? body.message.trim() : "";
     if (!message) {
-      return withCORS(NextResponse.json({ error: "Reply message is required" }, { status: 400 }))
+      return withCORS(NextResponse.json({ error: "Reply message is required" }, { status: 400 }));
     }
 
-    await connectDB()
+    await connectDB();
 
     const review = await Review.findByIdAndUpdate(
       reviewId,
@@ -59,16 +59,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           repliedByName: session.user.name || "Admin",
         },
       },
-      { new: true },
-    )
+      { new: true }
+    );
 
     if (!review) {
-      return withCORS(NextResponse.json({ error: "Review not found" }, { status: 404 }))
+      return withCORS(NextResponse.json({ error: "Review not found" }, { status: 404 }));
     }
 
-    return withCORS(NextResponse.json({ review: mapReview(review.toObject()) }))
+    return withCORS(NextResponse.json({ review: mapReview(review.toObject()) }));
   } catch (error) {
-    console.error("Error replying to review:", error)
-    return withCORS(NextResponse.json({ error: "Failed to reply to review" }, { status: 500 }))
+    console.error("Error replying to review:", error);
+    return withCORS(NextResponse.json({ error: "Failed to reply to review" }, { status: 500 }));
   }
 }

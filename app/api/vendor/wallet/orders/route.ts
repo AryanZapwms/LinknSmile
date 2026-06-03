@@ -1,50 +1,50 @@
 // app/api/vendor/wallet/orders/route.ts
 import { withCORS } from "@/lib/cors";
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { connectDB } from '@/lib/db';
-import { Order } from '@/lib/models/order';
-import Shop from '@/lib/models/shop';
-import { Product } from '@/lib/models/product';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { connectDB } from "@/lib/db";
+import { Order } from "@/lib/models/order";
+import Shop from "@/lib/models/shop";
+import { Product } from "@/lib/models/product";
 
 export async function GET(req: NextRequest) {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'shop_owner') {
-      return withCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
+    if (!session || session.user.role !== "shop_owner") {
+      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
 
     await connectDB();
 
     const shopId = session.user.shopId;
     if (!shopId) {
-      return withCORS(NextResponse.json({ error: 'Shop not found in session' }, { status: 404 }));
+      return withCORS(NextResponse.json({ error: "Shop not found in session" }, { status: 404 }));
     }
 
-    const shop = await Shop.findById(shopId).select('commissionRate shopName');
+    const shop = await Shop.findById(shopId).select("commissionRate shopName");
     if (!shop) {
-      return withCORS(NextResponse.json({ error: 'Shop not found' }, { status: 404 }));
+      return withCORS(NextResponse.json({ error: "Shop not found" }, { status: 404 }));
     }
 
     const { searchParams } = new URL(req.url);
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-    const limit = Math.min(50, parseInt(searchParams.get('limit') || '20'));
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(50, parseInt(searchParams.get("limit") || "20"));
     const skip = (page - 1) * limit;
 
     // Fetch orders that contain items from this shop
     const [orders, total] = await Promise.all([
-      Order.find({ 'items.shopId': shopId })
-        .populate('items.product', 'name image slug')
+      Order.find({ "items.shopId": shopId })
+        .populate("items.product", "name image slug")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Order.countDocuments({ 'items.shopId': shopId }),
+      Order.countDocuments({ "items.shopId": shopId }),
     ]);
 
     const orderBreakdowns = orders.map((order) => {
@@ -72,11 +72,10 @@ export async function GET(req: NextRequest) {
       const vendorPayout = order.vendorPayouts?.find(
         (p: any) => p.shopId?.toString() === shopId.toString()
       );
-      const settlementStatus = vendorPayout?.status || 'pending';
+      const settlementStatus = vendorPayout?.status || "pending";
 
       // Effective commission rate (use stored rate or compute)
-      const commissionRate =
-        vendorItems[0]?.commissionRate ?? shop.commissionRate ?? 10;
+      const commissionRate = vendorItems[0]?.commissionRate ?? shop.commissionRate ?? 10;
 
       return {
         orderId: order._id.toString(),
@@ -92,7 +91,7 @@ export async function GET(req: NextRequest) {
           const itemEarnings = item.vendorEarnings || itemTotal - itemCommission;
           return {
             productId: item.product?._id?.toString() || item.product?.toString(),
-            productName: item.product?.name || item.shopName || 'Product',
+            productName: item.product?.name || item.shopName || "Product",
             productImage: item.product?.image,
             quantity: item.quantity || 1,
             unitPrice: itemPrice,
@@ -111,30 +110,32 @@ export async function GET(req: NextRequest) {
           settlementStatus,
           // Human-readable settlement info
           settlementNote: (() => {
-            if (order.paymentStatus !== 'completed') return 'Awaiting payment';
-            if (order.orderStatus === 'cancelled') return 'Order cancelled';
-            if (order.orderStatus !== 'delivered') return 'Settles after delivery';
-            if (settlementStatus === 'released') return 'Credited to wallet';
-            if (settlementStatus === 'held') return 'On hold - contact support';
-            return 'Pending wallet credit (7 days after delivery)';
+            if (order.paymentStatus !== "completed") return "Awaiting payment";
+            if (order.orderStatus === "cancelled") return "Order cancelled";
+            if (order.orderStatus !== "delivered") return "Settles after delivery";
+            if (settlementStatus === "released") return "Credited to wallet";
+            if (settlementStatus === "held") return "On hold - contact support";
+            return "Pending wallet credit (7 days after delivery)";
           })(),
         },
       };
     });
 
-    return withCORS(NextResponse.json({
-      success: true,
-      orders: orderBreakdowns,
-      shopCommissionRate: shop.commissionRate,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      },
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        orders: orderBreakdowns,
+        shopCommissionRate: shop.commissionRate,
+        pagination: {
+          total,
+          page,
+          limit,
+          pages: Math.ceil(total / limit),
+        },
+      })
+    );
   } catch (error: any) {
-    console.error('[VendorWalletOrders GET]', error);
-    return withCORS(NextResponse.json({ error: 'Internal server error' }, { status: 500 }));
+    console.error("[VendorWalletOrders GET]", error);
+    return withCORS(NextResponse.json({ error: "Internal server error" }, { status: 500 }));
   }
 }

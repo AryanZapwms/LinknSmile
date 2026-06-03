@@ -1,38 +1,39 @@
-"use client"
+"use client";
 
-import { Star } from "lucide-react"
+import { Star } from "lucide-react";
 
 interface ComingSoonProps {
-  companyName?: string
+  companyName?: string;
 }
 
 export function ComingSoon({ companyName }: ComingSoonProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFFBF3] to-[#FAF6E8] flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full text-center space-y-8 mt-5">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#FFFBF3] to-[#FAF6E8] px-4">
+      <div className="mt-5 w-full max-w-2xl space-y-8 text-center">
         {/* Stars decoration */}
-        <div className="flex justify-center gap-8 mb-8">
-          <Star className="w-6 h-6 text-[#B08A2E] fill-[#B08A2E] animate-pulse" />
-          <Star className="w-8 h-8 text-[#C29A43] fill-[#C29A43] animate-pulse delay-100" />
-          <Star className="w-6 h-6 text-[#B08A2E] fill-[#B08A2E] animate-pulse delay-200" />
+        <div className="mb-8 flex justify-center gap-8">
+          <Star className="h-6 w-6 animate-pulse fill-[#B08A2E] text-[#B08A2E]" />
+          <Star className="h-8 w-8 animate-pulse fill-[#C29A43] text-[#C29A43] delay-100" />
+          <Star className="h-6 w-6 animate-pulse fill-[#B08A2E] text-[#B08A2E] delay-200" />
         </div>
 
         {/* Main Heading */}
         <div className="space-y-4">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#2D2415] tracking-wide">
+          <h1 className="text-4xl font-bold tracking-wide text-[#2D2415] md:text-5xl lg:text-6xl">
             Coming Soon
           </h1>
-          <p className="text-lg md:text-xl text-[#6B5B47] font-medium">
+          <p className="text-lg font-medium text-[#6B5B47] md:text-xl">
             {companyName ? `${companyName} is` : "We are"} preparing something special for you
           </p>
         </div>
 
         {/* Description */}
-        <div className="bg-white/60 backdrop-blur-sm border-2 border-[#E8D5C4] rounded-2xl p-6 md:p-8 space-y-3">
-          <p className="text-[#6B5B47] text-base md:text-lg leading-relaxed">
-            ✨ Our team is working hard to bring you an amazing collection of premium beauty and skincare products.
+        <div className="space-y-3 rounded-2xl border-2 border-[#E8D5C4] bg-white/60 p-6 backdrop-blur-sm md:p-8">
+          <p className="text-base leading-relaxed text-[#6B5B47] md:text-lg">
+            ✨ Our team is working hard to bring you an amazing collection of premium beauty and
+            skincare products.
           </p>
-          <p className="text-[#8B7355] text-sm md:text-base">
+          <p className="text-sm text-[#8B7355] md:text-base">
             Stay tuned for exclusive launches, special offers, and products curated just for you.
           </p>
         </div>
@@ -40,27 +41,26 @@ export function ComingSoon({ companyName }: ComingSoonProps) {
         {/* Stay Tuned Section */}
         <div className="space-y-4">
           <div className="inline-block">
-            <div className="bg-gradient-to-r from-[#B08A2E] to-[#C29A43] text-white px-8 py-4 rounded-full font-semibold text-lg tracking-wide shadow-lg">
+            <div className="rounded-full bg-gradient-to-r from-[#B08A2E] to-[#C29A43] px-8 py-4 text-lg font-semibold tracking-wide text-white shadow-lg">
               🌟 Stay Tuned 🌟
             </div>
           </div>
-          
         </div>
 
-       
         {/* Bottom decoration */}
-        <div className="pt-8 flex justify-center gap-2 mb-5">
-          <div className="w-2 h-2 rounded-full bg-[#B08A2E]" />
-          <div className="w-2 h-2 rounded-full bg-[#C29A43]" />
-          <div className="w-2 h-2 rounded-full bg-[#A08C6A]" />
-          <div className="w-2 h-2 rounded-full bg-[#C29A43]" />
-          <div className="w-2 h-2 rounded-full bg-[#B08A2E]" />
+        <div className="mb-5 flex justify-center gap-2 pt-8">
+          <div className="h-2 w-2 rounded-full bg-[#B08A2E]" />
+          <div className="h-2 w-2 rounded-full bg-[#C29A43]" />
+          <div className="h-2 w-2 rounded-full bg-[#A08C6A]" />
+          <div className="h-2 w-2 rounded-full bg-[#C29A43]" />
+          <div className="h-2 w-2 rounded-full bg-[#B08A2E]" />
         </div>
       </div>
 
       <style jsx>{`
         @keyframes pulse {
-          0%, 100% {
+          0%,
+          100% {
             opacity: 1;
           }
           50% {
@@ -81,5 +81,5 @@ export function ComingSoon({ companyName }: ComingSoonProps) {
         }
       `}</style>
     </div>
-  )
+  );
 }

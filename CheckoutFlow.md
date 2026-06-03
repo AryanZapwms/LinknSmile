@@ -1,6 +1,7 @@
 # Checkout Flow Documentation
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Prerequisites & Access Control](#prerequisites--access-control)
 3. [Cart State Management](#cart-state-management)
@@ -36,11 +37,13 @@ The checkout experience combines a persisted cart (Zustand), authenticated acces
 Cart data lives in `lib/store/cart-store.ts`, persisted to `localStorage` via `zustand/middleware`.
 
 ### Store Shape
+
 - **Items:** Array of `CartItem` objects (product id, name, pricing, quantity, optional size).
 - **Mutators:** `addItem`, `removeItem`, `updateQuantity`, `clearCart`.
 - **Derived Helpers:** `getTotalPrice` sums discounted prices when available, `getTotalItems` counts total units.
 
 ### Usage Highlights
+
 - `app/cart/page.tsx` reads and mutates cart state for the cart view.
 - `app/shop/[company]/product/[id]/page.tsx` writes into the cart on "Add to Cart" actions.
 - `app/checkout/page.tsx` consumes `items`, `getTotalPrice`, and `clearCart` to present the order summary and reset the cart after success.
@@ -69,12 +72,14 @@ Located at `app/checkout/page.tsx`, the page coordinates data fetching, payment 
 `components/checkout-form.tsx` encapsulates the shipping form and payment selector.
 
 ### Props
-- **`totalAmount`** *(number)*: Order total in INR.
-- **`onSubmit`** *(async function)*: Receives `formData` and `paymentMethod`.
-- **`availablePaymentMethods`** *(string[])*: Typically `['razorpay', 'cod']` depending on admin settings.
-- **`initialData`** *(optional object)*: Prefills name, phone, and address fields.
+
+- **`totalAmount`** _(number)_: Order total in INR.
+- **`onSubmit`** _(async function)_: Receives `formData` and `paymentMethod`.
+- **`availablePaymentMethods`** _(string[])_: Typically `['razorpay', 'cod']` depending on admin settings.
+- **`initialData`** _(optional object)_: Prefills name, phone, and address fields.
 
 ### Behavior
+
 1. **Local State:** Manages form inputs, selected payment method, and internal `isLoading` for submit button.
 2. **Controlled Inputs:** Collect full name, phone, street, city, state, ZIP, and country (locked to India).
 3. **Payment Options:** Renders `RadioGroup` entries for Razorpay and COD if the methods are available.
@@ -139,14 +144,14 @@ const verifyResponse = await fetch("/api/razorpay/verify-payment", {
 
 ## API Endpoints
 
-| Endpoint | Method | Purpose | File |
-|----------|--------|---------|------|
-| `/api/orders` | `POST` | Create COD orders (or generic orders) and trigger emails. | `app/api/orders/route.ts` |
-| `/api/orders` | `GET` | Fetch authenticated user orders (excluding failed payments). | `app/api/orders/route.ts` |
-| `/api/razorpay/create-order` | `POST` | Create a Razorpay order (server-to-Razorpay) and return the order ID. | `app/api/razorpay/create-order/route.ts` |
+| Endpoint                       | Method | Purpose                                                                     | File                                       |
+| ------------------------------ | ------ | --------------------------------------------------------------------------- | ------------------------------------------ |
+| `/api/orders`                  | `POST` | Create COD orders (or generic orders) and trigger emails.                   | `app/api/orders/route.ts`                  |
+| `/api/orders`                  | `GET`  | Fetch authenticated user orders (excluding failed payments).                | `app/api/orders/route.ts`                  |
+| `/api/razorpay/create-order`   | `POST` | Create a Razorpay order (server-to-Razorpay) and return the order ID.       | `app/api/razorpay/create-order/route.ts`   |
 | `/api/razorpay/verify-payment` | `POST` | Verify Razorpay signature, persist/update order, adjust stock, send emails. | `app/api/razorpay/verify-payment/route.ts` |
-| `/api/admin/payment-settings` | `GET` | Determines whether Razorpay and COD are enabled. | `app/api/admin/payment-settings/route.ts` |
-| `/api/users/profile` | `GET` | Supplies shipping defaults (name, phone, address). | `app/api/users/profile/route.ts` |
+| `/api/admin/payment-settings`  | `GET`  | Determines whether Razorpay and COD are enabled.                            | `app/api/admin/payment-settings/route.ts`  |
+| `/api/users/profile`           | `GET`  | Supplies shipping defaults (name, phone, address).                          | `app/api/users/profile/route.ts`           |
 
 ---
 
@@ -155,12 +160,14 @@ const verifyResponse = await fetch("/api/razorpay/verify-payment", {
 All transactional emails leverage helpers in `lib/email.tsx`. Delivery happens via a lazily created Gmail transporter (`nodemailer.createTransport`) that reads `GMAIL_EMAIL` and `GMAIL_APP_PASSWORD` from environment variables. When credentials are missing the helper logs an error and the caller continues, so API routes remain resilient even if email fails.
 
 ### Available Templates
+
 - **`getWelcomeEmail(name)`**: Long-form HTML welcome message sent after OTP verification.
 - **`getOrderConfirmationEmail({...})`**: Customer-facing invoice summary with line items, totals, and payment status tag.
 - **`getAdminOrderNotificationEmail({...})`**: Internal alert summarizing buyer contact info, shipping address, payment method, and cart contents for fulfillment teams.
-- **`getOtpEmail({ otp, name })`** *(from `lib/EmailOtp.ts`)*: Minimal template delivering 6-digit login verification codes.
+- **`getOtpEmail({ otp, name })`** _(from `lib/EmailOtp.ts`)_: Minimal template delivering 6-digit login verification codes.
 
 ### Sending Mechanisms & Trigger Points
+
 1. **Account Verification (OTP flow)**
    - Route: `app/api/auth/verify-otp/route.ts`
    - Trigger: After an OTP is validated, `sendEmail` dispatches `getWelcomeEmail` to the customer so they know registration succeeded.
@@ -190,6 +197,7 @@ All transactional emails leverage helpers in `lib/email.tsx`. Delivery happens v
    - Trigger: When admins mutate an order, `getOrderStatusUpdateEmail` (from `lib/email.tsx`) is filled with the new status, expected delivery info, and tracking link before dispatching to the customer.
 
 ### Failure Handling & Observability
+
 - **Graceful Degradation:** All callers wrap `sendEmail` in `try/catch` and log failures without interrupting order or payment flows.
 - **Logging:** Success and failure logs are emitted with recipient addresses to aid debugging in server logs.
 - **Environment Prerequisites:** Ensure Gmail credentials are available in deployment environments; otherwise the transporter returns `null` and no emails leave the server.

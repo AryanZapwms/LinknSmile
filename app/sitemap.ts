@@ -31,9 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const blogs = await Blog.find({ isPublished: true })
-    .select("slug updatedAt")
-    .lean();
+  const blogs = await Blog.find({ isPublished: true }).select("slug updatedAt").lean();
   const blogRoutes = blogs.map((blog) => ({
     url: `${baseUrl}/blog/${blog.slug}`,
     lastModified: blog.updatedAt || new Date(),
@@ -41,17 +39,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const products = await Product.find({ isActive: true })
-    .select("_id updatedAt")
-    .lean();
+  const products = await Product.find({ isActive: true }).select("_id updatedAt").lean();
 
-  const productRoutes = products
-    .map((product: any) => ({
-      url: `${baseUrl}/products/${product._id}`,
-      lastModified: product.updatedAt || new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.6,
-    }));
+  const productRoutes = products.map((product: any) => ({
+    url: `${baseUrl}/products/${product._id}`,
+    lastModified: product.updatedAt || new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
 
   return [...staticRoutes, ...blogRoutes, ...productRoutes];
 }

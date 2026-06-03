@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { SessionProvider } from "next-auth/react"
-import type { Session } from "next-auth"
-import type { SessionProviderProps } from "next-auth/react"
+import { SessionProvider } from "next-auth/react";
+import type { Session } from "next-auth";
+import type { SessionProviderProps } from "next-auth/react";
 
-type AuthSessionProviderProps = SessionProviderProps & { session?: Session | null }
+type AuthSessionProviderProps = SessionProviderProps & { session?: Session | null };
 
 export function AuthSessionProvider({ children, session, ...props }: AuthSessionProviderProps) {
   return (
@@ -17,5 +17,5 @@ export function AuthSessionProvider({ children, session, ...props }: AuthSession
     >
       {children}
     </SessionProvider>
-  )
+  );
 }

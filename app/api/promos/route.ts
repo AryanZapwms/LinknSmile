@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -28,15 +28,12 @@ export async function GET(request: NextRequest) {
     return withCORS(NextResponse.json(promos));
   } catch (error) {
     console.error("Error fetching promos:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to fetch promos" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to fetch promos" }, { status: 500 }));
   }
 }
 
 export async function POST(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -44,22 +41,15 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     //  SECURITY CHECK: Only admins can create promos
     if (!session || session.user.role !== "admin") {
-      return withCORS(NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 })
+      );
     }
 
     await connectDB();
 
     const body = await request.json();
-    const {
-      title,
-      message,
-      link,
-      linkText,
-      backgroundColor,
-      textColor,
-      isActive,
-      priority,
-    } = body;
+    const { title, message, link, linkText, backgroundColor, textColor, isActive, priority } = body;
 
     const promo = new Promo({
       title,
@@ -77,9 +67,6 @@ export async function POST(request: NextRequest) {
     return withCORS(NextResponse.json(promo, { status: 201 }));
   } catch (error) {
     console.error("Error creating promo:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to create promo" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to create promo" }, { status: 500 }));
   }
 }

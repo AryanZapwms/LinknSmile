@@ -1,8 +1,8 @@
 // lib/services/push-notification.ts
-import { Expo, ExpoPushMessage } from 'expo-server-sdk';
-import mongoose from 'mongoose';
-import { User } from '../models/user';
-import Shop from '../models/shop';
+import { Expo, ExpoPushMessage } from "expo-server-sdk";
+import mongoose from "mongoose";
+import { User } from "../models/user";
+import Shop from "../models/shop";
 
 let expo = new Expo();
 
@@ -14,7 +14,7 @@ export async function sendPushNotificationToVendor(
 ) {
   try {
     // Find shop and its owner
-    const shop = await Shop.findById(shopId).populate<{ ownerId: any }>('ownerId');
+    const shop = await Shop.findById(shopId).populate<{ ownerId: any }>("ownerId");
     if (!shop || !shop.ownerId) {
       console.error(`No owner found for shop ${shopId}`);
       return;
@@ -29,7 +29,7 @@ export async function sendPushNotificationToVendor(
       .filter((token: string) => Expo.isExpoPushToken(token))
       .map((token: string) => ({
         to: token,
-        sound: 'default',
+        sound: "default",
         title,
         body,
         data: data || {},
@@ -42,7 +42,7 @@ export async function sendPushNotificationToVendor(
       await expo.sendPushNotificationsAsync(chunk);
     }
   } catch (error) {
-    console.error('Failed to send push notification:', error);
+    console.error("Failed to send push notification:", error);
   }
 }
 
@@ -53,8 +53,8 @@ export async function sendPushNotificationToMultipleVendors(
   body: string,
   data?: Record<string, any>
 ) {
-  const uniqueShopIds = [...new Set(shopIds.map(id => id.toString()))];
-  const shops = await Shop.find({ _id: { $in: uniqueShopIds } }).populate('ownerId');
+  const uniqueShopIds = [...new Set(shopIds.map((id) => id.toString()))];
+  const shops = await Shop.find({ _id: { $in: uniqueShopIds } }).populate("ownerId");
   const allTokens: string[] = [];
 
   for (const shop of shops) {
@@ -65,12 +65,12 @@ export async function sendPushNotificationToMultipleVendors(
   }
 
   const uniqueTokens = [...new Set(allTokens)];
-  const validTokens = uniqueTokens.filter(token => Expo.isExpoPushToken(token));
+  const validTokens = uniqueTokens.filter((token) => Expo.isExpoPushToken(token));
   if (validTokens.length === 0) return;
 
-  const messages: ExpoPushMessage[] = validTokens.map(token => ({
+  const messages: ExpoPushMessage[] = validTokens.map((token) => ({
     to: token,
-    sound: 'default',
+    sound: "default",
     title,
     body,
     data,

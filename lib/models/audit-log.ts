@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface IAuditLog extends Document {
   action: string;
@@ -20,7 +20,7 @@ const AuditLogSchema = new Schema<IAuditLog>(
     performedBy: { type: Schema.Types.Mixed, required: true },
     targetEntity: { type: String, required: true },
     targetId: { type: Schema.Types.Mixed },
-    shopId: { type: Schema.Types.ObjectId, ref: 'Shop', index: true },
+    shopId: { type: Schema.Types.ObjectId, ref: "Shop", index: true },
     before: { type: Schema.Types.Mixed },
     after: { type: Schema.Types.Mixed },
     ipAddress: { type: String },
@@ -36,14 +36,14 @@ const AuditLogSchema = new Schema<IAuditLog>(
 );
 
 // Block all mutations — audit logs are immutable
-AuditLogSchema.pre('findOneAndUpdate', function () {
-  throw new Error('AuditLog entries are immutable. Create a new entry instead.');
+AuditLogSchema.pre("findOneAndUpdate", function () {
+  throw new Error("AuditLog entries are immutable. Create a new entry instead.");
 });
-AuditLogSchema.pre('updateOne', function () {
-  throw new Error('AuditLog entries are immutable.');
+AuditLogSchema.pre("updateOne", function () {
+  throw new Error("AuditLog entries are immutable.");
 });
-AuditLogSchema.pre('updateMany', function () {
-  throw new Error('AuditLog entries are immutable.');
+AuditLogSchema.pre("updateMany", function () {
+  throw new Error("AuditLog entries are immutable.");
 });
 
 AuditLogSchema.index({ shopId: 1, createdAt: -1 });
@@ -51,4 +51,4 @@ AuditLogSchema.index({ action: 1, createdAt: -1 });
 AuditLogSchema.index({ performedBy: 1, createdAt: -1 });
 
 export const AuditLog: Model<IAuditLog> =
-  mongoose.models.AuditLog || mongoose.model<IAuditLog>('AuditLog', AuditLogSchema);
+  mongoose.models.AuditLog || mongoose.model<IAuditLog>("AuditLog", AuditLogSchema);

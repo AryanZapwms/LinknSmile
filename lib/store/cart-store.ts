@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface CartItem {
   productId: string; // product._id
@@ -10,7 +10,7 @@ export interface CartItem {
   image?: string;
   quantity: number;
   stock: number;
-  
+
   shopId: string;
   shopName: string;
   commissionRate: number; // percentage (e.g., 10 for 10%)
@@ -24,7 +24,7 @@ export interface CartItem {
     discountPrice?: number;
     stock: number;
   };
-  
+
   // Product details
   category?: {
     _id: string;
@@ -44,7 +44,8 @@ interface CartStore {
   getTotalPrice: () => number;
   getItemsByVendor: () => Record<string, CartItem[]>; // ✅ NEW: Group by vendor
   getVendorTotal: (shopId: string) => number; // ✅ NEW: Total per vendor
-  getCommissionBreakdown: () => { // ✅ NEW: Commission calculation
+  getCommissionBreakdown: () => {
+    // ✅ NEW: Commission calculation
     subtotal: number;
     totalCommission: number;
     vendorEarnings: number;
@@ -86,9 +87,7 @@ export const useCartStore = create<CartStore>()(
             // Item exists, increase quantity
             const newItems = [...state.items];
             const existingItem = newItems[existingItemIndex];
-            const maxStock = item.selectedSize
-              ? item.selectedSize.stock
-              : item.stock;
+            const maxStock = item.selectedSize ? item.selectedSize.stock : item.stock;
 
             if (existingItem.quantity < maxStock) {
               newItems[existingItemIndex] = {
@@ -121,19 +120,21 @@ export const useCartStore = create<CartStore>()(
 
       updateQuantity: (id, quantity, sizeId) => {
         set((state) => ({
-          items: state.items.map((item) => {
-            const matches = sizeId
-              ? item.productId === id &&
-                `${item.selectedSize?.size}-${item.selectedSize?.quantity}` === sizeId
-              : item.productId === id;
+          items: state.items
+            .map((item) => {
+              const matches = sizeId
+                ? item.productId === id &&
+                  `${item.selectedSize?.size}-${item.selectedSize?.quantity}` === sizeId
+                : item.productId === id;
 
-            if (matches) {
-              const maxStock = item.selectedSize ? item.selectedSize.stock : item.stock;
-              const newQuantity = Math.max(0, Math.min(quantity, maxStock));
-              return { ...item, quantity: newQuantity };
-            }
-            return item;
-          }).filter((item) => item.quantity > 0),
+              if (matches) {
+                const maxStock = item.selectedSize ? item.selectedSize.stock : item.stock;
+                const newQuantity = Math.max(0, Math.min(quantity, maxStock));
+                return { ...item, quantity: newQuantity };
+              }
+              return item;
+            })
+            .filter((item) => item.quantity > 0),
           items_version: state.items_version + 1,
         }));
       },
@@ -156,21 +157,21 @@ export const useCartStore = create<CartStore>()(
       getItemsByVendor: () => {
         const items = get().items;
         const grouped: Record<string, CartItem[]> = {};
-      
+
         items.forEach((item) => {
-          const vendorId = item.shopId || 'platform'; // fallback to 'platform' for old products
+          const vendorId = item.shopId || "platform"; // fallback to 'platform' for old products
           if (!grouped[vendorId]) {
             grouped[vendorId] = [];
           }
           grouped[vendorId].push(item);
         });
-      
+
         return grouped;
       },
 
       getVendorTotal: (shopId: string) => {
-        return get().items
-          .filter((item) => item.shopId === shopId || (!item.shopId && shopId === 'platform'))
+        return get()
+          .items.filter((item) => item.shopId === shopId || (!item.shopId && shopId === "platform"))
           .reduce((total, item) => {
             const price = item.selectedSize
               ? item.selectedSize.discountPrice || item.selectedSize.price
@@ -182,7 +183,7 @@ export const useCartStore = create<CartStore>()(
       getCommissionBreakdown: () => {
         const items = get().items;
         const itemsByVendor = get().getItemsByVendor();
-        
+
         let subtotal = 0;
         let totalCommission = 0;
         const byVendor: Array<{
@@ -193,7 +194,7 @@ export const useCartStore = create<CartStore>()(
           earnings: number;
           commissionRate: number;
         }> = [];
-      
+
         Object.entries(itemsByVendor).forEach(([shopId, vendorItems]) => {
           const vendorSubtotal = vendorItems.reduce((sum, item) => {
             const price = item.selectedSize
@@ -201,24 +202,24 @@ export const useCartStore = create<CartStore>()(
               : item.discountPrice || item.price;
             return sum + price * item.quantity;
           }, 0);
-      
+
           const commissionRate = vendorItems[0]?.commissionRate || 10; // Default 10%
           const commission = (vendorSubtotal * commissionRate) / 100;
           const earnings = vendorSubtotal - commission;
-      
+
           subtotal += vendorSubtotal;
           totalCommission += commission;
-      
+
           byVendor.push({
             shopId,
-            shopName: vendorItems[0]?.shopName || 'LinkAndSmile Platform',
+            shopName: vendorItems[0]?.shopName || "LinkAndSmile Platform",
             subtotal: vendorSubtotal,
             commission,
             earnings,
             commissionRate,
           });
         });
-      
+
         return {
           subtotal,
           totalCommission,
@@ -228,7 +229,7 @@ export const useCartStore = create<CartStore>()(
       },
     }),
     {
-      name: 'cart-storage',
+      name: "cart-storage",
     }
   )
 );

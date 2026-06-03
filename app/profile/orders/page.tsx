@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   ShoppingBag,
   Package,
@@ -20,37 +20,40 @@ import {
   AlertCircle,
   ArrowLeft,
   Receipt,
-} from "lucide-react"
+} from "lucide-react";
 
 interface OrderItem {
   product?: {
-    _id?: string
-    name?: string
-    image?: string
-    slug?: string
-  }
-  quantity?: number
-  price?: number
-  shopName?: string
+    _id?: string;
+    name?: string;
+    image?: string;
+    slug?: string;
+  };
+  quantity?: number;
+  price?: number;
+  shopName?: string;
   selectedSize?: {
-    size: string
-    unit: string
-    quantity: number
-  }
+    size: string;
+    unit: string;
+    quantity: number;
+  };
 }
 
 interface Order {
-  _id: string
-  orderNumber?: string
-  items?: OrderItem[]
-  totalAmount?: number
-  orderStatus?: string
-  paymentStatus?: string
-  createdAt?: string
-  paymentMethod?: string
+  _id: string;
+  orderNumber?: string;
+  items?: OrderItem[];
+  totalAmount?: number;
+  orderStatus?: string;
+  paymentStatus?: string;
+  createdAt?: string;
+  paymentMethod?: string;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string; bg: string; border: string }> = {
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; icon: React.ElementType; color: string; bg: string; border: string }
+> = {
   pending: {
     label: "Pending",
     icon: Clock,
@@ -93,118 +96,118 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; co
     bg: "bg-red-50",
     border: "border-red-200",
   },
-}
+};
 
 const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   pending: { label: "Payment Pending", color: "text-amber-600" },
   completed: { label: "Paid", color: "text-emerald-600" },
   failed: { label: "Payment Failed", color: "text-red-600" },
-}
+};
 
 function StatusBadge({ status }: { status?: string }) {
-  const key = (status ?? "pending").toLowerCase()
+  const key = (status ?? "pending").toLowerCase();
   const cfg = STATUS_CONFIG[key] ?? {
     label: status ?? "Unknown",
     icon: AlertCircle,
     color: "text-gray-700",
     bg: "bg-gray-50",
     border: "border-gray-200",
-  }
-  const Icon = cfg.icon
+  };
+  const Icon = cfg.icon;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.color} ${cfg.bg} ${cfg.border}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${cfg.color} ${cfg.bg} ${cfg.border}`}
     >
       <Icon className="h-3.5 w-3.5" />
       {cfg.label}
     </span>
-  )
+  );
 }
 
 function OrderSkeleton() {
   return (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="rounded-2xl border border-border bg-card p-5 animate-pulse">
-          <div className="flex justify-between mb-4">
+        <div key={i} className="border-border bg-card animate-pulse rounded-2xl border p-5">
+          <div className="mb-4 flex justify-between">
             <div className="space-y-2">
-              <div className="h-4 w-32 rounded-full bg-muted" />
-              <div className="h-3 w-24 rounded-full bg-muted" />
+              <div className="bg-muted h-4 w-32 rounded-full" />
+              <div className="bg-muted h-3 w-24 rounded-full" />
             </div>
-            <div className="h-6 w-20 rounded-full bg-muted" />
+            <div className="bg-muted h-6 w-20 rounded-full" />
           </div>
           <div className="flex gap-3">
-            <div className="h-16 w-16 rounded-xl bg-muted flex-shrink-0" />
+            <div className="bg-muted h-16 w-16 flex-shrink-0 rounded-xl" />
             <div className="flex-1 space-y-2 pt-1">
-              <div className="h-4 w-48 rounded-full bg-muted" />
-              <div className="h-3 w-32 rounded-full bg-muted" />
+              <div className="bg-muted h-4 w-48 rounded-full" />
+              <div className="bg-muted h-3 w-32 rounded-full" />
             </div>
-            <div className="h-6 w-16 rounded-full bg-muted" />
+            <div className="bg-muted h-6 w-16 rounded-full" />
           </div>
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export default function OrdersPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === "loading") return
+    if (status === "loading") return;
     if (status === "unauthenticated") {
-      router.replace("/auth/login?callbackUrl=/profile/orders")
-      return
+      router.replace("/auth/login?callbackUrl=/profile/orders");
+      return;
     }
-    fetchOrders()
+    fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status])
+  }, [status]);
 
   const fetchOrders = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch("/api/orders?userOrders=true")
+      const res = await fetch("/api/orders?userOrders=true");
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.error || "Failed to fetch orders")
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to fetch orders");
       }
-      const data = await res.json()
+      const data = await res.json();
       // Handle both array and { orders: [] } response shapes
-      const normalized = Array.isArray(data) ? data : (data.orders ?? [])
-      setOrders(normalized)
+      const normalized = Array.isArray(data) ? data : (data.orders ?? []);
+      setOrders(normalized);
     } catch (err: any) {
-      setError(err?.message ?? "Something went wrong")
+      setError(err?.message ?? "Something went wrong");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (status === "loading" || (status === "authenticated" && loading)) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-10">
+      <div className="bg-background min-h-screen">
+        <div className="mx-auto max-w-3xl px-4 py-10">
           <div className="mb-8">
-            <div className="h-8 w-40 rounded-full bg-muted animate-pulse mb-2" />
-            <div className="h-4 w-56 rounded-full bg-muted animate-pulse" />
+            <div className="bg-muted mb-2 h-8 w-40 animate-pulse rounded-full" />
+            <div className="bg-muted h-4 w-56 animate-pulse rounded-full" />
           </div>
           <OrderSkeleton />
         </div>
       </div>
-    )
+    );
   }
 
-  if (status === "unauthenticated") return null
+  if (status === "unauthenticated") return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="bg-background min-h-screen">
+      <div className="mx-auto max-w-3xl px-4 py-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -215,16 +218,14 @@ export default function OrdersPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">My Orders</h1>
-              <p className="text-sm text-muted-foreground">
-                View and track all your orders
-              </p>
+              <h1 className="text-foreground text-2xl font-bold">My Orders</h1>
+              <p className="text-muted-foreground text-sm">View and track all your orders</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 text-muted-foreground"
+            className="text-muted-foreground gap-2"
             onClick={fetchOrders}
             disabled={loading}
           >
@@ -237,7 +238,7 @@ export default function OrdersPage() {
         {error && (
           <Card className="mb-6 border-red-200 bg-red-50">
             <CardContent className="flex items-center gap-3 py-4">
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-600" />
               <div>
                 <p className="text-sm font-medium text-red-800">{error}</p>
               </div>
@@ -255,14 +256,12 @@ export default function OrdersPage() {
 
         {/* Empty state */}
         {!loading && !error && orders.length === 0 && (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
-              <ShoppingBag className="h-10 w-10 text-primary" />
+          <div className="py-20 text-center">
+            <div className="bg-primary/10 mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full">
+              <ShoppingBag className="text-primary h-10 w-10" />
             </div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              No orders yet
-            </h2>
-            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+            <h2 className="text-foreground mb-2 text-xl font-semibold">No orders yet</h2>
+            <p className="text-muted-foreground mx-auto mb-8 max-w-sm">
               You haven't placed any orders yet. Start shopping to see your orders here.
             </p>
             <Link href="/products">
@@ -274,39 +273,39 @@ export default function OrdersPage() {
         {/* Orders list */}
         {!loading && !error && orders.length > 0 && (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground font-medium">
+            <p className="text-muted-foreground text-sm font-medium">
               {orders.length} order{orders.length !== 1 ? "s" : ""} found
             </p>
             {orders.map((order) => {
-              const items = order.items ?? []
-              const firstItem = items[0]
-              const remainingCount = items.length - 1
-              const productImage = firstItem?.product?.image
-              const productName = firstItem?.product?.name ?? "Product"
+              const items = order.items ?? [];
+              const firstItem = items[0];
+              const remainingCount = items.length - 1;
+              const productImage = firstItem?.product?.image;
+              const productName = firstItem?.product?.name ?? "Product";
               const createdAt = order.createdAt
                 ? new Date(order.createdAt).toLocaleDateString("en-IN", {
                     day: "numeric",
                     month: "short",
                     year: "numeric",
                   })
-                : "—"
-              const paymentCfg =
-                PAYMENT_STATUS_CONFIG[(order.paymentStatus ?? "").toLowerCase()] ??
-                { label: order.paymentStatus ?? "Unknown", color: "text-muted-foreground" }
+                : "—";
+              const paymentCfg = PAYMENT_STATUS_CONFIG[
+                (order.paymentStatus ?? "").toLowerCase()
+              ] ?? { label: order.paymentStatus ?? "Unknown", color: "text-muted-foreground" };
 
               return (
                 <Link key={order._id} href={`/profile/orders/${order._id}`}>
-                  <Card className="group hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer border border-border rounded-2xl overflow-hidden">
+                  <Card className="group hover:border-primary/30 border-border cursor-pointer overflow-hidden rounded-2xl border transition-all duration-200 hover:shadow-md">
                     <CardContent className="p-0">
                       {/* Top bar */}
-                      <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
+                      <div className="border-border bg-muted/30 flex items-center justify-between border-b px-5 py-3">
                         <div className="flex items-center gap-3">
-                          <Receipt className="h-4 w-4 text-muted-foreground" />
+                          <Receipt className="text-muted-foreground h-4 w-4" />
                           <div>
-                            <span className="text-xs font-semibold text-foreground">
+                            <span className="text-foreground text-xs font-semibold">
                               #{order.orderNumber ?? order._id.slice(-8).toUpperCase()}
                             </span>
-                            <span className="text-xs text-muted-foreground ml-2">{createdAt}</span>
+                            <span className="text-muted-foreground ml-2 text-xs">{createdAt}</span>
                           </div>
                         </div>
                         <StatusBadge status={order.orderStatus} />
@@ -317,7 +316,7 @@ export default function OrdersPage() {
                         {/* Product image */}
                         <div className="relative flex-shrink-0">
                           {productImage ? (
-                            <div className="relative h-16 w-16 rounded-xl overflow-hidden border border-border">
+                            <div className="border-border relative h-16 w-16 overflow-hidden rounded-xl border">
                               <Image
                                 src={productImage}
                                 alt={productName}
@@ -326,38 +325,37 @@ export default function OrdersPage() {
                               />
                             </div>
                           ) : (
-                            <div className="h-16 w-16 rounded-xl bg-muted flex items-center justify-center border border-border">
-                              <Package className="h-6 w-6 text-muted-foreground" />
+                            <div className="bg-muted border-border flex h-16 w-16 items-center justify-center rounded-xl border">
+                              <Package className="text-muted-foreground h-6 w-6" />
                             </div>
                           )}
                           {items.length > 1 && (
-                            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                            <div className="bg-primary text-primary-foreground absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
                               {items.length}
                             </div>
                           )}
                         </div>
 
                         {/* Details */}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-foreground truncate">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-foreground truncate text-sm font-semibold">
                             {productName}
                           </p>
                           {remainingCount > 0 && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
+                            <p className="text-muted-foreground mt-0.5 text-xs">
                               +{remainingCount} more item{remainingCount !== 1 ? "s" : ""}
                             </p>
                           )}
                           {firstItem?.selectedSize && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {firstItem.selectedSize.size} ·{" "}
-                              {firstItem.selectedSize.quantity}
+                            <p className="text-muted-foreground mt-0.5 text-xs">
+                              {firstItem.selectedSize.size} · {firstItem.selectedSize.quantity}
                               {firstItem.selectedSize.unit}
                             </p>
                           )}
-                          <p className={`text-xs font-medium mt-1 ${paymentCfg.color}`}>
+                          <p className={`mt-1 text-xs font-medium ${paymentCfg.color}`}>
                             {paymentCfg.label}
                             {order.paymentMethod && (
-                              <span className="text-muted-foreground font-normal ml-1">
+                              <span className="text-muted-foreground ml-1 font-normal">
                                 via {order.paymentMethod.toUpperCase()}
                               </span>
                             )}
@@ -365,26 +363,26 @@ export default function OrdersPage() {
                         </div>
 
                         {/* Amount + arrow */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex flex-shrink-0 items-center gap-2">
                           <div className="text-right">
-                            <p className="font-bold text-foreground">
+                            <p className="text-foreground font-bold">
                               ₹{Number(order.totalAmount ?? 0).toLocaleString("en-IN")}
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                               {items.length} item{items.length !== 1 ? "s" : ""}
                             </p>
                           </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <ChevronRight className="text-muted-foreground group-hover:text-primary h-4 w-4 transition-colors" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 </Link>
-              )
+              );
             })}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

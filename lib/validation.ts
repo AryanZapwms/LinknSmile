@@ -1,9 +1,9 @@
-import { z } from "zod"
+import { z } from "zod";
 
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-})
+});
 
 export const registerSchema = z
   .object({
@@ -16,7 +16,7 @@ export const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
-  })
+  });
 
 export const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -26,4 +26,4 @@ export const productSchema = z.object({
   stock: z.number().int().nonnegative(),
   category: z.string(),
   company: z.string(),
-})
+});

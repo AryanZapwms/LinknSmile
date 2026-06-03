@@ -15,10 +15,7 @@ import mongoose from "mongoose";
 export const dynamic = "force-dynamic";
 
 // ─── GET: public reviews for a product ───────────────────────────────────────
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
     await connectDB();
@@ -39,9 +36,7 @@ export async function GET(
     const total = reviews.length;
     const averageRating =
       total > 0
-        ? parseFloat(
-            (reviews.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(1)
-          )
+        ? parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(1))
         : 0;
 
     const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
@@ -67,17 +62,12 @@ export async function GET(
     );
   } catch (error) {
     console.error("Error fetching product reviews:", error);
-    return withCORS(
-      NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 })
-    );
+    return withCORS(NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 }));
   }
 }
 
 // ─── POST: submit a review ────────────────────────────────────────────────────
-export async function POST(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id: productId } = await context.params;
     const session = await getServerSession(authOptions);
@@ -171,8 +161,6 @@ export async function POST(
       );
     }
     console.error("Error submitting review:", error);
-    return withCORS(
-      NextResponse.json({ error: "Failed to submit review" }, { status: 500 })
-    );
+    return withCORS(NextResponse.json({ error: "Failed to submit review" }, { status: 500 }));
   }
 }

@@ -11,47 +11,48 @@
 
 // lib/services/ledger-service.ts
 
-import mongoose from 'mongoose';
-import crypto from 'crypto';
-import { Wallet, IWallet } from '../models/wallet';
-import { LedgerEntry } from '../models/ledger';
-import { AuditLog } from '../models/audit-log';
-import { sendPushNotificationToVendor } from './push-notification';
+import mongoose from "mongoose";
+import crypto from "crypto";
+import { Wallet, IWallet } from "../models/wallet";
+import { LedgerEntry } from "../models/ledger";
+import { AuditLog } from "../models/audit-log";
+import { sendPushNotificationToVendor } from "./push-notification";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
 function generateIdempotencyKey(...parts: string[]): string {
-  return crypto.createHash('sha256').update(parts.join('|')).digest('hex');
+  return crypto.createHash("sha256").update(parts.join("|")).digest("hex");
 }
 
 async function getOrCreateVendorWallet(
   shopId: string,
   session: mongoose.ClientSession
 ): Promise<IWallet> {
-  let wallet = await Wallet.findOne({ shopId, type: 'VENDOR' }).session(session) as IWallet | null;
+  let wallet = (await Wallet.findOne({ shopId, type: "VENDOR" }).session(
+    session
+  )) as IWallet | null;
   if (!wallet) {
-    const created = await Wallet.create([{ shopId, type: 'VENDOR' }], { session });
+    const created = await Wallet.create([{ shopId, type: "VENDOR" }], { session });
     wallet = created[0].toObject() as IWallet;
   }
   if (!wallet) throw new Error(`Cannot find or create wallet for shop ${shopId}`);
   return wallet;
 }
 
-async function getOrCreatePlatformWallet(
-  session: mongoose.ClientSession
-): Promise<IWallet> {
-  let platformWallet = await Wallet.findOne({ type: 'PLATFORM_REVENUE' }).session(session) as IWallet | null;
+async function getOrCreatePlatformWallet(session: mongoose.ClientSession): Promise<IWallet> {
+  let platformWallet = (await Wallet.findOne({ type: "PLATFORM_REVENUE" }).session(
+    session
+  )) as IWallet | null;
   if (!platformWallet) {
-    const platformShopId = new mongoose.Types.ObjectId('000000000000000000000001');
-    const created = await Wallet.create(
-      [{ shopId: platformShopId, type: 'PLATFORM_REVENUE' }],
-      { session }
-    );
+    const platformShopId = new mongoose.Types.ObjectId("000000000000000000000001");
+    const created = await Wallet.create([{ shopId: platformShopId, type: "PLATFORM_REVENUE" }], {
+      session,
+    });
     platformWallet = created[0].toObject() as IWallet;
   }
-  if (!platformWallet) throw new Error('Cannot find or create platform wallet');
+  if (!platformWallet) throw new Error("Cannot find or create platform wallet");
   return platformWallet;
 }
 
@@ -70,10 +71,10 @@ export class LedgerService {
     items: Array<{ shopId: string; vendorEarnings: number; commission: number }>;
     performedBy?: string;
   }) {
-    const transactionId = generateIdempotencyKey('SALE', params.orderId);
+    const transactionId = generateIdempotencyKey("SALE", params.orderId);
 
     // Idempotency check — if already recorded, skip
-    const existing = await LedgerEntry.findOne({ transactionId, type: 'SALE' });
+    const existing = await LedgerEntry.findOne({ transactionId, type: "SALE" });
     if (existing) {
       console.log(`[LedgerService] Sale ${params.orderId} already recorded. Skipping.`);
       return;
@@ -93,11 +94,11 @@ export class LedgerService {
           accountId: wallet._id,
           shopId: item.shopId,
           amount: item.vendorEarnings,
-          type: 'SALE',
-          status: 'PENDING',
+          type: "SALE",
+          status: "PENDING",
           description: `Vendor earnings from Order #${params.orderId}`,
           referenceId: params.orderId,
-          referenceType: 'ORDER',
+          referenceType: "ORDER",
           clearAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // T+7
         });
         await vendorEntry.save({ session });
@@ -118,14 +119,14 @@ export class LedgerService {
 
         // 2. Platform commission
         const commissionEntry = new LedgerEntry({
-          transactionId: generateIdempotencyKey('COMMISSION', params.orderId, item.shopId),
+          transactionId: generateIdempotencyKey("COMMISSION", params.orderId, item.shopId),
           accountId: platformWallet._id,
           amount: item.commission,
-          type: 'COMMISSION',
-          status: 'CLEARED',
+          type: "COMMISSION",
+          status: "CLEARED",
           description: `Platform commission from Order #${params.orderId} (Shop: ${item.shopId})`,
           referenceId: params.orderId,
-          referenceType: 'ORDER',
+          referenceType: "ORDER",
         });
         await commissionEntry.save({ session });
 
@@ -139,9 +140,9 @@ export class LedgerService {
       await session.commitTransaction();
 
       await AuditLog.create({
-        action: 'SALE_RECORDED',
-        performedBy: params.performedBy || 'SYSTEM',
-        targetEntity: 'Order',
+        action: "SALE_RECORDED",
+        performedBy: params.performedBy || "SYSTEM",
+        targetEntity: "Order",
         targetId: params.orderId,
         metadata: { items: params.items },
       });
@@ -164,10 +165,10 @@ export class LedgerService {
     payoutId: string;
     adminId?: string;
   }) {
-    const transactionId = generateIdempotencyKey('PAYOUT', params.payoutId);
+    const transactionId = generateIdempotencyKey("PAYOUT", params.payoutId);
 
     // Idempotency check
-    const existing = await LedgerEntry.findOne({ transactionId, type: 'PAYOUT' });
+    const existing = await LedgerEntry.findOne({ transactionId, type: "PAYOUT" });
     if (existing) {
       console.log(`[LedgerService] Payout ${params.payoutId} already recorded. Skipping.`);
       return existing;
@@ -177,9 +178,12 @@ export class LedgerService {
     session.startTransaction();
 
     try {
-      const wallet = await Wallet.findOne({ shopId: params.shopId, type: 'VENDOR' }).session(session);
-      if (!wallet) throw new Error('Wallet not found');
-      if (wallet.status !== 'ACTIVE') throw new Error(`Wallet is ${wallet.status}. Cannot process payout.`);
+      const wallet = await Wallet.findOne({ shopId: params.shopId, type: "VENDOR" }).session(
+        session
+      );
+      if (!wallet) throw new Error("Wallet not found");
+      if (wallet.status !== "ACTIVE")
+        throw new Error(`Wallet is ${wallet.status}. Cannot process payout.`);
       if (wallet.withdrawableBalance < params.amount) {
         throw new Error(
           `Insufficient withdrawable balance. Available: ₹${wallet.withdrawableBalance}, Requested: ₹${params.amount}`
@@ -190,12 +194,12 @@ export class LedgerService {
         transactionId,
         accountId: wallet._id,
         shopId: params.shopId,
-        amount: -params.amount,  // negative = debit
-        type: 'PAYOUT',
-        status: 'PENDING',       // pending bank processing
+        amount: -params.amount, // negative = debit
+        type: "PAYOUT",
+        status: "PENDING", // pending bank processing
         description: `Payout request #${params.payoutId}`,
         referenceId: params.payoutId,
-        referenceType: 'PAYOUT',
+        referenceType: "PAYOUT",
       });
       await debitEntry.save({ session });
 
@@ -210,15 +214,15 @@ export class LedgerService {
       );
 
       if (!updated) {
-        throw new Error('Concurrent modification detected on wallet. Please retry.');
+        throw new Error("Concurrent modification detected on wallet. Please retry.");
       }
 
       await session.commitTransaction();
 
       await AuditLog.create({
-        action: 'PAYOUT_INITIATED',
-        performedBy: params.adminId || 'SYSTEM',
-        targetEntity: 'Payout',
+        action: "PAYOUT_INITIATED",
+        performedBy: params.adminId || "SYSTEM",
+        targetEntity: "Payout",
         targetId: params.payoutId,
         shopId: new mongoose.Types.ObjectId(params.shopId),
         before: { withdrawableBalance: wallet.withdrawableBalance },
@@ -245,11 +249,11 @@ export class LedgerService {
     try {
       const entry = await LedgerEntry.findOne({
         referenceId: payoutId,
-        type: 'PAYOUT',
+        type: "PAYOUT",
       }).session(session);
 
       if (!entry) throw new Error(`No ledger entry found for payout ${payoutId}`);
-      if (entry.status === 'CLEARED') {
+      if (entry.status === "CLEARED") {
         // Already completed — idempotent
         await session.abortTransaction();
         return;
@@ -257,16 +261,16 @@ export class LedgerService {
 
       await LedgerEntry.updateOne(
         { _id: entry._id },
-        { $set: { status: 'CLEARED', metadata: { transactionRef } } },
+        { $set: { status: "CLEARED", metadata: { transactionRef } } },
         { session }
       );
 
       await session.commitTransaction();
 
       await AuditLog.create({
-        action: 'PAYOUT_COMPLETED',
-        performedBy: adminId || 'SYSTEM',
-        targetEntity: 'Payout',
+        action: "PAYOUT_COMPLETED",
+        performedBy: adminId || "SYSTEM",
+        targetEntity: "Payout",
         targetId: payoutId,
         shopId: entry.shopId,
         metadata: { transactionRef, amount: Math.abs(entry.amount) },
@@ -284,11 +288,17 @@ export class LedgerService {
    * Reverses the payout ledger debit, restores withdrawable balance.
    * Creates a REVERSAL ledger entry (never mutates existing entry).
    */
-  static async rejectPayout(payoutId: string, shopId: string, amount: number, reason?: string, adminId?: string) {
+  static async rejectPayout(
+    payoutId: string,
+    shopId: string,
+    amount: number,
+    reason?: string,
+    adminId?: string
+  ) {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const reversalKey = generateIdempotencyKey('PAYOUT_REVERSAL', payoutId);
+      const reversalKey = generateIdempotencyKey("PAYOUT_REVERSAL", payoutId);
 
       // Check if already reversed (idempotency)
       const alreadyReversed = await LedgerEntry.findOne({
@@ -299,8 +309,8 @@ export class LedgerService {
         return;
       }
 
-      const wallet = await Wallet.findOne({ shopId, type: 'VENDOR' }).session(session);
-      if (!wallet) throw new Error('Wallet not found for reversal');
+      const wallet = await Wallet.findOne({ shopId, type: "VENDOR" }).session(session);
+      if (!wallet) throw new Error("Wallet not found for reversal");
 
       // Create reversal entry (positive — restoring the debit)
       const reversalEntry = new LedgerEntry({
@@ -308,11 +318,11 @@ export class LedgerService {
         accountId: wallet._id,
         shopId,
         amount: amount, // positive = credit back
-        type: 'ADJUSTMENT',
-        status: 'CLEARED',
-        description: `Payout reversal for request #${payoutId}. Reason: ${reason || 'Rejected'}`,
+        type: "ADJUSTMENT",
+        status: "CLEARED",
+        description: `Payout reversal for request #${payoutId}. Reason: ${reason || "Rejected"}`,
         referenceId: payoutId,
-        referenceType: 'PAYOUT',
+        referenceType: "PAYOUT",
       });
       await reversalEntry.save({ session });
 
@@ -329,12 +339,12 @@ export class LedgerService {
       await session.commitTransaction();
 
       await AuditLog.create({
-        action: 'PAYOUT_REJECTED',
-        performedBy: adminId || 'SYSTEM',
-        targetEntity: 'Payout',
+        action: "PAYOUT_REJECTED",
+        performedBy: adminId || "SYSTEM",
+        targetEntity: "Payout",
         targetId: payoutId,
         shopId: new mongoose.Types.ObjectId(shopId),
-        reason: reason || 'Rejected by admin',
+        reason: reason || "Rejected by admin",
         metadata: { amount, restoredTo: wallet.withdrawableBalance + amount },
       });
     } catch (error) {
@@ -354,9 +364,9 @@ export class LedgerService {
     items: Array<{ shopId: string; refundAmount: number; commissionReversal: number }>;
     performedBy?: string;
   }) {
-    const transactionId = generateIdempotencyKey('REFUND', params.refundId);
+    const transactionId = generateIdempotencyKey("REFUND", params.refundId);
 
-    const existing = await LedgerEntry.findOne({ transactionId, type: 'REFUND' });
+    const existing = await LedgerEntry.findOne({ transactionId, type: "REFUND" });
     if (existing) return;
 
     const session = await mongoose.startSession();
@@ -364,7 +374,9 @@ export class LedgerService {
 
     try {
       for (const item of params.items) {
-        const wallet = await Wallet.findOne({ shopId: item.shopId, type: 'VENDOR' }).session(session);
+        const wallet = await Wallet.findOne({ shopId: item.shopId, type: "VENDOR" }).session(
+          session
+        );
         if (!wallet) continue;
 
         // Deduct from vendor (may go negative — that's expected for post-payout refunds)
@@ -373,11 +385,11 @@ export class LedgerService {
           accountId: wallet._id,
           shopId: item.shopId,
           amount: -item.refundAmount,
-          type: 'REFUND',
-          status: 'CLEARED',
+          type: "REFUND",
+          status: "CLEARED",
           description: `Refund deduction for Order #${params.orderId} (Refund #${params.refundId})`,
           referenceId: params.refundId,
-          referenceType: 'REFUND',
+          referenceType: "REFUND",
         });
         await refundEntry.save({ session });
 
@@ -401,15 +413,11 @@ export class LedgerService {
         // Freeze wallet if balance goes negative
         const newWithdrawable = wallet.withdrawableBalance - deductFromWithdrawable;
         if (newWithdrawable < 0) {
-          await Wallet.findByIdAndUpdate(
-            wallet._id,
-            { status: 'FROZEN' },
-            { session }
-          );
+          await Wallet.findByIdAndUpdate(wallet._id, { status: "FROZEN" }, { session });
           await AuditLog.create({
-            action: 'WALLET_AUTO_FROZEN_NEGATIVE_BALANCE',
-            performedBy: 'SYSTEM',
-            targetEntity: 'Wallet',
+            action: "WALLET_AUTO_FROZEN_NEGATIVE_BALANCE",
+            performedBy: "SYSTEM",
+            targetEntity: "Wallet",
             targetId: wallet._id.toString(),
             shopId: wallet.shopId,
             reason: `Post-payout refund caused negative balance. Amount: ₹${item.refundAmount}`,
@@ -417,17 +425,17 @@ export class LedgerService {
         }
 
         // Also reverse platform commission
-        const platformWallet = await Wallet.findOne({ type: 'PLATFORM_REVENUE' }).session(session);
+        const platformWallet = await Wallet.findOne({ type: "PLATFORM_REVENUE" }).session(session);
         if (platformWallet && item.commissionReversal > 0) {
           const commEntry = new LedgerEntry({
-            transactionId: generateIdempotencyKey('COMMISSION_REVERSAL', params.refundId),
+            transactionId: generateIdempotencyKey("COMMISSION_REVERSAL", params.refundId),
             accountId: platformWallet._id,
             amount: -item.commissionReversal,
-            type: 'COMMISSION',
-            status: 'CLEARED',
+            type: "COMMISSION",
+            status: "CLEARED",
             description: `Commission reversal for Refund #${params.refundId}`,
             referenceId: params.refundId,
-            referenceType: 'REFUND',
+            referenceType: "REFUND",
           });
           await commEntry.save({ session });
           await Wallet.updateOne(
@@ -452,20 +460,20 @@ export class LedgerService {
    * Creates audit log.
    */
   static async freezeWallet(shopId: string, reason: string, adminId: string) {
-    const wallet = await Wallet.findOne({ shopId, type: 'VENDOR' });
-    if (!wallet) throw new Error('Wallet not found');
+    const wallet = await Wallet.findOne({ shopId, type: "VENDOR" });
+    if (!wallet) throw new Error("Wallet not found");
 
     const before = { status: wallet.status };
-    await Wallet.findByIdAndUpdate(wallet._id, { status: 'FROZEN' });
+    await Wallet.findByIdAndUpdate(wallet._id, { status: "FROZEN" });
 
     await AuditLog.create({
-      action: 'WALLET_FROZEN',
+      action: "WALLET_FROZEN",
       performedBy: adminId,
-      targetEntity: 'Wallet',
+      targetEntity: "Wallet",
       targetId: wallet._id.toString(),
       shopId: wallet.shopId,
       before,
-      after: { status: 'FROZEN' },
+      after: { status: "FROZEN" },
       reason,
     });
   }
@@ -474,20 +482,20 @@ export class LedgerService {
    * Unfreezes a vendor wallet.
    */
   static async unfreezeWallet(shopId: string, reason: string, adminId: string) {
-    const wallet = await Wallet.findOne({ shopId, type: 'VENDOR' });
-    if (!wallet) throw new Error('Wallet not found');
+    const wallet = await Wallet.findOne({ shopId, type: "VENDOR" });
+    if (!wallet) throw new Error("Wallet not found");
 
     const before = { status: wallet.status };
-    await Wallet.findByIdAndUpdate(wallet._id, { status: 'ACTIVE' });
+    await Wallet.findByIdAndUpdate(wallet._id, { status: "ACTIVE" });
 
     await AuditLog.create({
-      action: 'WALLET_UNFROZEN',
+      action: "WALLET_UNFROZEN",
       performedBy: adminId,
-      targetEntity: 'Wallet',
+      targetEntity: "Wallet",
       targetId: wallet._id.toString(),
       shopId: wallet.shopId,
       before,
-      after: { status: 'ACTIVE' },
+      after: { status: "ACTIVE" },
       reason,
     });
   }
@@ -500,8 +508,8 @@ export class LedgerService {
     const now = new Date();
 
     const entries = await LedgerEntry.find({
-      status: 'PENDING',
-      type: 'SALE',
+      status: "PENDING",
+      type: "SALE",
       clearAt: { $lte: now },
     }).limit(500); // process in batches
 
@@ -514,7 +522,7 @@ export class LedgerService {
       try {
         await LedgerEntry.updateOne(
           { _id: entry._id },
-          { $set: { status: 'CLEARED' } },
+          { $set: { status: "CLEARED" } },
           { session }
         );
 
@@ -532,11 +540,11 @@ export class LedgerService {
 
         await session.commitTransaction();
         await sendPushNotificationToVendor(
-  entry.shopId.toString(), // ensure shopId is stored on LedgerEntry (it should be)
-  '💰 Funds Cleared',
-  `₹${entry.amount} from your order earnings is now available for withdrawal.`,
-  { screen: 'wallet' }
-);
+          entry.shopId.toString(), // ensure shopId is stored on LedgerEntry (it should be)
+          "💰 Funds Cleared",
+          `₹${entry.amount} from your order earnings is now available for withdrawal.`,
+          { screen: "wallet" }
+        );
         cleared++;
       } catch (error) {
         await session.abortTransaction();
@@ -556,15 +564,15 @@ export class LedgerService {
    * Used for reconciliation.
    */
   static async computeBalanceFromLedger(shopId: string) {
-    const wallet = await Wallet.findOne({ shopId, type: 'VENDOR' });
+    const wallet = await Wallet.findOne({ shopId, type: "VENDOR" });
     if (!wallet) return null;
 
     const result = await LedgerEntry.aggregate([
-      { $match: { accountId: wallet._id, status: { $ne: 'VOIDED' } } },
+      { $match: { accountId: wallet._id, status: { $ne: "VOIDED" } } },
       {
         $group: {
-          _id: '$status',
-          total: { $sum: '$amount' },
+          _id: "$status",
+          total: { $sum: "$amount" },
         },
       },
     ]);
@@ -575,13 +583,13 @@ export class LedgerService {
     });
 
     return {
-      ledgerPendingBalance: balances['PENDING'] || 0,
-      ledgerWithdrawableBalance: balances['CLEARED'] || 0,
+      ledgerPendingBalance: balances["PENDING"] || 0,
+      ledgerWithdrawableBalance: balances["CLEARED"] || 0,
       cachedPendingBalance: wallet.pendingBalance,
       cachedWithdrawableBalance: wallet.withdrawableBalance,
       isDrifted:
-        Math.abs(balances['PENDING'] - wallet.pendingBalance) > 0.001 ||
-        Math.abs(balances['CLEARED'] - wallet.withdrawableBalance) > 0.001,
+        Math.abs(balances["PENDING"] - wallet.pendingBalance) > 0.001 ||
+        Math.abs(balances["CLEARED"] - wallet.withdrawableBalance) > 0.001,
     };
   }
 }

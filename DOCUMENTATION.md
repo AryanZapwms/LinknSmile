@@ -42,19 +42,19 @@ LinknSmile is a full-stack multi-vendor marketplace where local Indian sellers c
 
 ## 2. Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 15 (App Router) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS 4 + shadcn/ui |
-| Database | MongoDB via Mongoose |
-| Auth | NextAuth.js (Credentials + JWT) |
-| Payments | Razorpay + Cash on Delivery |
-| Email | Nodemailer (Gmail SMTP) |
-| State | Zustand (cart store) |
-| Images | Cloudinary |
-| Analytics | Google Tag Manager, Facebook Pixel, Vercel Analytics |
-| Deployment | Docker / VPS (linknsmile.com) |
+| Layer      | Technology                                           |
+| ---------- | ---------------------------------------------------- |
+| Framework  | Next.js 15 (App Router)                              |
+| Language   | TypeScript 5                                         |
+| Styling    | Tailwind CSS 4 + shadcn/ui                           |
+| Database   | MongoDB via Mongoose                                 |
+| Auth       | NextAuth.js (Credentials + JWT)                      |
+| Payments   | Razorpay + Cash on Delivery                          |
+| Email      | Nodemailer (Gmail SMTP)                              |
+| State      | Zustand (cart store)                                 |
+| Images     | Cloudinary                                           |
+| Analytics  | Google Tag Manager, Facebook Pixel, Vercel Analytics |
+| Deployment | Docker / VPS (linknsmile.com)                        |
 
 ---
 
@@ -185,6 +185,7 @@ MIGRATION_SECRET=some-secret-string
 ## 5. Getting Started
 
 ### Prerequisites
+
 - Node.js ≥ 18.18.0
 - npm ≥ 9 or pnpm
 - MongoDB Atlas account (or local MongoDB)
@@ -209,12 +210,12 @@ npm run dev
 
 ### Available Scripts
 
-| Script | Description |
-|---|---|
-| `npm run dev` | Start dev server on port 3004 |
-| `npm run build` | Production build |
+| Script          | Description                         |
+| --------------- | ----------------------------------- |
+| `npm run dev`   | Start dev server on port 3004       |
+| `npm run build` | Production build                    |
 | `npm run start` | Serve production build on port 3004 |
-| `npm run lint` | Run ESLint |
+| `npm run lint`  | Run ESLint                          |
 
 ---
 
@@ -223,24 +224,29 @@ npm run dev
 LinknSmile uses **NextAuth.js** with a credentials provider and JWT sessions.
 
 ### Registration
+
 1. User submits name, email, password at `/auth/register`
 2. OTP is sent to their email via `lib/EmailOtp.ts`
 3. User verifies OTP → `isVerified = true` set in DB
 4. Welcome email dispatched via `lib/email.tsx`
 
 ### Login
+
 1. User submits credentials at `/auth/login`
 2. NextAuth credentials provider validates against DB (bcrypt compare)
 3. JWT session issued, stored in HTTP-only cookie
 4. Session accessible via `useSession()` on client or `getServerSession()` on server
 
 ### Password Reset
+
 1. `/auth/forgot-password` → user enters email → OTP sent
 2. `/auth/verify-reset-otp` → user enters OTP → verified
 3. `/auth/reset-password` → user sets new password → bcrypt hashed & saved
 
 ### Route Protection
+
 `middleware.ts` intercepts requests to:
+
 - `/checkout` → requires any valid session
 - `/admin/*` → requires session with `role: "admin"`
 - `/profile/*` → requires any valid session
@@ -263,63 +269,64 @@ session.user = {
 
 ### Auth
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/[...nextauth]` | NextAuth handler (login, session, signout) |
+| Method | Endpoint                  | Description                                |
+| ------ | ------------------------- | ------------------------------------------ |
+| POST   | `/api/auth/[...nextauth]` | NextAuth handler (login, session, signout) |
 
 ### Users
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| GET | `/api/users` | List all users | Admin |
-| PUT | `/api/users/[id]` | Update user role | Admin |
-| DELETE | `/api/users/[id]` | Delete user | Admin |
-| GET | `/api/users/profile` | Get current user profile | User |
-| PUT | `/api/users/profile` | Update current user profile + avatar | User |
+| Method | Endpoint             | Description                          | Auth  |
+| ------ | -------------------- | ------------------------------------ | ----- |
+| GET    | `/api/users`         | List all users                       | Admin |
+| PUT    | `/api/users/[id]`    | Update user role                     | Admin |
+| DELETE | `/api/users/[id]`    | Delete user                          | Admin |
+| GET    | `/api/users/profile` | Get current user profile             | User  |
+| PUT    | `/api/users/profile` | Update current user profile + avatar | User  |
 
 ### Products
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/products` | List products (with filters) |
-| POST | `/api/products` | Create product (admin/vendor) |
-| PUT | `/api/products/[id]` | Update product |
-| DELETE | `/api/products/[id]` | Delete product |
+| Method | Endpoint             | Description                   |
+| ------ | -------------------- | ----------------------------- |
+| GET    | `/api/products`      | List products (with filters)  |
+| POST   | `/api/products`      | Create product (admin/vendor) |
+| PUT    | `/api/products/[id]` | Update product                |
+| DELETE | `/api/products/[id]` | Delete product                |
 
 ### Orders
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/orders` | List orders |
-| POST | `/api/orders` | Create order (COD) |
-| PUT | `/api/orders/[id]` | Update order status |
+| Method | Endpoint           | Description         |
+| ------ | ------------------ | ------------------- |
+| GET    | `/api/orders`      | List orders         |
+| POST   | `/api/orders`      | Create order (COD)  |
+| PUT    | `/api/orders/[id]` | Update order status |
 
 ### Payments
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/razorpay/create-order` | Create Razorpay order, returns `order_id` |
-| POST | `/api/razorpay/verify-payment` | Verify signature, confirm order |
+| Method | Endpoint                       | Description                               |
+| ------ | ------------------------------ | ----------------------------------------- |
+| POST   | `/api/razorpay/create-order`   | Create Razorpay order, returns `order_id` |
+| POST   | `/api/razorpay/verify-payment` | Verify signature, confirm order           |
 
 ### Categories & Promos
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/categories` | List all categories |
-| GET/POST/PUT/DELETE | `/api/categories/[id]` | Category CRUD |
-| GET | `/api/promos` | Get active promo bar content |
+| Method              | Endpoint               | Description                  |
+| ------------------- | ---------------------- | ---------------------------- |
+| GET                 | `/api/categories`      | List all categories          |
+| GET/POST/PUT/DELETE | `/api/categories/[id]` | Category CRUD                |
+| GET                 | `/api/promos`          | Get active promo bar content |
 
 ### Admin Analytics
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/admin/analytics` | Dashboard stats (revenue, orders, users, products) |
+| Method | Endpoint               | Description                                        |
+| ------ | ---------------------- | -------------------------------------------------- |
+| GET    | `/api/admin/analytics` | Dashboard stats (revenue, orders, users, products) |
 
 ---
 
 ## 8. Database Models
 
 ### User
+
 ```ts
 {
   name: String,
@@ -338,6 +345,7 @@ session.user = {
 ```
 
 ### Product
+
 ```ts
 {
   name: String,
@@ -357,6 +365,7 @@ session.user = {
 ```
 
 ### Order
+
 ```ts
 {
   user: ObjectId → User,
@@ -385,11 +394,13 @@ session.user = {
 Access at `/admin` — requires `role: "admin"` session.
 
 ### Dashboard (`/admin`)
+
 - Revenue overview chart (7D / 30D / 3M / 6M / 1Y)
 - KPI cards: Total Orders, Total Revenue, Total Products, Total Users
 - Top categories breakdown
 
 ### Users (`/admin/users`)
+
 - View all registered customers
 - Search by name, email, or role
 - Edit user role (user ↔ admin)
@@ -399,24 +410,30 @@ Access at `/admin` — requires `role: "admin"` session.
 > **Note:** The `/api/users` route must return a plain array `[]`, not `{ users: [] }`, for the users page to work correctly.
 
 ### Orders (`/admin/orders`)
+
 - Full order list with status, payment method, amount
 - Update order status (processing → shipped → delivered)
 
 ### Products (`/admin/products`)
+
 - CRUD for product listings
 - Toggle active/inactive status
 
 ### Product Approvals (`/admin/product-approvals`)
+
 - Review and approve/reject vendor-submitted products
 
 ### Vendors (`/admin/vendors`)
+
 - View registered vendors
 - Manage vendor status
 
 ### Promo Bar (`/admin/promo-bar`)
+
 - Edit the scrolling promotional banner text displayed site-wide
 
 ### Finance & Payouts
+
 - Revenue tracking per vendor
 - Initiate vendor payouts
 
@@ -467,22 +484,24 @@ Redirect to /order-success/[orderId]
 Emails are sent via **Nodemailer** using Gmail SMTP.
 
 ### Setup
+
 ```env
 GMAIL_EMAIL=your@gmail.com
 GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
 ```
+
 Use a Gmail **App Password** (not your account password). Enable 2FA on Gmail first, then generate an App Password from Google Account → Security.
 
 ### Email Types
 
-| Trigger | Template Location | Recipients |
-|---|---|---|
-| Registration OTP | `lib/EmailOtp.ts` | New user |
-| Welcome | `lib/email.tsx` | New user |
-| Password reset OTP | `lib/EmailOtp.ts` | User |
-| Order confirmation (COD) | `lib/email.tsx` | Customer + Admin |
-| Order confirmation (Razorpay) | `lib/email.tsx` | Customer + Admin |
-| Order status update | `lib/email.tsx` | Customer |
+| Trigger                       | Template Location | Recipients       |
+| ----------------------------- | ----------------- | ---------------- |
+| Registration OTP              | `lib/EmailOtp.ts` | New user         |
+| Welcome                       | `lib/email.tsx`   | New user         |
+| Password reset OTP            | `lib/EmailOtp.ts` | User             |
+| Order confirmation (COD)      | `lib/email.tsx`   | Customer + Admin |
+| Order confirmation (Razorpay) | `lib/email.tsx`   | Customer + Admin |
+| Order status update           | `lib/email.tsx`   | Customer         |
 
 > Email failures are caught gracefully and never block the primary transaction from completing.
 
@@ -523,25 +542,31 @@ Use **nginx** as a reverse proxy to forward port 80/443 to 3004.
 ## 13. Known Issues & Fixes
 
 ### Issue: Logout redirects to `localhost:3004`
+
 **Cause:** `NEXTAUTH_URL` or `NEXT_PUBLIC_SITE_URL` set to localhost in production env.  
 **Fix:** Set both to `https://linknsmile.com` in your hosting environment variables and redeploy.
 
 ### Issue: `/admin/users` crashes with `TypeError: h.filter is not a function`
+
 **Cause:** `app/api/users/route.ts` was returning a profile object instead of a users array (wrong code pasted into the file).  
 **Fix:** Replace `app/api/users/route.ts` with:
+
 ```ts
 export async function GET() {
-  await connectDB()
-  const users = await User.find({}).select("-password").sort({ createdAt: -1 })
-  return NextResponse.json(users)  // plain array
+  await connectDB();
+  const users = await User.find({}).select("-password").sort({ createdAt: -1 });
+  return NextResponse.json(users); // plain array
 }
 ```
+
 Also add a safety guard in the users page:
+
 ```ts
-setUsers(Array.isArray(data) ? data : data.users ?? [])
+setUsers(Array.isArray(data) ? data : (data.users ?? []));
 ```
 
 ### Issue: Vercel Analytics 404 (`/_vercel/insights/script.js`)
+
 **Cause:** App is not deployed on Vercel — it's on a VPS, so the Vercel Analytics script path doesn't exist.  
 **Fix:** Either deploy to Vercel, or remove `@vercel/analytics` from `app/layout.tsx` if you don't need it.
 
@@ -561,4 +586,4 @@ setUsers(Array.isArray(data) ? data : data.users ?? [])
 
 ---
 
-*Documentation generated for LinknSmile v1.0 — June 2026*
+_Documentation generated for LinknSmile v1.0 — June 2026_

@@ -21,23 +21,25 @@ export async function GET(request: NextRequest) {
     const query = { isApproved: true, isActive: true };
 
     // ── Ids filter (for favourites page) ────────────────────
-const ids = searchParams.get("ids");
-if (ids) {
-  const mongoose = (await import("mongoose")).default;
-  const idList = ids
-    .split(",")
-    .filter((i) => mongoose.Types.ObjectId.isValid(i))
-    .map((i) => new mongoose.Types.ObjectId(i));
+    const ids = searchParams.get("ids");
+    if (ids) {
+      const mongoose = (await import("mongoose")).default;
+      const idList = ids
+        .split(",")
+        .filter((i) => mongoose.Types.ObjectId.isValid(i))
+        .map((i) => new mongoose.Types.ObjectId(i));
 
-  if (idList.length === 0) {
-    return withCORS(NextResponse.json({
-      shops: [],
-      pagination: { total: 0, page: 1, limit: 0, pages: 0 },
-    }));
-  }
+      if (idList.length === 0) {
+        return withCORS(
+          NextResponse.json({
+            shops: [],
+            pagination: { total: 0, page: 1, limit: 0, pages: 0 },
+          })
+        );
+      }
 
-  query._id = { $in: idList };
-}
+      query._id = { $in: idList };
+    }
 
     const [shops, total] = await Promise.all([
       Shop.find(query)
@@ -62,8 +64,6 @@ if (ids) {
     );
   } catch (error) {
     console.error("Shops fetch error:", error);
-    return withCORS(
-      NextResponse.json({ error: "Failed to fetch shops" }, { status: 500 })
-    );
+    return withCORS(NextResponse.json({ error: "Failed to fetch shops" }, { status: 500 }));
   }
 }

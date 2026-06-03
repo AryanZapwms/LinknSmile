@@ -1,18 +1,27 @@
 // app/vendor/wallet/WalletDashboardClient.tsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
-import { usePathname, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { 
-  LayoutDashboard, Package, ShoppingCart, 
-  DollarSign, Star, Settings, Menu, LogOut,
-  Store, Bell, Wallet, CreditCard
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  DollarSign,
+  Star,
+  Settings,
+  Menu,
+  LogOut,
+  Store,
+  Bell,
+  Wallet,
+  CreditCard,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +29,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -36,11 +45,11 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
       if (!session) return;
 
       try {
-        const res = await fetch('/api/vendor/status');
+        const res = await fetch("/api/vendor/status");
         const data = await res.json();
         if (data.success) setIsApproved(data.isApproved);
       } catch (error) {
-        console.error('Failed to check shop status:', error);
+        console.error("Failed to check shop status:", error);
       }
     };
     checkStatus();
@@ -48,32 +57,33 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   // 3️⃣ Handle redirect safely after hooks
   useEffect(() => {
-    if (status !== 'loading' && (!session || session.user.role !== 'shop_owner')) {
-      router.push('/auth/login');
+    if (status !== "loading" && (!session || session.user.role !== "shop_owner")) {
+      router.push("/auth/login");
     }
   }, [status, session, router]);
 
   // 4️⃣ Render loading state
-  if (status === 'loading' || !session) {
+  if (status === "loading" || !session) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
       </div>
     );
   }
 
   // Navigation items, filtered by approval
   const navigation = [
-    { name: 'Dashboard', href: '/vendor', icon: LayoutDashboard },
-    { name: 'Products', href: '/vendor/products', icon: Package, requiresApproval: true },
-    { name: 'Orders', href: '/vendor/orders', icon: ShoppingCart, requiresApproval: true },
-    { name: 'Wallet', href: '/vendor/wallet', icon: Wallet },
-    { name: 'Reviews', href: '/vendor/reviews', icon: Star, requiresApproval: true },
-    { name: 'Bank Details', href: '/vendor/bank-details', icon: CreditCard },
-    { name: 'Settings', href: '/vendor/settings', icon: Settings },
-  ].filter(item => !item.requiresApproval || isApproved);
+    { name: "Dashboard", href: "/vendor", icon: LayoutDashboard },
+    { name: "Products", href: "/vendor/products", icon: Package, requiresApproval: true },
+    { name: "Orders", href: "/vendor/orders", icon: ShoppingCart, requiresApproval: true },
+    { name: "Wallet", href: "/vendor/wallet", icon: Wallet },
+    { name: "Reviews", href: "/vendor/reviews", icon: Star, requiresApproval: true },
+    { name: "Bank Details", href: "/vendor/bank-details", icon: CreditCard },
+    { name: "Settings", href: "/vendor/settings", icon: Settings },
+  ].filter((item) => !item.requiresApproval || isApproved);
 
-  const isActive = (path: string) => (path === '/vendor' ? pathname === path : pathname.startsWith(path));
+  const isActive = (path: string) =>
+    path === "/vendor" ? pathname === path : pathname.startsWith(path);
 
   const Sidebar = () => (
     <div className="flex h-full flex-col gap-2">
@@ -84,15 +94,15 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
         </Link>
       </div>
       <div className="flex-1 overflow-y-auto">
-        <nav className="grid items-start px-2 py-4 text-sm font-medium lg:px-4 gap-1">
-          {navigation.map(item => (
+        <nav className="grid items-start gap-1 px-2 py-4 text-sm font-medium lg:px-4">
+          {navigation.map((item) => (
             <Link
               key={item.name}
               href={item.href}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all ${
                 isActive(item.href)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-primary hover:bg-muted'
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-primary hover:bg-muted"
               }`}
             >
               <item.icon className="h-4 w-4" />
@@ -101,11 +111,11 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
           ))}
         </nav>
       </div>
-      <div className="mt-auto p-4 border-t">
+      <div className="mt-auto border-t p-4">
         <Button
           variant="outline"
           className="w-full justify-start gap-2"
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={() => signOut({ callbackUrl: "/" })}
         >
           <LogOut className="h-4 w-4" />
           Logout
@@ -117,13 +127,13 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       {/* Desktop Sidebar */}
-      <div className="hidden border-r bg-muted/40 md:block">
+      <div className="bg-muted/40 hidden border-r md:block">
         <Sidebar />
       </div>
 
       <div className="flex flex-col">
         {/* Header */}
-        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-16 lg:px-6">
+        <header className="bg-muted/40 flex h-14 items-center gap-4 border-b px-4 lg:h-16 lg:px-6">
           {/* Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild>
@@ -145,7 +155,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" className="relative">
               <Bell className="h-4 w-4" />
-              <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
             </Button>
 
             <DropdownMenu>
@@ -153,7 +163,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback>
-                      {session.user.name?.charAt(0).toUpperCase() || 'V'}
+                      {session.user.name?.charAt(0).toUpperCase() || "V"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -161,8 +171,10 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{session.user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
+                    <p className="text-sm leading-none font-medium">{session.user.name}</p>
+                    <p className="text-muted-foreground text-xs leading-none">
+                      {session.user.email}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -179,7 +191,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
+                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>

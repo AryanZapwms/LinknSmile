@@ -1,15 +1,15 @@
 import { withCORS } from "@/lib/cors";
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { connectDB } from '@/lib/db';
-import { Product } from '@/lib/models/product';
-import { Order } from '@/lib/models/order';
-import Shop from '@/lib/models/shop';
-import mongoose from 'mongoose';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { connectDB } from "@/lib/db";
+import { Product } from "@/lib/models/product";
+import { Order } from "@/lib/models/order";
+import Shop from "@/lib/models/shop";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -17,8 +17,8 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
     console.log("SESSION:", session);
 
-    if (!session || session.user.role !== 'shop_owner') {
-      return withCORS(NextResponse.json({ message: 'Unauthorized' }, { status: 401 }));
+    if (!session || session.user.role !== "shop_owner") {
+      return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
     console.log(session);
 
@@ -29,18 +29,28 @@ export async function GET(req: NextRequest) {
 
     if (!shopId) {
       console.log("Stats API - Shop ID missing in session");
-      return withCORS(NextResponse.json({ 
-        success: false,
-        message: 'Shop not found in session. Please log out and log in again.' 
-      }, { status: 401 }));
+      return withCORS(
+        NextResponse.json(
+          {
+            success: false,
+            message: "Shop not found in session. Please log out and log in again.",
+          },
+          { status: 401 }
+        )
+      );
     }
 
     if (!mongoose.Types.ObjectId.isValid(shopId)) {
-        console.log("Invalid shopId format:", shopId);
-        return withCORS(NextResponse.json({ 
-          success: false,
-          message: 'Invalid Shop ID format' 
-        }, { status: 400 }));
+      console.log("Invalid shopId format:", shopId);
+      return withCORS(
+        NextResponse.json(
+          {
+            success: false,
+            message: "Invalid Shop ID format",
+          },
+          { status: 400 }
+        )
+      );
     }
 
     // Get shop details
@@ -48,23 +58,28 @@ export async function GET(req: NextRequest) {
 
     if (!shop) {
       console.log("Stats API - Shop document not found for ID:", shopId);
-      return withCORS(NextResponse.json({ 
-        success: false,
-        message: `Shop record not found in database for ID: ${shopId}` 
-      }, { status: 404 }));
+      return withCORS(
+        NextResponse.json(
+          {
+            success: false,
+            message: `Shop record not found in database for ID: ${shopId}`,
+          },
+          { status: 404 }
+        )
+      );
     }
 
     // Count products by status
     const [totalProducts, pendingApproval, approvedProducts, rejectedProducts] = await Promise.all([
       Product.countDocuments({ shopId }),
-      Product.countDocuments({ shopId, approvalStatus: 'pending' }),
-      Product.countDocuments({ shopId, approvalStatus: 'approved' }),
-      Product.countDocuments({ shopId, approvalStatus: 'rejected' }),
+      Product.countDocuments({ shopId, approvalStatus: "pending" }),
+      Product.countDocuments({ shopId, approvalStatus: "approved" }),
+      Product.countDocuments({ shopId, approvalStatus: "rejected" }),
     ]);
 
     // Get orders containing vendor's products
     const orders = await Order.find({
-      'items.shopId': shopId,
+      "items.shopId": shopId,
     }).lean();
 
     // Calculate earnings
@@ -73,9 +88,7 @@ export async function GET(req: NextRequest) {
     let pendingPayouts = 0;
 
     orders.forEach((order) => {
-      const vendorItems = order.items.filter(
-        (item: any) => item.shopId?.toString() === shopId
-      );
+      const vendorItems = order.items.filter((item: any) => item.shopId?.toString() === shopId);
 
       if (vendorItems.length > 0) {
         totalOrders++;
@@ -85,11 +98,11 @@ export async function GET(req: NextRequest) {
           totalEarnings += earnings;
 
           // If order is delivered and payout is pending, add to pending payouts
-          if (order.orderStatus === 'delivered' && order.paymentStatus === 'completed') {
+          if (order.orderStatus === "delivered" && order.paymentStatus === "completed") {
             const vendorPayout = order.vendorPayouts?.find(
               (p: any) => p.shopId?.toString() === shopId
             );
-            if (!vendorPayout || vendorPayout.status === 'pending') {
+            if (!vendorPayout || vendorPayout.status === "pending") {
               pendingPayouts += earnings;
             }
           }
@@ -99,9 +112,7 @@ export async function GET(req: NextRequest) {
 
     // Recent orders (last 5)
     const recentOrders = orders
-      .filter((order) =>
-        order.items.some((item: any) => item.shopId?.toString() === shopId)
-      )
+      .filter((order) => order.items.some((item: any) => item.shopId?.toString() === shopId))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5)
       .map((order) => ({
@@ -112,31 +123,35 @@ export async function GET(req: NextRequest) {
         createdAt: order.createdAt,
       }));
 
-    return withCORS(NextResponse.json({
-      success: true,
-      stats: {
-        totalProducts,
-        pendingApproval,
-        approvedProducts,
-        rejectedProducts,
-        totalOrders,
-        totalEarnings: Math.round(totalEarnings * 100) / 100,
-        pendingPayouts: Math.round(pendingPayouts * 100) / 100,
-      },
-      shop: {
-        name: shop.shopName,
-        isApproved: shop.isApproved,
-        isActive: shop.isActive,
-        commissionRate: shop.commissionRate,
-        ratings: shop.ratings,
-      },
-      recentOrders,
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        stats: {
+          totalProducts,
+          pendingApproval,
+          approvedProducts,
+          rejectedProducts,
+          totalOrders,
+          totalEarnings: Math.round(totalEarnings * 100) / 100,
+          pendingPayouts: Math.round(pendingPayouts * 100) / 100,
+        },
+        shop: {
+          name: shop.shopName,
+          isApproved: shop.isApproved,
+          isActive: shop.isActive,
+          commissionRate: shop.commissionRate,
+          ratings: shop.ratings,
+        },
+        recentOrders,
+      })
+    );
   } catch (error: any) {
-    console.error('Vendor stats error:', error);
-    return withCORS(NextResponse.json(
-      { success: false, message: 'Failed to fetch stats', error: error.message },
-      { status: 500 }
-    ));
+    console.error("Vendor stats error:", error);
+    return withCORS(
+      NextResponse.json(
+        { success: false, message: "Failed to fetch stats", error: error.message },
+        { status: 500 }
+      )
+    );
   }
 }

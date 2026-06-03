@@ -1,22 +1,22 @@
 // app/api/vendor/orders/route.ts
 import { withCORS } from "@/lib/cors";
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import mongoose from 'mongoose';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { connectDB } from '@/lib/db';
-import { Order } from '@/lib/models/order';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import mongoose from "mongoose";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { connectDB } from "@/lib/db";
+import { Order } from "@/lib/models/order";
 
 export async function GET(req: NextRequest) {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'shop_owner') {
-      return withCORS(NextResponse.json({ message: 'Unauthorized' }, { status: 401 }));
+    if (!session || session.user.role !== "shop_owner") {
+      return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
 
     await connectDB();
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     const shopId = session.user.shopId;
 
     if (!shopId) {
-      return withCORS(NextResponse.json({ message: 'Shop not found' }, { status: 404 }));
+      return withCORS(NextResponse.json({ message: "Shop not found" }, { status: 404 }));
     }
 
     // Convert shopId string to ObjectId for proper MongoDB query
@@ -32,18 +32,18 @@ export async function GET(req: NextRequest) {
     try {
       shopObjectId = new mongoose.Types.ObjectId(shopId);
     } catch {
-      return withCORS(NextResponse.json({ message: 'Invalid shop ID' }, { status: 400 }));
+      return withCORS(NextResponse.json({ message: "Invalid shop ID" }, { status: 400 }));
     }
 
     // Get query parameters
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status'); // pending, processing, shipped, delivered, cancelled
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const status = searchParams.get("status"); // pending, processing, shipped, delivered, cancelled
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
 
     // Build query - find orders that contain vendor's products
     const query: any = {
-      'items.shopId': shopObjectId,
+      "items.shopId": shopObjectId,
     };
 
     if (status) {
@@ -55,8 +55,8 @@ export async function GET(req: NextRequest) {
     // Get orders and filter items to show only vendor's items
     const [orders, total] = await Promise.all([
       Order.find(query)
-        .populate('user', 'name email phone')
-        .populate('items.product', 'name image')
+        .populate("user", "name email phone")
+        .populate("items.product", "name image")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
 
       // Calculate vendor's subtotal for this order
       const vendorSubtotal = vendorItems.reduce((sum: number, item: any) => {
-        return sum + (item.price * item.quantity);
+        return sum + item.price * item.quantity;
       }, 0);
 
       // Get vendor's payout info for this order
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
         items: vendorItems, // Only vendor's items
         vendorSubtotal,
         vendorEarnings: vendorPayout?.amount || 0,
-        payoutStatus: vendorPayout?.status || 'pending',
+        payoutStatus: vendorPayout?.status || "pending",
         shippingAddress: order.shippingAddress,
         paymentMethod: order.paymentMethod,
         paymentStatus: order.paymentStatus,
@@ -98,21 +98,25 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return withCORS(NextResponse.json({
-      success: true,
-      orders: vendorOrders,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        orders: vendorOrders,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit),
+        },
+      })
+    );
   } catch (error: any) {
-    console.error('Vendor orders fetch error:', error);
-    return withCORS(NextResponse.json(
-      { message: 'Failed to fetch orders', error: error.message },
-      { status: 500 }
-    ));
+    console.error("Vendor orders fetch error:", error);
+    return withCORS(
+      NextResponse.json(
+        { message: "Failed to fetch orders", error: error.message },
+        { status: 500 }
+      )
+    );
   }
 }

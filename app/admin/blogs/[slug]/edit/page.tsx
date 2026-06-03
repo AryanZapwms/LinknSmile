@@ -1,42 +1,42 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { ImageUploadField } from "@/components/admin/image-upload-field"
-import { ArrowLeft } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { ArrowLeft } from "lucide-react";
 
 interface Company {
-  _id: string
-  name: string
+  _id: string;
+  name: string;
 }
 
 interface BlogData {
-  _id: string
-  title: string
-  slug: string
-  excerpt: string
-  content: string
-  image?: string
-  tags?: string[] | string
-  isPublished: boolean
-  company?: { _id: string; name?: string } | string
+  _id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  image?: string;
+  tags?: string[] | string;
+  isPublished: boolean;
+  company?: { _id: string; name?: string } | string;
 }
 
 export default function EditBlogPage() {
-  const router = useRouter()
-  const { data: session } = useSession()
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [companies, setCompanies] = useState<Company[]>([])
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -46,39 +46,39 @@ export default function EditBlogPage() {
     tags: "",
     isPublished: false,
     company: "", // companyId
-  })
+  });
 
   // get slug from URL: /admin/blogs/[slug]/edit
-  const [slug, setSlug] = useState<string | null>(null)
+  const [slug, setSlug] = useState<string | null>(null);
   useEffect(() => {
-    if (typeof window === "undefined") return
-    const parts = window.location.pathname.split("/").filter(Boolean) // ["admin","blogs","slug","edit"]
-    const maybeSlug = parts.length >= 3 ? parts[parts.length - 2] : null
-    setSlug(maybeSlug)
-  }, [])
+    if (typeof window === "undefined") return;
+    const parts = window.location.pathname.split("/").filter(Boolean); // ["admin","blogs","slug","edit"]
+    const maybeSlug = parts.length >= 3 ? parts[parts.length - 2] : null;
+    setSlug(maybeSlug);
+  }, []);
 
   useEffect(() => {
-    if (!session) return
-    if (!slug) return
-    fetchInitial()
+    if (!session) return;
+    if (!slug) return;
+    fetchInitial();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, slug])
+  }, [session, slug]);
 
   const fetchInitial = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const [companiesRes, blogRes] = await Promise.all([
         fetch("/api/companies"),
         fetch(`/api/blogs/${slug}`),
-      ])
+      ]);
 
-      if (!companiesRes.ok) throw new Error("Failed to fetch companies")
-      if (!blogRes.ok) throw new Error("Failed to fetch blog")
+      if (!companiesRes.ok) throw new Error("Failed to fetch companies");
+      if (!blogRes.ok) throw new Error("Failed to fetch blog");
 
-      const companiesData = await companiesRes.json()
-      const blogData: BlogData = await blogRes.json()
+      const companiesData = await companiesRes.json();
+      const blogData: BlogData = await blogRes.json();
 
-      setCompanies(companiesData || [])
+      setCompanies(companiesData || []);
 
       setFormData({
         title: blogData.title || "",
@@ -86,41 +86,45 @@ export default function EditBlogPage() {
         excerpt: blogData.excerpt || "",
         content: blogData.content || "",
         image: typeof blogData.image === "string" ? blogData.image : "",
-        tags: Array.isArray(blogData.tags) ? blogData.tags.join(", ") : (blogData.tags as string) || "",
+        tags: Array.isArray(blogData.tags)
+          ? blogData.tags.join(", ")
+          : (blogData.tags as string) || "",
         isPublished: !!blogData.isPublished,
         company:
           typeof blogData.company === "string"
             ? blogData.company
             : blogData.company?.["_id"] || (blogData.company as any) || "",
-      })
+      });
     } catch (error) {
-      console.error("Error loading edit page:", error)
-      alert("Failed to load blog data")
+      console.error("Error loading edit page:", error);
+      alert("Failed to load blog data");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (!session) {
-    return null
+    return null;
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleToggle = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, isPublished: checked }))
-  }
+    setFormData((prev) => ({ ...prev, isPublished: checked }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!slug) {
-      alert("Missing slug")
-      return
+      alert("Missing slug");
+      return;
     }
-    setSaving(true)
+    setSaving(true);
 
     try {
       const res = await fetch(`/api/blogs/${slug}`, {
@@ -130,40 +134,43 @@ export default function EditBlogPage() {
           ...formData,
           tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()) : [],
         }),
-      })
+      });
 
       if (!res.ok) {
-        const text = await res.text()
-        throw new Error("Failed to update blog: " + text)
+        const text = await res.text();
+        throw new Error("Failed to update blog: " + text);
       }
 
-      router.push("/admin/blogs")
+      router.push("/admin/blogs");
     } catch (error) {
-      console.error("Error updating blog:", error)
-      alert("Failed to update blog")
+      console.error("Error updating blog:", error);
+      alert("Failed to update blog");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const deleteBlog = async () => {
-    if (!slug) return
-    if (!confirm("Are you sure you want to delete this blog?")) return
+    if (!slug) return;
+    if (!confirm("Are you sure you want to delete this blog?")) return;
     try {
-      const res = await fetch(`/api/blogs/${slug}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Failed to delete")
-      router.push("/admin/blogs")
+      const res = await fetch(`/api/blogs/${slug}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      router.push("/admin/blogs");
     } catch (error) {
-      console.error("Delete error:", error)
-      alert("Failed to delete blog")
+      console.error("Delete error:", error);
+      alert("Failed to delete blog");
     }
-  }
+  };
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <Link href="/admin/blogs" className="inline-flex items-center gap-2 text-primary hover:underline mb-8">
-          <ArrowLeft className="w-4 h-4" />
+    <main className="bg-background min-h-screen">
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <Link
+          href="/admin/blogs"
+          className="text-primary mb-8 inline-flex items-center gap-2 hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" />
           Back to Blogs
         </Link>
 
@@ -178,12 +185,24 @@ export default function EditBlogPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="text-sm font-medium">Title</label>
-                  <Input name="title" value={formData.title} onChange={handleChange} placeholder="Blog title" required />
+                  <Input
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    placeholder="Blog title"
+                    required
+                  />
                 </div>
 
                 <div>
                   <label className="text-sm font-medium">Slug</label>
-                  <Input name="slug" value={formData.slug} onChange={handleChange} placeholder="blog-slug" required />
+                  <Input
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleChange}
+                    placeholder="blog-slug"
+                    required
+                  />
                 </div>
 
                 <div>
@@ -240,7 +259,12 @@ export default function EditBlogPage() {
 
                 <div>
                   <label className="text-sm font-medium">Tags (comma-separated)</label>
-                  <Input name="tags" value={formData.tags} onChange={handleChange} placeholder="skincare, tips, tutorial" />
+                  <Input
+                    name="tags"
+                    value={formData.tags}
+                    onChange={handleChange}
+                    placeholder="skincare, tips, tutorial"
+                  />
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -267,5 +291,5 @@ export default function EditBlogPage() {
         </Card>
       </div>
     </main>
-  )
+  );
 }

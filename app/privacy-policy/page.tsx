@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import { Shield, Eye, Lock, UserCheck, Cookie, Mail } from "lucide-react"
+import React, { useState } from "react";
+import { Shield, Eye, Lock, UserCheck, Cookie, Mail } from "lucide-react";
 
 const privacySections = [
   {
@@ -14,7 +14,7 @@ Device Information: We collect version of web browser, IP address, time zone, co
 
 Order Information: We collect name, billing address, shipping address, payment information (including credit card numbers), email address, and phone number to fulfill your orders and provide you with our chemical peel products.
 
-Customer Support Information: When you contact us for support regarding our products, we collect the information you provide to help resolve your queries.`
+Customer Support Information: When you contact us for support regarding our products, we collect the information you provide to help resolve your queries.`,
   },
   {
     id: 2,
@@ -28,7 +28,7 @@ Purpose of Collection:
 • To process your payment information and arrange for shipping
 • To communicate with you and provide customer support
 • To screen orders for potential risk or fraud
-• To provide you with information about our chemical peel products when aligned with your preferences`
+• To provide you with information about our chemical peel products when aligned with your preferences`,
   },
   {
     id: 3,
@@ -38,7 +38,7 @@ Purpose of Collection:
 
 We use WooCommerce to power our online store. We may share your information to comply with applicable laws and regulations, to respond to lawful requests for information, or to protect our rights.
 
-We do not sell your personal information. Your privacy and trust are paramount to Instapeel's commitment to providing safe, effective home-use chemical peel solutions.`
+We do not sell your personal information. Your privacy and trust are paramount to Instapeel's commitment to providing safe, effective home-use chemical peel solutions.`,
   },
   {
     id: 4,
@@ -50,7 +50,7 @@ We use functional, performance, and advertising cookies. Cookies make your brows
 
 Session cookies last until you stop browsing and persistent cookies last between 30 minutes and two years. You can control cookies through your browser settings, but removing cookies may negatively impact your user experience.
 
-We use Google Analytics to understand how customers use our site. You can opt-out of Google Analytics at: https://tools.google.com/dlpage/gaoptout`
+We use Google Analytics to understand how customers use our site. You can opt-out of Google Analytics at: https://tools.google.com/dlpage/gaoptout`,
   },
   {
     id: 5,
@@ -60,7 +60,7 @@ We use Google Analytics to understand how customers use our site. You can opt-ou
 
 We take the security of your information seriously and implement appropriate measures to protect your personal data. Credit card information is always encrypted during transfer over networks.
 
-However, no method of transmission over the internet is 100% secure. While we strive to protect your personal information, we cannot guarantee its absolute security.`
+However, no method of transmission over the internet is 100% secure. While we strive to protect your personal information, we cannot guarantee its absolute security.`,
   },
   {
     id: 6,
@@ -75,45 +75,51 @@ However, no method of transmission over the internet is 100% secure. While we st
 
 To exercise these rights or if you have questions about our privacy practices, please contact us at care@instapeels.com
 
-If you are not satisfied with our response, you have the right to lodge a complaint with the relevant data protection authority.`
-  }
-]
+If you are not satisfied with our response, you have the right to lodge a complaint with the relevant data protection authority.`,
+  },
+];
 
 export default function PrivacyPolicy() {
-  const [activeTab, setActiveTab] = useState(1)
+  const [activeTab, setActiveTab] = useState(1);
 
   return (
-    <section className="bg-gradient-to-b from-neutral-50 to-white min-h-screen">
+    <section className="min-h-screen bg-gradient-to-b from-neutral-50 to-white">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 py-20 px-6">
+      <div className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 px-6 py-20">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-[#B18D0C] rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#B18D0C] rounded-full blur-3xl"></div>
+          <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-[#B18D0C] blur-3xl"></div>
+          <div className="absolute right-10 bottom-20 h-96 w-96 rounded-full bg-[#B18D0C] blur-3xl"></div>
         </div>
-        
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-[#B18D0C]/20 rounded-2xl mb-6">
-            <Shield className="w-10 h-10 text-[#B18D0C]" />
+
+        <div className="relative z-10 mx-auto max-w-4xl text-center">
+          <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-2xl bg-[#B18D0C]/20">
+            <Shield className="h-10 w-10 text-[#B18D0C]" />
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
+          <h1 className="mb-6 text-5xl font-bold tracking-tight text-white md:text-6xl">
             Privacy <span className="text-[#B18D0C]">Policy</span>
           </h1>
-          <p className="text-neutral-300 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            Your privacy is important to us. Learn how we collect, use, and protect your personal information when you shop for our premium chemical peel products.
+          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-neutral-300 md:text-xl">
+            Your privacy is important to us. Learn how we collect, use, and protect your personal
+            information when you shop for our premium chemical peel products.
           </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         {/* Trust Badge */}
-        <div className="bg-gradient-to-r from-[#B18D0C]/10 to-[#B18D0C]/5 border-l-4 border-[#B18D0C] rounded-r-xl p-6 mb-12">
+        <div className="mb-12 rounded-r-xl border-l-4 border-[#B18D0C] bg-gradient-to-r from-[#B18D0C]/10 to-[#B18D0C]/5 p-6">
           <div className="flex items-start gap-4">
-            <Lock className="w-6 h-6 text-[#B18D0C] flex-shrink-0 mt-1" />
+            <Lock className="mt-1 h-6 w-6 flex-shrink-0 text-[#B18D0C]" />
             <div>
-              <h3 className="text-lg font-semibold text-neutral-900 mb-2">Your Data is Protected</h3>
-              <p className="text-neutral-700 leading-relaxed">
-                At Instapeel, we are committed to protecting your personal information with the highest standards of security and transparency. We only collect information necessary to provide you with exceptional service and our innovative home-use chemical peel products.
+              <h3 className="mb-2 text-lg font-semibold text-neutral-900">
+                Your Data is Protected
+              </h3>
+              <p className="leading-relaxed text-neutral-700">
+                At Instapeel, we are committed to protecting your personal information with the
+                highest standards of security and transparency. We only collect information
+                necessary to provide you with exceptional service and our innovative home-use
+                chemical peel products.
               </p>
             </div>
           </div>
@@ -121,84 +127,84 @@ export default function PrivacyPolicy() {
 
         {/* Tab Navigation */}
         <div className="mb-12 overflow-x-auto">
-          <div className="flex gap-2 min-w-max pb-4">
+          <div className="flex min-w-max gap-2 pb-4">
             {privacySections.map((section) => {
-              const Icon = section.icon
+              const Icon = section.icon;
               return (
                 <button
                   key={section.id}
                   onClick={() => setActiveTab(section.id)}
-                  className={`flex items-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap ${
+                  className={`flex items-center gap-3 rounded-xl px-6 py-4 font-semibold whitespace-nowrap transition-all duration-300 ${
                     activeTab === section.id
-                      ? 'bg-[#B18D0C] text-white shadow-lg'
-                      : 'bg-white text-neutral-700 hover:bg-neutral-50 shadow-md'
+                      ? "bg-[#B18D0C] text-white shadow-lg"
+                      : "bg-white text-neutral-700 shadow-md hover:bg-neutral-50"
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="h-5 w-5" />
                   {section.title}
                 </button>
-              )
+              );
             })}
           </div>
         </div>
 
         {/* Content Display */}
-        <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 p-8 md:p-12">
+        <div className="rounded-2xl border border-neutral-100 bg-white p-8 shadow-xl md:p-12">
           {privacySections.map((section) => {
-            const Icon = section.icon
+            const Icon = section.icon;
             if (section.id === activeTab) {
               return (
                 <div key={section.id} className="animate-fadeIn">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="bg-[#B18D0C]/10 p-4 rounded-xl">
-                      <Icon className="w-8 h-8 text-[#B18D0C]" />
+                  <div className="mb-6 flex items-center gap-4">
+                    <div className="rounded-xl bg-[#B18D0C]/10 p-4">
+                      <Icon className="h-8 w-8 text-[#B18D0C]" />
                     </div>
                     <h2 className="text-3xl font-bold text-neutral-900">{section.title}</h2>
                   </div>
                   <div className="prose prose-lg max-w-none">
-                    <p className="text-neutral-700 leading-relaxed whitespace-pre-line">
+                    <p className="leading-relaxed whitespace-pre-line text-neutral-700">
                       {section.content}
                     </p>
                   </div>
                 </div>
-              )
+              );
             }
-            return null
+            return null;
           })}
         </div>
 
         {/* Contact Section */}
-        <div className="mt-16 grid md:grid-cols-2 gap-8">
-          <div className="bg-neutral-900 rounded-2xl p-8 text-white">
-            <Mail className="w-12 h-12 text-[#B18D0C] mb-4" />
-            <h3 className="text-2xl font-bold mb-4">Have Privacy Questions?</h3>
-            <p className="text-neutral-300 mb-6">
+        <div className="mt-16 grid gap-8 md:grid-cols-2">
+          <div className="rounded-2xl bg-neutral-900 p-8 text-white">
+            <Mail className="mb-4 h-12 w-12 text-[#B18D0C]" />
+            <h3 className="mb-4 text-2xl font-bold">Have Privacy Questions?</h3>
+            <p className="mb-6 text-neutral-300">
               Contact us for any privacy-related inquiries or to exercise your data rights.
             </p>
-            <a 
+            <a
               href="mailto:care@instapeels.com"
-              className="inline-block bg-[#B18D0C] hover:bg-[#8A6A09] text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300"
+              className="inline-block rounded-xl bg-[#B18D0C] px-6 py-3 font-semibold text-white transition-all duration-300 hover:bg-[#8A6A09]"
             >
               Email Us
             </a>
           </div>
 
-          <div className="bg-gradient-to-br from-[#B18D0C] to-[#8A6A09] rounded-2xl p-8 text-white">
-            <Shield className="w-12 h-12 text-white mb-4" />
-            <h3 className="text-2xl font-bold mb-4">Data Protection</h3>
-            <p className="text-neutral-100 mb-4">
-
-              Healthcare Medical Center,<br/>
-              S-55, Whispering Palms Shopping Center,<br/> 
-              Akurli road,Lokhandwala Township,<br/>
+          <div className="rounded-2xl bg-gradient-to-br from-[#B18D0C] to-[#8A6A09] p-8 text-white">
+            <Shield className="mb-4 h-12 w-12 text-white" />
+            <h3 className="mb-4 text-2xl font-bold">Data Protection</h3>
+            <p className="mb-4 text-neutral-100">
+              Healthcare Medical Center,
+              <br />
+              S-55, Whispering Palms Shopping Center,
+              <br />
+              Akurli road,Lokhandwala Township,
+              <br />
               Kandivali (E), Mumbai, Maharashtra, 400101
             </p>
-            <p className="text-sm text-neutral-200">
-              Last Updated: 2025
-            </p>
+            <p className="text-sm text-neutral-200">Last Updated: 2025</p>
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

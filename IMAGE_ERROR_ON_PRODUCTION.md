@@ -23,7 +23,8 @@ We created a **universal API route handler** that dynamically serves files from 
 **Location:** `app/api/[...path]/route.ts`
 
 **What it does:**
-- Catches ALL requests to `/api/*` 
+
+- Catches ALL requests to `/api/*`
 - Decodes URL-encoded characters (handles spaces and special characters in filenames)
 - Searches for the requested file in multiple `/public` subfolders:
   - `/public/uploads`
@@ -37,21 +38,22 @@ We created a **universal API route handler** that dynamically serves files from 
 - Returns 404 if file not found
 
 **Key Features:**
+
 ```typescript
 // Decodes URLs like "green%200.jpg" → "green 0.jpg"
-const filePath = params.path.map(segment => decodeURIComponent(segment)).join('/');
+const filePath = params.path.map((segment) => decodeURIComponent(segment)).join("/");
 
 // Checks multiple folders in order
 const possiblePaths = [
-  path.join(process.cwd(), 'public', 'uploads', filePath),
-  path.join(process.cwd(), 'public', 'arrivals', filePath),
+  path.join(process.cwd(), "public", "uploads", filePath),
+  path.join(process.cwd(), "public", "arrivals", filePath),
   // ... etc
 ];
 
 // Returns proper MIME types
 const contentTypes = {
-  '.jpg': 'image/jpeg',
-  '.png': 'image/png',
+  ".jpg": "image/jpeg",
+  ".png": "image/png",
   // ... etc
 };
 ```
@@ -98,12 +100,14 @@ async rewrites() {
 ```
 
 **What these rewrites do:**
+
 - When a user requests `/arrivals/image.jpg`, Next.js internally rewrites it to `/api/arrivals/image.jpg`
 - The `[...path]` route handler catches this request
 - The handler searches for the file in `/public/arrivals/image.jpg`
 - The file is served dynamically
 
 **Other changes:**
+
 - Added `domains` config for Next.js Image optimization:
   ```javascript
   images: {
@@ -171,12 +175,14 @@ pm2 logs instapeels-next-app --lines 50
 ## Testing
 
 ### Verify files exist:
+
 ```bash
 ls -la /home/instapeels.com/public_html/public/arrivals/
 ls -la /home/instapeels.com/public_html/public/uploads/
 ```
 
 ### Test file access:
+
 ```bash
 # Test via curl
 curl -I https://instapeels.com/uploads/[filename].jpg
@@ -186,11 +192,13 @@ curl -I https://instapeels.com/arrivals/[filename].jpg
 ```
 
 ### Check debug logs:
+
 ```bash
 pm2 logs instapeels-next-app --lines 30
 ```
 
 You should see output like:
+
 ```
 ========== FILE REQUEST DEBUG ==========
 Requested file path: 1762922077120-image.jpg
@@ -205,28 +213,35 @@ Checking: /home/instapeels.com/public_html/public/arrivals/1762922077120-image.j
 ## Important Notes
 
 ### 1. File Upload API
+
 Make sure your upload API saves files to the correct location:
+
 ```typescript
-const uploadsDir = path.join(process.cwd(), 'public', folder);
+const uploadsDir = path.join(process.cwd(), "public", folder);
 // Example: /home/instapeels.com/public_html/public/uploads/
 ```
 
 ### 2. File Permissions
+
 Ensure proper permissions:
+
 ```bash
 chmod 755 /home/instapeels.com/public_html/public/arrivals
 chmod 644 /home/instapeels.com/public_html/public/arrivals/*
 ```
 
 ### 3. Adding New Folders
+
 To add a new public subfolder:
 
 1. Add the folder to `possiblePaths` in `/app/api/[...path]/route.ts`:
+
    ```typescript
    path.join(process.cwd(), 'public', 'new-folder', filePath),
    ```
 
 2. Add rewrite rule in `next.config.mjs`:
+
    ```javascript
    {
      source: '/new-folder/:path*',
@@ -237,13 +252,16 @@ To add a new public subfolder:
 3. Rebuild and restart
 
 ### 4. URL Encoding
+
 The handler automatically handles URL-encoded filenames:
+
 - `green%200.jpg` → `green 0.jpg`
 - `my%20image.png` → `my image.png`
 
 However, it's best practice to avoid spaces in filenames. Update your upload API:
+
 ```typescript
-const filename = `${timestamp}-${random}-${file.name.replace(/\s+/g, '-')}`;
+const filename = `${timestamp}-${random}-${file.name.replace(/\s+/g, "-")}`;
 ```
 
 ---
@@ -251,12 +269,14 @@ const filename = `${timestamp}-${random}-${file.name.replace(/\s+/g, '-')}`;
 ## Troubleshooting
 
 ### Images still showing 404:
+
 1. Check file exists: `ls -la /home/instapeels.com/public_html/public/[folder]/`
 2. Check PM2 logs: `pm2 logs instapeels-next-app`
 3. Verify route file exists: `ls -la app/api/\[...path\]/route.ts`
 4. Ensure rebuild completed: `npm run build`
 
 ### Build errors:
+
 ```bash
 # Clear Next.js cache
 rm -rf .next
@@ -264,6 +284,7 @@ npm run build
 ```
 
 ### PM2 not restarting:
+
 ```bash
 pm2 delete instapeels-next-app
 pm2 start npm --name "instapeels-next-app" -- start
@@ -276,11 +297,13 @@ pm2 start npm --name "instapeels-next-app" -- start
 ### Development vs Production Behavior:
 
 **Development (`npm run dev`):**
+
 - Next.js serves `/public` files directly
 - New files are immediately accessible
 - Hot reload handles file changes
 
 **Production (`npm run build && npm start`):**
+
 - Next.js pre-builds static files during build time
 - Only files present during build are included in the static manifest
 - Files added after build are not served automatically
@@ -291,6 +314,7 @@ pm2 start npm --name "instapeels-next-app" -- start
 ## Summary
 
 This fix enables dynamic file serving in production by:
+
 1. ✅ Creating a universal API route handler (`[...path]/route.ts`)
 2. ✅ Configuring URL rewrites in `next.config.mjs`
 3. ✅ Handling URL encoding and multiple folder locations
@@ -301,6 +325,7 @@ This fix enables dynamic file serving in production by:
 ---
 
 ## Maintained By
+
 - **Date Fixed:** November 12, 2025
 - **Issue:** Production 404 errors for uploaded images
 - **Hosting:** CyberPanel VPS

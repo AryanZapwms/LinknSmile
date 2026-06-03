@@ -1,7 +1,7 @@
-"use client"
-import { useFavouritesLoader } from "@/hooks/useFavouritesLoader"
+"use client";
+import { useFavouritesLoader } from "@/hooks/useFavouritesLoader";
 
 export default function FavouritesLoader() {
-  useFavouritesLoader()
-  return null
+  useFavouritesLoader();
+  return null;
 }

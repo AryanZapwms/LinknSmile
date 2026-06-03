@@ -1,4 +1,4 @@
- // app/api/orders/route.ts
+// app/api/orders/route.ts
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -9,9 +9,7 @@ import { Product } from "@/lib/models/product";
 import { Cart } from "@/lib/models/cart";
 import Shop from "@/lib/models/shop";
 import { sendEmail } from "@/lib/email";
-import { sendPushNotificationToMultipleVendors } from '@/lib/services/push-notification';
-
-
+import { sendPushNotificationToMultipleVendors } from "@/lib/services/push-notification";
 
 // Helper function to generate order number
 function generateOrderNumber(): string {
@@ -21,7 +19,7 @@ function generateOrderNumber(): string {
 }
 
 export async function POST(req: NextRequest) {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -29,10 +27,9 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return withCORS(NextResponse.json(
-        { error: "Unauthorized. Please log in." },
-        { status: 401 }
-      ));
+      return withCORS(
+        NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 })
+      );
     }
 
     await connectDB();
@@ -50,70 +47,68 @@ export async function POST(req: NextRequest) {
 
     // Validate required fields
     if (!items || items.length === 0) {
-      return withCORS(NextResponse.json(
-        { error: "No items in order" },
-        { status: 400 }
-      ));
+      return withCORS(NextResponse.json({ error: "No items in order" }, { status: 400 }));
     }
 
     if (!shippingAddress) {
-      return withCORS(NextResponse.json(
-        { error: "Shipping address is required" },
-        { status: 400 }
-      ));
+      return withCORS(
+        NextResponse.json({ error: "Shipping address is required" }, { status: 400 })
+      );
     }
 
     // ✅ NEW: Process each item with vendor information
     const processedItems = [];
-    const vendorPayouts: Record<string, {
-      shopId: string;
-      amount: number;
-      items: any[];
-    }> = {};
+    const vendorPayouts: Record<
+      string,
+      {
+        shopId: string;
+        amount: number;
+        items: any[];
+      }
+    > = {};
 
     for (const item of items) {
       // Fetch product to get latest stock and info
       const product = await Product.findById(item.product)
-        .populate('shopId', 'shopName commissionRate')
+        .populate("shopId", "shopName commissionRate")
         .lean();
 
       if (!product) {
-        return withCORS(NextResponse.json(
-          { error: `Product ${item.product} not found` },
-          { status: 404 }
-        ));
+        return withCORS(
+          NextResponse.json({ error: `Product ${item.product} not found` }, { status: 404 })
+        );
       }
 
       // Check stock availability
-      const stockToCheck = item.selectedSize 
+      const stockToCheck = item.selectedSize
         ? product.sizes?.find(
-            (s: any) => 
-              s.size === item.selectedSize.size && 
-              s.quantity === item.selectedSize.quantity
+            (s: any) =>
+              s.size === item.selectedSize.size && s.quantity === item.selectedSize.quantity
           )?.stock || 0
         : product.stock;
 
       if (stockToCheck < item.quantity) {
-        return withCORS(NextResponse.json(
-          { error: `Insufficient stock for ${product.name}` },
-          { status: 400 }
-        ));
+        return withCORS(
+          NextResponse.json({ error: `Insufficient stock for ${product.name}` }, { status: 400 })
+        );
       }
 
       // ✅ Calculate commission and vendor earnings - STRICT VALIDATION
       const dbShopId = product.shopId?._id || product.shopId;
-      
+
       if (!dbShopId) {
-        return withCORS(NextResponse.json(
-          { error: `Product ${product.name} is missing a valid vendor assignment.` },
-          { status: 400 }
-        ));
+        return withCORS(
+          NextResponse.json(
+            { error: `Product ${product.name} is missing a valid vendor assignment.` },
+            { status: 400 }
+          )
+        );
       }
 
       const shopId = dbShopId.toString();
-      const shopName = product.shopId?.shopName || 'LinkAndSmile Platform';
+      const shopName = product.shopId?.shopName || "LinkAndSmile Platform";
       const commissionRate = product.shopId?.commissionRate ?? 10;
-      
+
       const itemTotal = item.price * item.quantity;
       const platformCommission = (itemTotal * commissionRate) / 100;
       const vendorEarnings = itemTotal - platformCommission;
@@ -163,7 +158,7 @@ export async function POST(req: NextRequest) {
       orderStatus: "pending",
       razorpayOrderId,
       razorpayPaymentId,
-      vendorPayouts: Object.values(vendorPayouts).map(v => ({
+      vendorPayouts: Object.values(vendorPayouts).map((v) => ({
         shopId: v.shopId,
         amount: v.amount,
         status: paymentStatus === "completed" ? "pending" : "held",
@@ -223,8 +218,8 @@ export async function POST(req: NextRequest) {
       if (shopId !== "699942a5a2b407e83b6d9ea8") {
         await Shop.findByIdAndUpdate(shopId, {
           $inc: {
-            'stats.totalOrders': 1,
-            'stats.totalRevenue': payoutInfo.amount,
+            "stats.totalOrders": 1,
+            "stats.totalRevenue": payoutInfo.amount,
           },
         });
       }
@@ -262,20 +257,22 @@ export async function POST(req: NextRequest) {
                 </tr>
               </thead>
               <tbody>
-                ${processedItems.map(item => {
-                  const product = items.find((i: any) => i.product === item.product.toString());
-                  return `
+                ${processedItems
+                  .map((item) => {
+                    const product = items.find((i: any) => i.product === item.product.toString());
+                    return `
                     <tr>
                       <td style="padding: 10px; border: 1px solid #ddd;">
-                        ${product?.name || 'Product'}
-                        ${item.selectedSize ? `<br/><small>(${item.selectedSize.size})</small>` : ''}
+                        ${product?.name || "Product"}
+                        ${item.selectedSize ? `<br/><small>(${item.selectedSize.size})</small>` : ""}
                         <br/><small style="color: #888;">by ${item.shopName}</small>
                       </td>
                       <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">${item.quantity}</td>
                       <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">₹${(item.price * item.quantity).toFixed(2)}</td>
                     </tr>
                   `;
-                }).join('')}
+                  })
+                  .join("")}
               </tbody>
               <tfoot>
                 <tr>
@@ -296,7 +293,7 @@ export async function POST(req: NextRequest) {
 
             <p style="margin-top: 30px; color: #666;">
               Payment Method: <strong>${paymentMethod.toUpperCase()}</strong><br/>
-              Payment Status: <strong>${paymentStatus || 'Pending'}</strong>
+              Payment Status: <strong>${paymentStatus || "Pending"}</strong>
             </p>
 
             <p style="margin-top: 30px; color: #888; font-size: 12px;">
@@ -307,24 +304,27 @@ export async function POST(req: NextRequest) {
       });
 
       // After the email sending loop for vendors, collect unique shopIds
-const vendorShopIds = Object.keys(vendorPayouts).filter(id => id !== 'platform');
-if (vendorShopIds.length > 0) {
-  // ✅ Calculate total earnings across all vendors
-  const totalVendorEarnings = Object.values(vendorPayouts).reduce((sum, v) => sum + v.amount, 0);
-  await sendPushNotificationToMultipleVendors(
-    vendorShopIds,
-    '🛍️ New Order Received!',
-    `You have a new order #${orderNumber}. Total earnings across all vendors: ₹${totalVendorEarnings.toFixed(2)}`,
-    { screen: 'orders', orderId: order._id.toString() }
-  );
-}
+      const vendorShopIds = Object.keys(vendorPayouts).filter((id) => id !== "platform");
+      if (vendorShopIds.length > 0) {
+        // ✅ Calculate total earnings across all vendors
+        const totalVendorEarnings = Object.values(vendorPayouts).reduce(
+          (sum, v) => sum + v.amount,
+          0
+        );
+        await sendPushNotificationToMultipleVendors(
+          vendorShopIds,
+          "🛍️ New Order Received!",
+          `You have a new order #${orderNumber}. Total earnings across all vendors: ₹${totalVendorEarnings.toFixed(2)}`,
+          { screen: "orders", orderId: order._id.toString() }
+        );
+      }
 
       // 2. Send notification to each vendor
       for (const [shopId, payoutInfo] of Object.entries(vendorPayouts)) {
-        if (shopId === 'platform') continue; // Skip platform items
+        if (shopId === "platform") continue; // Skip platform items
 
         // Get shop owner email
-        const shop = await Shop.findById(shopId).populate('ownerId', 'email name').lean();
+        const shop = await Shop.findById(shopId).populate("ownerId", "email name").lean();
         if (shop && shop.ownerId) {
           await sendEmail({
             to: (shop.ownerId as any).email,
@@ -346,13 +346,17 @@ if (vendorShopIds.length > 0) {
                     </tr>
                   </thead>
                   <tbody>
-                    ${payoutInfo.items.map(item => `
+                    ${payoutInfo.items
+                      .map(
+                        (item) => `
                       <tr>
                         <td style="padding: 10px; border: 1px solid #ddd;">${item.productName}</td>
                         <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">${item.quantity}</td>
                         <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">₹${item.earnings.toFixed(2)}</td>
                       </tr>
-                    `).join('')}
+                    `
+                      )
+                      .join("")}
                   </tbody>
                   <tfoot>
                     <tr style="background: #f0f8ff;">
@@ -396,7 +400,7 @@ if (vendorShopIds.length > 0) {
               <p><strong>Items:</strong> ${processedItems.length}</p>
               <p><strong>Vendors:</strong> ${Object.keys(vendorPayouts).length}</p>
               <p><strong>Payment Method:</strong> ${paymentMethod}</p>
-              <p><strong>Payment Status:</strong> ${paymentStatus || 'Pending'}</p>
+              <p><strong>Payment Status:</strong> ${paymentStatus || "Pending"}</p>
             </div>
           `,
         });
@@ -406,23 +410,24 @@ if (vendorShopIds.length > 0) {
       // Don't fail the order if email fails
     }
 
-    return withCORS(NextResponse.json({
-      success: true,
-      orderId: order._id,
-      orderNumber: order.orderNumber,
-      message: "Order created successfully",
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        message: "Order created successfully",
+      })
+    );
   } catch (error: any) {
     console.error("Order creation error:", error);
-    return withCORS(NextResponse.json(
-      { error: error.message || "Failed to create order" },
-      { status: 500 }
-    ));
+    return withCORS(
+      NextResponse.json({ error: error.message || "Failed to create order" }, { status: 500 })
+    );
   }
 }
 
 export async function GET(req: NextRequest) {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -430,10 +435,7 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return withCORS(NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      ));
+      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
 
     await connectDB();
@@ -452,9 +454,6 @@ export async function GET(req: NextRequest) {
     return withCORS(NextResponse.json({ orders }));
   } catch (error: any) {
     console.error("Fetch orders error:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to fetch orders" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 }));
   }
 }

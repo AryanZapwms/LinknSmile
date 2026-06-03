@@ -1,26 +1,26 @@
 // app/vendor/settings/page.tsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { 
-  Store, 
-  MapPin, 
-  CreditCard, 
-  Building2, 
-  Mail, 
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import {
+  Store,
+  MapPin,
+  CreditCard,
+  Building2,
+  Mail,
   Phone,
   Globe,
   Save,
   Loader2,
   Info,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface ShopSettings {
   shopName: string;
@@ -58,24 +58,37 @@ export default function VendorSettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('/api/vendor/settings');
+      const res = await fetch("/api/vendor/settings");
       const json = await res.json();
       if (json.success) {
         // Ensure nesting exists
         const shop = json.shop;
         setSettings({
-          shopName: shop.shopName || '',
-          description: shop.description || '',
-          contactInfo: shop.contactInfo || { phone: '', email: '' },
-          address: shop.address || { street: '', city: '', state: '', pincode: '', country: 'India' },
-          bankDetails: shop.bankDetails || { accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '', swiftCode: '', upiId: '' },
-          commissionRate: shop.commissionRate || 10
+          shopName: shop.shopName || "",
+          description: shop.description || "",
+          contactInfo: shop.contactInfo || { phone: "", email: "" },
+          address: shop.address || {
+            street: "",
+            city: "",
+            state: "",
+            pincode: "",
+            country: "India",
+          },
+          bankDetails: shop.bankDetails || {
+            accountHolderName: "",
+            accountNumber: "",
+            ifscCode: "",
+            bankName: "",
+            swiftCode: "",
+            upiId: "",
+          },
+          commissionRate: shop.commissionRate || 10,
         });
       } else {
-        toast.error('Failed to load settings');
+        toast.error("Failed to load settings");
       }
     } catch (error) {
-      toast.error('Something went wrong');
+      toast.error("Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -85,19 +98,19 @@ export default function VendorSettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch('/api/vendor/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/vendor/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       });
       const json = await res.json();
       if (json.success) {
-        toast.success('Settings updated successfully!');
+        toast.success("Settings updated successfully!");
       } else {
-        toast.error(json.message || 'Failed to update settings');
+        toast.error(json.message || "Failed to update settings");
       }
     } catch (error) {
-      toast.error('Failed to update settings');
+      toast.error("Failed to update settings");
     } finally {
       setSaving(false);
     }
@@ -105,17 +118,19 @@ export default function VendorSettingsPage() {
 
   if (loading || !settings) {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto p-4 md:p-8">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+      <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-8">
+        <Loader2 className="text-primary mx-auto h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-4 md:p-8">
+    <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-8">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Shop Settings</h1>
-        <p className="text-muted-foreground">Manage your shop profile, contact details, and bank information.</p>
+        <p className="text-muted-foreground">
+          Manage your shop profile, contact details, and bank information.
+        </p>
       </div>
 
       <form onSubmit={handleUpdate}>
@@ -125,10 +140,12 @@ export default function VendorSettingsPage() {
               <Store className="h-4 w-4" /> <span className="hidden sm:inline">Shop Profile</span>
             </TabsTrigger>
             <TabsTrigger value="address" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" /> <span className="hidden sm:inline">Contact & Address</span>
+              <MapPin className="h-4 w-4" />{" "}
+              <span className="hidden sm:inline">Contact & Address</span>
             </TabsTrigger>
             <TabsTrigger value="bank" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" /> <span className="hidden sm:inline">Bank Details</span>
+              <CreditCard className="h-4 w-4" />{" "}
+              <span className="hidden sm:inline">Bank Details</span>
             </TabsTrigger>
           </TabsList>
 
@@ -142,27 +159,28 @@ export default function VendorSettingsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Shop Name</label>
-                  <Input 
-                    value={settings.shopName} 
-                    onChange={(e) => setSettings({...settings, shopName: e.target.value})}
+                  <Input
+                    value={settings.shopName}
+                    onChange={(e) => setSettings({ ...settings, shopName: e.target.value })}
                     placeholder="Enter shop name"
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Description</label>
-                  <Textarea 
-                    value={settings.description} 
-                    onChange={(e) => setSettings({...settings, description: e.target.value})}
+                  <Textarea
+                    value={settings.description}
+                    onChange={(e) => setSettings({ ...settings, description: e.target.value })}
                     placeholder="Tell customers about your shop..."
                     rows={4}
                   />
                 </div>
-                <div className="p-4 bg-muted/50 rounded-lg flex gap-3">
-                  <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Your current platform commission rate is <strong>{settings.commissionRate}%</strong>. 
-                    This rate is applied to each order. Contact admin to request a rate change.
+                <div className="bg-muted/50 flex gap-3 rounded-lg p-4">
+                  <Info className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    Your current platform commission rate is{" "}
+                    <strong>{settings.commissionRate}%</strong>. This rate is applied to each order.
+                    Contact admin to request a rate change.
                   </p>
                 </div>
               </CardContent>
@@ -180,11 +198,16 @@ export default function VendorSettingsPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Phone Number</label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
+                    <Phone className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                    <Input
                       className="pl-9"
-                      value={settings.contactInfo.phone} 
-                      onChange={(e) => setSettings({...settings, contactInfo: {...settings.contactInfo, phone: e.target.value}})}
+                      value={settings.contactInfo.phone}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          contactInfo: { ...settings.contactInfo, phone: e.target.value },
+                        })
+                      }
                       placeholder="9876543210"
                       required
                     />
@@ -193,12 +216,17 @@ export default function VendorSettingsPage() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input 
+                    <Mail className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                    <Input
                       className="pl-9"
                       type="email"
-                      value={settings.contactInfo.email} 
-                      onChange={(e) => setSettings({...settings, contactInfo: {...settings.contactInfo, email: e.target.value}})}
+                      value={settings.contactInfo.email}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          contactInfo: { ...settings.contactInfo, email: e.target.value },
+                        })
+                      }
                       placeholder="vendor@example.com"
                       required
                     />
@@ -215,45 +243,70 @@ export default function VendorSettingsPage() {
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-sm font-medium">Street Address</label>
-                  <Input 
-                    value={settings.address.street} 
-                    onChange={(e) => setSettings({...settings, address: {...settings.address, street: e.target.value}})}
+                  <Input
+                    value={settings.address.street}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        address: { ...settings.address, street: e.target.value },
+                      })
+                    }
                     placeholder="123 Business Lane"
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">City</label>
-                  <Input 
-                    value={settings.address.city} 
-                    onChange={(e) => setSettings({...settings, address: {...settings.address, city: e.target.value}})}
+                  <Input
+                    value={settings.address.city}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        address: { ...settings.address, city: e.target.value },
+                      })
+                    }
                     placeholder="Mumbai"
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">State</label>
-                  <Input 
-                    value={settings.address.state} 
-                    onChange={(e) => setSettings({...settings, address: {...settings.address, state: e.target.value}})}
+                  <Input
+                    value={settings.address.state}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        address: { ...settings.address, state: e.target.value },
+                      })
+                    }
                     placeholder="Maharashtra"
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Pincode</label>
-                  <Input 
-                    value={settings.address.pincode} 
-                    onChange={(e) => setSettings({...settings, address: {...settings.address, pincode: e.target.value}})}
+                  <Input
+                    value={settings.address.pincode}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        address: { ...settings.address, pincode: e.target.value },
+                      })
+                    }
                     placeholder="400001"
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Country</label>
-                  <Input 
-                    value={settings.address.country} 
-                    onChange={(e) => setSettings({...settings, address: {...settings.address, country: e.target.value}})}
+                  <Input
+                    value={settings.address.country}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        address: { ...settings.address, country: e.target.value },
+                      })
+                    }
                     placeholder="India"
                     required
                   />
@@ -273,9 +326,17 @@ export default function VendorSettingsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Account Holder Name</label>
-                    <Input 
-                      value={settings.bankDetails.accountHolderName} 
-                      onChange={(e) => setSettings({...settings, bankDetails: {...settings.bankDetails, accountHolderName: e.target.value}})}
+                    <Input
+                      value={settings.bankDetails.accountHolderName}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          bankDetails: {
+                            ...settings.bankDetails,
+                            accountHolderName: e.target.value,
+                          },
+                        })
+                      }
                       placeholder="As per bank records"
                       required
                     />
@@ -283,11 +344,16 @@ export default function VendorSettingsPage() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Bank Name</label>
                     <div className="relative">
-                      <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input 
+                      <Building2 className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                      <Input
                         className="pl-9"
-                        value={settings.bankDetails.bankName} 
-                        onChange={(e) => setSettings({...settings, bankDetails: {...settings.bankDetails, bankName: e.target.value}})}
+                        value={settings.bankDetails.bankName}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            bankDetails: { ...settings.bankDetails, bankName: e.target.value },
+                          })
+                        }
                         placeholder="e.g. HDFC Bank"
                         required
                       />
@@ -296,11 +362,16 @@ export default function VendorSettingsPage() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Account Number</label>
                     <div className="relative">
-                      <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input 
+                      <CreditCard className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                      <Input
                         className="pl-9"
-                        value={settings.bankDetails.accountNumber} 
-                        onChange={(e) => setSettings({...settings, bankDetails: {...settings.bankDetails, accountNumber: e.target.value}})}
+                        value={settings.bankDetails.accountNumber}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            bankDetails: { ...settings.bankDetails, accountNumber: e.target.value },
+                          })
+                        }
                         placeholder="0000000000"
                         required
                       />
@@ -308,44 +379,73 @@ export default function VendorSettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">IFSC Code</label>
-                    <Input 
-                      value={settings.bankDetails.ifscCode} 
-                      onChange={(e) => setSettings({...settings, bankDetails: {...settings.bankDetails, ifscCode: e.target.value.toUpperCase()}})}
+                    <Input
+                      value={settings.bankDetails.ifscCode}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          bankDetails: {
+                            ...settings.bankDetails,
+                            ifscCode: e.target.value.toUpperCase(),
+                          },
+                        })
+                      }
                       placeholder="e.g. HDFC0001234"
                       className="font-mono tracking-wider"
                       required
                     />
-                    <p className="text-xs text-muted-foreground">11-character Indian bank branch code.</p>
+                    <p className="text-muted-foreground text-xs">
+                      11-character Indian bank branch code.
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">SWIFT / BIC Code <span className="font-normal text-muted-foreground">(Optional)</span></label>
-                    <Input 
-                      value={settings.bankDetails.swiftCode ?? ''} 
-                      onChange={(e) => setSettings({...settings, bankDetails: {...settings.bankDetails, swiftCode: e.target.value.toUpperCase()}})}
+                    <label className="text-sm font-medium">
+                      SWIFT / BIC Code{" "}
+                      <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </label>
+                    <Input
+                      value={settings.bankDetails.swiftCode ?? ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          bankDetails: {
+                            ...settings.bankDetails,
+                            swiftCode: e.target.value.toUpperCase(),
+                          },
+                        })
+                      }
                       placeholder="e.g. HDFCINBBXXX"
                       className="font-mono tracking-wider"
                     />
-                    <p className="text-xs text-muted-foreground">Required for international payouts.</p>
+                    <p className="text-muted-foreground text-xs">
+                      Required for international payouts.
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">UPI ID (Optional)</label>
                     <div className="relative">
-                      <Globe className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input 
+                      <Globe className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                      <Input
                         className="pl-9"
-                        value={settings.bankDetails.upiId} 
-                        onChange={(e) => setSettings({...settings, bankDetails: {...settings.bankDetails, upiId: e.target.value}})}
+                        value={settings.bankDetails.upiId}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            bankDetails: { ...settings.bankDetails, upiId: e.target.value },
+                          })
+                        }
                         placeholder="user@upi"
                       />
                     </div>
                   </div>
                 </div>
-                
-                <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex gap-3">
-                  <AlertCircle className="h-5 w-5 text-blue-500 shrink-0" />
+
+                <div className="flex gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
+                  <AlertCircle className="h-5 w-5 shrink-0 text-blue-500" />
                   <p className="text-xs text-blue-700">
-                    Ensure these details are absolutely correct. We won't be responsible for payments sent to the wrong account provided here. 
-                    Changes here will reflect in all future payout requests.
+                    Ensure these details are absolutely correct. We won't be responsible for
+                    payments sent to the wrong account provided here. Changes here will reflect in
+                    all future payout requests.
                   </p>
                 </div>
               </CardContent>
@@ -356,9 +456,15 @@ export default function VendorSettingsPage() {
         <div className="mt-8 flex justify-end">
           <Button type="submit" size="lg" disabled={saving}>
             {saving ? (
-              <> <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving... </>
+              <>
+                {" "}
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...{" "}
+              </>
             ) : (
-              <> <Save className="mr-2 h-4 w-4" /> Save All Changes </>
+              <>
+                {" "}
+                <Save className="mr-2 h-4 w-4" /> Save All Changes{" "}
+              </>
             )}
           </Button>
         </div>

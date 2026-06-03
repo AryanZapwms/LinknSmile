@@ -1,31 +1,31 @@
 // app\admin\blogs\add\page.tsx
 
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { ImageUploadField } from "@/components/admin/image-upload-field"
-import { ArrowLeft } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { ArrowLeft } from "lucide-react";
 
 interface Company {
-  _id: string
-  name: string
+  _id: string;
+  name: string;
 }
 
 export default function AddBlogPage() {
-  const router = useRouter()
-  const { data: session } = useSession()
-  const [loading, setLoading] = useState(false)
-  const [companies, setCompanies] = useState<Company[]>([])
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -35,40 +35,42 @@ export default function AddBlogPage() {
     tags: "",
     isPublished: false,
     company: "", // will hold companyId
-  })
+  });
 
   useEffect(() => {
     // fetch companies for the dropdown
-    fetchCompanies()
-  }, [])
+    fetchCompanies();
+  }, []);
 
   if (!session) {
-    return null
+    return null;
   }
 
   const fetchCompanies = async () => {
     try {
-      const res = await fetch("/api/companies")
-      if (!res.ok) throw new Error("Failed to fetch companies")
-      const data = await res.json()
-      setCompanies(data)
+      const res = await fetch("/api/companies");
+      if (!res.ok) throw new Error("Failed to fetch companies");
+      const data = await res.json();
+      setCompanies(data);
     } catch (error) {
-      console.error("Error fetching companies:", error)
+      console.error("Error fetching companies:", error);
     }
-  }
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleToggle = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, isPublished: checked }))
-  }
+    setFormData((prev) => ({ ...prev, isPublished: checked }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       const res = await fetch("/api/blogs", {
@@ -78,27 +80,30 @@ export default function AddBlogPage() {
           ...formData,
           tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()) : [],
         }),
-      })
+      });
 
       if (!res.ok) {
-        const text = await res.text()
-        throw new Error("Failed to create blog: " + text)
+        const text = await res.text();
+        throw new Error("Failed to create blog: " + text);
       }
 
-      router.push("/admin/blogs")
+      router.push("/admin/blogs");
     } catch (error) {
-      console.error("Error creating blog:", error)
-      alert("Failed to create blog")
+      console.error("Error creating blog:", error);
+      alert("Failed to create blog");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <Link href="/admin/blogs" className="inline-flex items-center gap-2 text-primary hover:underline mb-8">
-          <ArrowLeft className="w-4 h-4" />
+    <main className="bg-background min-h-screen">
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <Link
+          href="/admin/blogs"
+          className="text-primary mb-8 inline-flex items-center gap-2 hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" />
           Back to Blogs
         </Link>
 
@@ -110,12 +115,24 @@ export default function AddBlogPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="text-sm font-medium">Title</label>
-                <Input name="title" value={formData.title} onChange={handleChange} placeholder="Blog title" required />
+                <Input
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="Blog title"
+                  required
+                />
               </div>
 
               <div>
                 <label className="text-sm font-medium">Slug</label>
-                <Input name="slug" value={formData.slug} onChange={handleChange} placeholder="blog-slug" required />
+                <Input
+                  name="slug"
+                  value={formData.slug}
+                  onChange={handleChange}
+                  placeholder="blog-slug"
+                  required
+                />
               </div>
 
               <div>
@@ -200,5 +217,5 @@ export default function AddBlogPage() {
         </Card>
       </div>
     </main>
-  )
+  );
 }

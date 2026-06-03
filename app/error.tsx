@@ -24,32 +24,28 @@ export default function GlobalError({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center space-y-6">
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-6 text-center">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Something went wrong
-          </h1>
-          <p className="text-gray-500 text-sm">
+          <h1 className="text-2xl font-semibold text-gray-900">Something went wrong</h1>
+          <p className="text-sm text-gray-500">
             We hit an unexpected error. Our team has been notified.
             {error.digest && (
-              <span className="block mt-1 text-xs text-gray-400">
-                Error ID: {error.digest}
-              </span>
+              <span className="mt-1 block text-xs text-gray-400">Error ID: {error.digest}</span>
             )}
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
           <button
             onClick={reset}
-            className="px-4 py-2 bg-black text-white text-sm rounded-md hover:bg-gray-800 transition-colors"
+            className="rounded-md bg-black px-4 py-2 text-sm text-white transition-colors hover:bg-gray-800"
           >
             Try again
           </button>
           <a
             href="/"
-            className="px-4 py-2 border border-gray-300 text-sm rounded-md hover:bg-gray-50 transition-colors"
+            className="rounded-md border border-gray-300 px-4 py-2 text-sm transition-colors hover:bg-gray-50"
           >
             Go home
           </a>

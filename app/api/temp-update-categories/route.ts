@@ -13,11 +13,11 @@ const NEW_CATEGORIES = [
   "Handmade crafts",
   "Artisan products",
   "Chemical-free products",
-  "Sustainable shopping"
+  "Sustainable shopping",
 ];
 
 export async function GET() {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -28,24 +28,34 @@ export async function GET() {
     const deleteResult = await Category.deleteMany({});
 
     // 2. Insert new categories
-    const categoriesToInsert = NEW_CATEGORIES.map(name => ({
+    const categoriesToInsert = NEW_CATEGORIES.map((name) => ({
       name,
-      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-      isActive: true
+      slug: name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, ""),
+      isActive: true,
     }));
 
     const inserted = await Category.insertMany(categoriesToInsert);
 
-    return withCORS(NextResponse.json({
-      success: true,
-      deleted: deleteResult.deletedCount,
-      inserted: inserted.length,
-      categories: inserted.map(c => c.name)
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        deleted: deleteResult.deletedCount,
+        inserted: inserted.length,
+        categories: inserted.map((c) => c.name),
+      })
+    );
   } catch (error: any) {
-    return withCORS(NextResponse.json({
-      success: false,
-      error: error.message
-    }, { status: 500 }));
+    return withCORS(
+      NextResponse.json(
+        {
+          success: false,
+          error: error.message,
+        },
+        { status: 500 }
+      )
+    );
   }
 }

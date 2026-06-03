@@ -17,11 +17,21 @@ const transporter = nodemailer.createTransport({
     pass: GMAIL_APP_PASSWORD,
   },
   tls: {
-    rejectUnauthorized: false, 
+    rejectUnauthorized: false,
   },
 });
 
-export async function sendEmail({ to, subject, html, text }: { to: string; subject: string; html?: string; text?: string }) {
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+}: {
+  to: string;
+  subject: string;
+  html?: string;
+  text?: string;
+}) {
   if (!transporter) throw new Error("Mail transporter not configured");
   return transporter.sendMail({
     from: EMAIL_FROM,
@@ -74,8 +84,7 @@ const buildOtpHtml = (name: string, otp: string) => {
     </div>
   </div>
   `;
-}
-
+};
 
 export function buildWelcomeHtml(name: string) {
   return `
@@ -110,7 +119,6 @@ export function buildWelcomeHtml(name: string) {
   </div>
   `;
 }
-
 
 export async function sendOtpEmail(to: string, name: string, otp: string) {
   const html = buildOtpHtml(name, otp);

@@ -6,12 +6,24 @@ import { Otp } from "@/lib/models/otp";
 import { generateNumericOtp, hashOtp } from "@/lib/otp";
 import { sendOtpEmail } from "@/lib/EmailOtp";
 import { type NextRequest, NextResponse } from "next/server";
+import { otpLimiter } from "@/lib/rate-limit";
 
 const RESEND_MIN_MS = 30 * 1000;
 const MAX_PER_DAY = 10;
 
 export async function POST(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+
+  const { success } = otpLimiter(ip);
+
+  if (!success) {
+    return Response.json(
+      { error: "Too many requests. Please wait a minute before trying again." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
+
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -34,18 +46,32 @@ export async function POST(request: NextRequest) {
 
     const latestOtp = await Otp.findOne({ email: normalizedEmail }).sort({ createdAt: -1 });
     if (!latestOtp || !latestOtp.pendingName || !latestOtp.pendingPassword) {
-      return withCORS(NextResponse.json({ error: "No pending registration found" }, { status: 404 }));
+      return withCORS(
+        NextResponse.json({ error: "No pending registration found" }, { status: 404 })
+      );
     }
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recentCount = await Otp.countDocuments({ email: normalizedEmail, createdAt: { $gte: since } });
+    const recentCount = await Otp.countDocuments({
+      email: normalizedEmail,
+      createdAt: { $gte: since },
+    });
     if (recentCount >= MAX_PER_DAY) {
-      return withCORS(NextResponse.json({ error: "Too many OTP requests. Try again tomorrow." }, { status: 429 }));
+      return withCORS(
+        NextResponse.json({ error: "Too many OTP requests. Try again tomorrow." }, { status: 429 })
+      );
     }
 
     const elapsed = Date.now() - latestOtp.createdAt.getTime();
     if (elapsed < RESEND_MIN_MS) {
-      return withCORS(NextResponse.json({ error: `Please wait ${Math.ceil((RESEND_MIN_MS - elapsed) / 1000)} seconds before resending.` }, { status: 429 }));
+      return withCORS(
+        NextResponse.json(
+          {
+            error: `Please wait ${Math.ceil((RESEND_MIN_MS - elapsed) / 1000)} seconds before resending.`,
+          },
+          { status: 429 }
+        )
+      );
     }
 
     const otpPlain = generateNumericOtp(6);

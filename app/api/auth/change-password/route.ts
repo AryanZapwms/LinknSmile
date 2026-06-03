@@ -18,17 +18,12 @@ export async function POST(req: Request) {
 
     // ── Validate input ──────────────────────────────────────────────────────
     if (!currentPassword || !newPassword) {
-      return withCORS(
-        NextResponse.json({ error: "Missing required fields" }, { status: 400 })
-      );
+      return withCORS(NextResponse.json({ error: "Missing required fields" }, { status: 400 }));
     }
 
     if (newPassword.length < 6) {
       return withCORS(
-        NextResponse.json(
-          { error: "New password must be at least 6 characters" },
-          { status: 400 }
-        )
+        NextResponse.json({ error: "New password must be at least 6 characters" }, { status: 400 })
       );
     }
 
@@ -47,9 +42,7 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-      return withCORS(
-        NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      );
+      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
 
     const email = session.user.email.trim().toLowerCase();
@@ -59,9 +52,7 @@ export async function POST(req: Request) {
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
-      return withCORS(
-        NextResponse.json({ error: "User not found" }, { status: 404 })
-      );
+      return withCORS(NextResponse.json({ error: "User not found" }, { status: 404 }));
     }
 
     // ── Verify current password ─────────────────────────────────────────────
@@ -69,10 +60,7 @@ export async function POST(req: Request) {
 
     if (!isCorrect) {
       return withCORS(
-        NextResponse.json(
-          { error: "Current password is incorrect" },
-          { status: 400 }
-        )
+        NextResponse.json({ error: "Current password is incorrect" }, { status: 400 })
       );
     }
 
@@ -81,15 +69,9 @@ export async function POST(req: Request) {
     user.markModified("password");
     await user.save();
 
-    return withCORS(
-      NextResponse.json({ message: "Password changed successfully" })
-    );
+    return withCORS(NextResponse.json({ message: "Password changed successfully" }));
   } catch (err) {
     console.error("[CHANGE_PASSWORD]", err);
-    return withCORS(
-      NextResponse.json({ error: "Something went wrong" }, { status: 500 })
-    );
+    return withCORS(NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
   }
 }
-
-

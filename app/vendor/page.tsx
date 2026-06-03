@@ -1,13 +1,23 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, ShoppingCart, DollarSign, TrendingUp, AlertCircle, CheckCircle, XCircle, Clock, CreditCard } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Package,
+  ShoppingCart,
+  DollarSign,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Clock,
+  CreditCard,
+} from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 interface Stats {
   totalProducts: number;
@@ -53,7 +63,7 @@ export default function VendorDashboard() {
 
   const fetchBankStatus = async () => {
     try {
-      const res = await fetch('/api/vendor/bank-details');
+      const res = await fetch("/api/vendor/bank-details");
       if (res.ok) {
         const data = await res.json();
         setBankDetailsComplete(data.isComplete ?? false);
@@ -65,7 +75,7 @@ export default function VendorDashboard() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch('/api/vendor/stats');
+      const res = await fetch("/api/vendor/stats");
       const data = await res.json();
 
       if (data.success) {
@@ -73,11 +83,11 @@ export default function VendorDashboard() {
         setShop(data.shop);
         setRecentOrders(data.recentOrders || []);
       } else {
-        setError(data.message || 'Failed to load dashboard data.');
+        setError(data.message || "Failed to load dashboard data.");
       }
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
-      setError('An unexpected error occurred while loading dashboard data.');
+      console.error("Failed to fetch stats:", error);
+      setError("An unexpected error occurred while loading dashboard data.");
     } finally {
       setLoading(false);
     }
@@ -108,20 +118,20 @@ export default function VendorDashboard() {
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error || 'Failed to load dashboard data.'}</AlertDescription>
+        <AlertDescription>{error || "Failed to load dashboard data."}</AlertDescription>
       </Alert>
     );
   }
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      pending: 'outline',
-      processing: 'secondary',
-      shipped: 'default',
-      delivered: 'default',
-      cancelled: 'destructive',
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      pending: "outline",
+      processing: "secondary",
+      shipped: "default",
+      delivered: "default",
+      cancelled: "destructive",
     };
-    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
+    return <Badge variant={variants[status] || "outline"}>{status}</Badge>;
   };
 
   return (
@@ -129,22 +139,26 @@ export default function VendorDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Welcome back, {shop.name}!</h1>
-        <p className="text-muted-foreground">
-          Here's what's happening with your shop today.
-        </p>
+        <p className="text-muted-foreground">Here's what's happening with your shop today.</p>
       </div>
 
       {/* ── Bank details missing banner ────────────────────────────── */}
       {bankDetailsComplete === false && (
-        <Alert className="bg-amber-50 border-amber-300">
+        <Alert className="border-amber-300 bg-amber-50">
           <CreditCard className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-900 font-semibold">Complete Your Bank Details to Enable Payouts</AlertTitle>
-          <AlertDescription className="text-amber-800 flex flex-col sm:flex-row sm:items-center gap-3 mt-1">
+          <AlertTitle className="font-semibold text-amber-900">
+            Complete Your Bank Details to Enable Payouts
+          </AlertTitle>
+          <AlertDescription className="mt-1 flex flex-col gap-3 text-amber-800 sm:flex-row sm:items-center">
             <span className="flex-1">
               Your bank account information is missing. Without it, payout requests cannot be
               processed and your earnings will remain on hold.
             </span>
-            <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-700 text-white shrink-0">
+            <Button
+              asChild
+              size="sm"
+              className="shrink-0 bg-amber-600 text-white hover:bg-amber-700"
+            >
               <Link href="/vendor/bank-details">Add Bank Details</Link>
             </Button>
           </AlertDescription>
@@ -153,11 +167,12 @@ export default function VendorDashboard() {
 
       {/* Shop Status Alert */}
       {!shop.isApproved && (
-        <Alert className="bg-orange-50 border-orange-200">
+        <Alert className="border-orange-200 bg-orange-50">
           <Clock className="h-4 w-4 text-orange-600" />
           <AlertTitle className="text-orange-800">Shop Pending Approval</AlertTitle>
           <AlertDescription className="text-orange-700">
-            Your shop is currently under review. You will be able to add and manage products once your shop is approved by our admin team.
+            Your shop is currently under review. You will be able to add and manage products once
+            your shop is approved by our admin team.
           </AlertDescription>
         </Alert>
       )}
@@ -177,11 +192,11 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalProducts}</div>
-            <div className="flex gap-2 mt-2 text-xs">
+            <div className="mt-2 flex gap-2 text-xs">
               <span className="flex items-center gap-1 text-green-600">
                 <CheckCircle className="h-3 w-3" />
                 {stats.approvedProducts} approved
@@ -197,24 +212,22 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            <ShoppingCart className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalOrders}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              All time orders
-            </p>
+            <p className="text-muted-foreground mt-1 text-xs">All time orders</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{stats.totalEarnings.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 text-xs">
               After {shop.commissionRate}% commission
             </p>
           </CardContent>
@@ -223,13 +236,11 @@ export default function VendorDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Pending Payouts</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{stats.pendingPayouts.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Available to withdraw
-            </p>
+            <p className="text-muted-foreground mt-1 text-xs">Available to withdraw</p>
           </CardContent>
         </Card>
       </div>
@@ -241,16 +252,16 @@ export default function VendorDashboard() {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Status</p>
-            <div className="flex gap-2 mt-1">
+            <p className="text-muted-foreground text-sm font-medium">Status</p>
+            <div className="mt-1 flex gap-2">
               {shop.isApproved ? (
                 <Badge variant="default" className="bg-purple-500">
-                  <CheckCircle className="h-3 w-3 mr-1" />
+                  <CheckCircle className="mr-1 h-3 w-3" />
                   Approved
                 </Badge>
               ) : (
                 <Badge variant="outline">
-                  <Clock className="h-3 w-3 mr-1" />
+                  <Clock className="mr-1 h-3 w-3" />
                   Pending
                 </Badge>
               )}
@@ -262,14 +273,14 @@ export default function VendorDashboard() {
             </div>
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Commission Rate</p>
-            <p className="text-2xl font-bold mt-1">{shop.commissionRate}%</p>
+            <p className="text-muted-foreground text-sm font-medium">Commission Rate</p>
+            <p className="mt-1 text-2xl font-bold">{shop.commissionRate}%</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Shop Rating</p>
-            <div className="flex items-center gap-1 mt-1">
+            <p className="text-muted-foreground text-sm font-medium">Shop Rating</p>
+            <div className="mt-1 flex items-center gap-1">
               <p className="text-2xl font-bold">{shop.ratings.average.toFixed(1)}</p>
-              <p className="text-sm text-muted-foreground">({shop.ratings.count} reviews)</p>
+              <p className="text-muted-foreground text-sm">({shop.ratings.count} reviews)</p>
             </div>
           </div>
         </CardContent>
@@ -285,21 +296,21 @@ export default function VendorDashboard() {
         </CardHeader>
         <CardContent>
           {recentOrders.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No orders yet</p>
+            <p className="text-muted-foreground py-8 text-center">No orders yet</p>
           ) : (
             <div className="space-y-4">
               {recentOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors"
                 >
                   <div>
                     <p className="font-medium">#{order.orderNumber}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="text-right flex items-center gap-4">
+                  <div className="flex items-center gap-4 text-right">
                     <div>
                       <p className="font-medium">₹{order.totalAmount.toLocaleString()}</p>
                       {getStatusBadge(order.status)}
@@ -317,8 +328,13 @@ export default function VendorDashboard() {
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className={`transition-shadow ${!shop.isApproved ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg cursor-pointer'}`}>
-          <Link href={shop.isApproved ? "/vendor/products/add" : "#"} onClick={(e) => !shop.isApproved && e.preventDefault()}>
+        <Card
+          className={`transition-shadow ${!shop.isApproved ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:shadow-lg"}`}
+        >
+          <Link
+            href={shop.isApproved ? "/vendor/products/add" : "#"}
+            onClick={(e) => !shop.isApproved && e.preventDefault()}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
@@ -326,15 +342,18 @@ export default function VendorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                List a new product for sale
-              </p>
+              <p className="text-muted-foreground text-sm">List a new product for sale</p>
             </CardContent>
           </Link>
         </Card>
 
-        <Card className={`transition-shadow ${!shop.isApproved ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg cursor-pointer'}`}>
-          <Link href={shop.isApproved ? "/vendor/products" : "#"} onClick={(e) => !shop.isApproved && e.preventDefault()}>
+        <Card
+          className={`transition-shadow ${!shop.isApproved ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:shadow-lg"}`}
+        >
+          <Link
+            href={shop.isApproved ? "/vendor/products" : "#"}
+            onClick={(e) => !shop.isApproved && e.preventDefault()}
+          >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
@@ -342,14 +361,12 @@ export default function VendorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                View and edit your products
-              </p>
+              <p className="text-muted-foreground text-sm">View and edit your products</p>
             </CardContent>
           </Link>
         </Card>
 
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+        <Card className="cursor-pointer transition-shadow hover:shadow-lg">
           <Link href="/vendor/payouts">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -358,31 +375,31 @@ export default function VendorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Withdraw your earnings
-              </p>
+              <p className="text-muted-foreground text-sm">Withdraw your earnings</p>
             </CardContent>
           </Link>
         </Card>
 
-        <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${
-          bankDetailsComplete === false ? 'ring-2 ring-amber-400 ring-offset-1' : ''
-        }`}>
+        <Card
+          className={`cursor-pointer transition-shadow hover:shadow-lg ${
+            bankDetailsComplete === false ? "ring-2 ring-amber-400 ring-offset-1" : ""
+          }`}
+        >
           <Link href="/vendor/bank-details">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
                 Bank Details
                 {bankDetailsComplete === false && (
-                  <span className="ml-auto text-xs font-normal text-amber-600 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full">
+                  <span className="ml-auto rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-normal text-amber-600">
                     Incomplete
                   </span>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {bankDetailsComplete ? 'Manage payout account' : 'Required for payouts'}
+              <p className="text-muted-foreground text-sm">
+                {bankDetailsComplete ? "Manage payout account" : "Required for payouts"}
               </p>
             </CardContent>
           </Link>

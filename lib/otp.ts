@@ -34,8 +34,8 @@ export async function sendOTP(email: string) {
         <div style="font-size: 32px; font-weight: bold; margin: 20px; letter-spacing: 5px;">${otp}</div>
         <p>This code will expire in 10 minutes.</p>
       </div>
-    `
+    `,
   });
-  
+
   return { hashedOtp, expiresAt };
 }

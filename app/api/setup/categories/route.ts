@@ -5,7 +5,7 @@ import { Company } from "@/lib/models/company";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -15,10 +15,12 @@ export async function POST() {
     // Get all companies
     const companies = await Company.find({ isActive: true });
     if (companies.length === 0) {
-      return withCORS(NextResponse.json(
-        { error: "No companies found. Please create companies first." },
-        { status: 400 }
-      ));
+      return withCORS(
+        NextResponse.json(
+          { error: "No companies found. Please create companies first." },
+          { status: 400 }
+        )
+      );
     }
 
     const categories = [
@@ -26,8 +28,7 @@ export async function POST() {
       {
         name: "Korean Skin Kits",
         slug: "korean-skin-kits",
-        description:
-          "Complete Korean skincare routines for radiant, glass skin",
+        description: "Complete Korean skincare routines for radiant, glass skin",
         company: companies.find((c) => c.slug === "instapeels")?._id,
         image:
           "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop&crop=center",
@@ -208,9 +209,7 @@ export async function POST() {
         });
 
         if (existingCategory) {
-          errors.push(
-            `Category ${categoryData.name} already exists for this company`
-          );
+          errors.push(`Category ${categoryData.name} already exists for this company`);
           continue;
         }
 
@@ -222,18 +221,17 @@ export async function POST() {
       }
     }
 
-    return withCORS(NextResponse.json({
-      message: "Category setup completed",
-      created: createdCategories.length,
-      errors: errors.length,
-      categories: createdCategories,
-      errorMessages: errors,
-    }));
+    return withCORS(
+      NextResponse.json({
+        message: "Category setup completed",
+        created: createdCategories.length,
+        errors: errors.length,
+        categories: createdCategories,
+        errorMessages: errors,
+      })
+    );
   } catch (error) {
     console.error("Error setting up categories:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to setup categories" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to setup categories" }, { status: 500 }));
   }
 }

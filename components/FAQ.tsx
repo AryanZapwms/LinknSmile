@@ -1,15 +1,15 @@
 // components/FAQ.tsx
-import React, { useState } from "react"
-import { Plus, Minus } from "lucide-react"
+import React, { useState } from "react";
+import { Plus, Minus } from "lucide-react";
 
 interface FAQItem {
-  question: string
-  answer: string
+  question: string;
+  answer: string;
 }
 
 interface FAQProps {
-  companySlug?: string
-  items?: FAQItem[]
+  companySlug?: string;
+  items?: FAQItem[];
 }
 
 // FAQ data organized by company
@@ -21,12 +21,14 @@ const faqByCompany: Record<string, FAQItem[]> = {
         "Yes, the Instapeels Complete Kit is formulated with gentle exfoliating acids and brightening agents that help reduce acne marks, pigmentation, and dullness while improving overall skin texture.",
     },
     {
-      question: "What are the main benefits of the Instapeels Complete Kit for achieving glass skin?",
+      question:
+        "What are the main benefits of the Instapeels Complete Kit for achieving glass skin?",
       answer:
         "The kit provides deep exfoliation, hydration, and radiance, helping you achieve smooth, even-toned, and luminous 'glass-like' skin with regular use.",
     },
     {
-      question: "Is the Instapeels Complete Kit suitable for oily, dry, and combination skin types?",
+      question:
+        "Is the Instapeels Complete Kit suitable for oily, dry, and combination skin types?",
       answer:
         "Yes, it’s dermatologically tested and suitable for all skin types including oily, dry, and combination skin.",
     },
@@ -112,69 +114,64 @@ const faqByCompany: Record<string, FAQItem[]> = {
     },
     {
       question: "Are the products cruelty-free?",
-      answer:
-        "Yes, all our partnered brands are cruelty-free and never test on animals.",
+      answer: "Yes, all our partnered brands are cruelty-free and never test on animals.",
     },
   ],
-}
-
+};
 
 export default function FAQ({ companySlug, items }: FAQProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   // Determine which FAQs to show
   const getFAQs = (): FAQItem[] => {
     // If custom items provided, use them
     if (items && items.length > 0) {
-      return items
+      return items;
     }
-    
+
     // If company slug provided, look up company-specific FAQs
     if (companySlug) {
-      const companyFAQs = faqByCompany[companySlug.toLowerCase()]
+      const companyFAQs = faqByCompany[companySlug.toLowerCase()];
       if (companyFAQs) {
-        return companyFAQs
+        return companyFAQs;
       }
     }
-    
-    // Fall back to default FAQs
-    return faqByCompany.default
-  }
 
-  const faqs = getFAQs()
+    // Fall back to default FAQs
+    return faqByCompany.default;
+  };
+
+  const faqs = getFAQs();
 
   const toggleFAQ = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index)
-  }
+    setOpenIndex(openIndex === index ? null : index);
+  };
 
   if (faqs.length === 0) {
-    return null
+    return null;
   }
 
   return (
-    <section className="bg-[#FFFCF7] max-w-3xl mx-auto p-6 sm:p-10 mt-8">
-      <h2 className="text-center font-semibold text-lg mb-6">FAQ</h2>
+    <section className="mx-auto mt-8 max-w-3xl bg-[#FFFCF7] p-6 sm:p-10">
+      <h2 className="mb-6 text-center text-lg font-semibold">FAQ</h2>
 
       <div className="space-y-3">
         {faqs.map((faq, index) => (
-          <div
-            key={index}
-            className="border-b border-gray-300 pb-3 last:border-none"
-          >
+          <div key={index} className="border-b border-gray-300 pb-3 last:border-none">
             <button
               onClick={() => toggleFAQ(index)}
-              className="cursor-pointer w-full flex justify-between items-center text-left text-sm sm:text-base font-medium text-gray-800 focus:outline-none"
+              className="flex w-full cursor-pointer items-center justify-between text-left text-sm font-medium text-gray-800 focus:outline-none sm:text-base"
             >
               <span>{faq.question}</span>
               {openIndex === index ? (
-                <Minus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 flex-shrink-0 ml-2 cursor-pointer"  />
+                <Minus className="ml-2 h-4 w-4 flex-shrink-0 cursor-pointer text-gray-700 sm:h-5 sm:w-5" />
               ) : (
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 flex-shrink-0 ml-2 cursor-pointer" />
+                <Plus className="ml-2 h-4 w-4 flex-shrink-0 cursor-pointer text-gray-700 sm:h-5 sm:w-5" />
               )}
             </button>
 
             {openIndex === index && (
-              <div className="mt-2 text-gray-600 text-sm sm:text-base leading-relaxed transition-all duration-300 ease-in-out">
+              <div className="mt-2 text-sm leading-relaxed text-gray-600 transition-all duration-300 ease-in-out sm:text-base">
                 {faq.answer}
               </div>
             )}
@@ -182,5 +179,5 @@ export default function FAQ({ companySlug, items }: FAQProps) {
         ))}
       </div>
     </section>
-  )
+  );
 }

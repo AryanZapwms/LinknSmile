@@ -14,7 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowDownToLine,
-  Info,           // ← Added Info import (was missing)
+  Info, // ← Added Info import (was missing)
   Package,
   Building2,
   Receipt,
@@ -132,38 +132,48 @@ function OrderCard({ order }: { order: OrderBreakdown }) {
     order.summary.settlementStatus === "released"
       ? "bg-green-50 border-green-100"
       : order.orderStatus === "cancelled"
-      ? "bg-red-50 border-red-100"
-      : "bg-yellow-50 border-yellow-100";
+        ? "bg-red-50 border-red-100"
+        : "bg-yellow-50 border-yellow-100";
 
   return (
-    <div className="border rounded-xl overflow-hidden">
+    <div className="overflow-hidden rounded-xl border">
       {/* Header row */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-sm">#{order.orderNumber}</span>
-            <Badge variant="outline" className={`text-[10px] h-5 px-1.5 capitalize ${statusColors[order.orderStatus]}`}>
+      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold">#{order.orderNumber}</span>
+            <Badge
+              variant="outline"
+              className={`h-5 px-1.5 text-[10px] capitalize ${statusColors[order.orderStatus]}`}
+            >
               {order.orderStatus}
             </Badge>
-            <Badge variant="outline" className={`text-[10px] h-5 px-1.5 uppercase ${statusColors[order.summary.settlementStatus]}`}>
-              {order.summary.settlementStatus === "released" ? "✓ Credited" : order.summary.settlementStatus}
+            <Badge
+              variant="outline"
+              className={`h-5 px-1.5 text-[10px] uppercase ${statusColors[order.summary.settlementStatus]}`}
+            >
+              {order.summary.settlementStatus === "released"
+                ? "✓ Credited"
+                : order.summary.settlementStatus}
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(order.orderDate)}</p>
+          <p className="text-muted-foreground mt-0.5 text-xs">{fmtDate(order.orderDate)}</p>
         </div>
 
         {/* Summary financials */}
         <div className="flex items-center gap-6 sm:gap-8">
           <div className="text-center">
-            <p className="text-[10px] text-muted-foreground uppercase font-medium">Sale</p>
+            <p className="text-muted-foreground text-[10px] font-medium uppercase">Sale</p>
             <p className="text-sm font-bold">{fmt(order.summary.grossAmount)}</p>
           </div>
           <div className="text-center">
-            <p className="text-[10px] text-red-500 uppercase font-medium">Platform Fee</p>
-            <p className="text-sm font-bold text-red-600">−{fmt(order.summary.platformCommission)}</p>
+            <p className="text-[10px] font-medium text-red-500 uppercase">Platform Fee</p>
+            <p className="text-sm font-bold text-red-600">
+              −{fmt(order.summary.platformCommission)}
+            </p>
           </div>
           <div className="text-center">
-            <p className="text-[10px] text-green-600 uppercase font-medium">You Earn</p>
+            <p className="text-[10px] font-medium text-green-600 uppercase">You Earn</p>
             <p className="text-sm font-bold text-green-700">+{fmt(order.summary.vendorEarnings)}</p>
           </div>
           <Button
@@ -178,41 +188,49 @@ function OrderCard({ order }: { order: OrderBreakdown }) {
       </div>
 
       {/* Settlement note */}
-      <div className={`px-4 py-2 text-xs border-t flex items-center gap-2 ${settleBg}`}>
+      <div className={`flex items-center gap-2 border-t px-4 py-2 text-xs ${settleBg}`}>
         <Info className="h-3 w-3 shrink-0" />
         <span>{order.summary.settlementNote}</span>
       </div>
 
       {/* Expanded item breakdown */}
       {expanded && (
-        <div className="border-t bg-muted/20 p-4 space-y-3">
-          <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">Item-wise Breakdown</p>
+        <div className="bg-muted/20 space-y-3 border-t p-4">
+          <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+            Item-wise Breakdown
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b text-muted-foreground">
+                <tr className="text-muted-foreground border-b">
                   <th className="pb-2 text-left font-medium">Product</th>
                   <th className="pb-2 text-center font-medium">Qty</th>
                   <th className="pb-2 text-right font-medium">Unit Price</th>
                   <th className="pb-2 text-right font-medium">Gross</th>
-                  <th className="pb-2 text-right font-medium text-red-500">Platform ({order.summary.commissionRate}%)</th>
+                  <th className="pb-2 text-right font-medium text-red-500">
+                    Platform ({order.summary.commissionRate}%)
+                  </th>
                   <th className="pb-2 text-right font-medium text-green-600">You Earn</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-border divide-y">
                 {order.items.map((item, i) => (
                   <tr key={i} className="hover:bg-muted/30">
                     <td className="py-3 pr-4">
                       <div className="flex items-center gap-2">
                         {item.productImage ? (
-                          <img src={item.productImage} alt={item.productName} className="h-8 w-8 rounded object-cover border shrink-0" />
+                          <img
+                            src={item.productImage}
+                            alt={item.productName}
+                            className="h-8 w-8 shrink-0 rounded border object-cover"
+                          />
                         ) : (
-                          <div className="h-8 w-8 rounded border bg-muted flex items-center justify-center shrink-0">
-                            <Package className="h-4 w-4 text-muted-foreground" />
+                          <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded border">
+                            <Package className="text-muted-foreground h-4 w-4" />
                           </div>
                         )}
                         <div>
-                          <p className="font-medium truncate max-w-[140px]">{item.productName}</p>
+                          <p className="max-w-[140px] truncate font-medium">{item.productName}</p>
                           {item.size && <p className="text-muted-foreground">{item.size}</p>}
                         </div>
                       </div>
@@ -220,34 +238,50 @@ function OrderCard({ order }: { order: OrderBreakdown }) {
                     <td className="py-3 text-center">{item.quantity}</td>
                     <td className="py-3 text-right">{fmt(item.unitPrice)}</td>
                     <td className="py-3 text-right font-medium">{fmt(item.totalPrice)}</td>
-                    <td className="py-3 text-right text-red-600">−{fmt(item.platformCommission)}</td>
-                    <td className="py-3 text-right text-green-600 font-semibold">+{fmt(item.vendorEarnings)}</td>
+                    <td className="py-3 text-right text-red-600">
+                      −{fmt(item.platformCommission)}
+                    </td>
+                    <td className="py-3 text-right font-semibold text-green-600">
+                      +{fmt(item.vendorEarnings)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr className="border-t font-semibold">
-                  <td colSpan={3} className="pt-3 text-left text-xs text-muted-foreground">Order Total</td>
+                  <td colSpan={3} className="text-muted-foreground pt-3 text-left text-xs">
+                    Order Total
+                  </td>
                   <td className="pt-3 text-right">{fmt(order.summary.grossAmount)}</td>
-                  <td className="pt-3 text-right text-red-600">−{fmt(order.summary.platformCommission)}</td>
-                  <td className="pt-3 text-right text-green-600">+{fmt(order.summary.vendorEarnings)}</td>
+                  <td className="pt-3 text-right text-red-600">
+                    −{fmt(order.summary.platformCommission)}
+                  </td>
+                  <td className="pt-3 text-right text-green-600">
+                    +{fmt(order.summary.vendorEarnings)}
+                  </td>
                 </tr>
               </tfoot>
             </table>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 mt-2">
-            <div className="bg-white rounded-lg border p-3 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase">Gross Sale</p>
-              <p className="text-sm font-bold mt-0.5">{fmt(order.summary.grossAmount)}</p>
+          <div className="mt-2 grid grid-cols-3 gap-3">
+            <div className="rounded-lg border bg-white p-3 text-center">
+              <p className="text-muted-foreground text-[10px] uppercase">Gross Sale</p>
+              <p className="mt-0.5 text-sm font-bold">{fmt(order.summary.grossAmount)}</p>
             </div>
-            <div className="bg-red-50 rounded-lg border border-red-100 p-3 text-center">
-              <p className="text-[10px] text-red-500 uppercase">Platform Fee ({order.summary.commissionRate}%)</p>
-              <p className="text-sm font-bold text-red-600 mt-0.5">−{fmt(order.summary.platformCommission)}</p>
+            <div className="rounded-lg border border-red-100 bg-red-50 p-3 text-center">
+              <p className="text-[10px] text-red-500 uppercase">
+                Platform Fee ({order.summary.commissionRate}%)
+              </p>
+              <p className="mt-0.5 text-sm font-bold text-red-600">
+                −{fmt(order.summary.platformCommission)}
+              </p>
             </div>
-            <div className="bg-green-50 rounded-lg border border-green-100 p-3 text-center">
+            <div className="rounded-lg border border-green-100 bg-green-50 p-3 text-center">
               <p className="text-[10px] text-green-600 uppercase">Your Net Earnings</p>
-              <p className="text-sm font-bold text-green-700 mt-0.5">+{fmt(order.summary.vendorEarnings)}</p>
+              <p className="mt-0.5 text-sm font-bold text-green-700">
+                +{fmt(order.summary.vendorEarnings)}
+              </p>
             </div>
           </div>
         </div>
@@ -264,10 +298,12 @@ function HeldOrdersSection() {
   useEffect(() => {
     async function fetchHeldOrders() {
       try {
-        const res = await fetch('/api/vendor/wallet/orders?limit=50');
+        const res = await fetch("/api/vendor/wallet/orders?limit=50");
         const data = await res.json();
         if (data.success) {
-          const held = data.orders.filter((o: OrderBreakdown) => o.summary.settlementStatus === 'held');
+          const held = data.orders.filter(
+            (o: OrderBreakdown) => o.summary.settlementStatus === "held"
+          );
           setHeldOrders(held);
         }
       } catch (err) {
@@ -285,7 +321,7 @@ function HeldOrdersSection() {
   return (
     <Card className="border-orange-200 bg-orange-50/30">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-semibold">
           <ShieldAlert className="h-4 w-4 text-orange-600" />
           Held Orders ({heldOrders.length})
         </CardTitle>
@@ -294,11 +330,14 @@ function HeldOrdersSection() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {heldOrders.map(order => (
-          <div key={order.orderId} className="bg-white rounded-lg border p-3 flex flex-wrap items-center justify-between gap-2">
+        {heldOrders.map((order) => (
+          <div
+            key={order.orderId}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-white p-3"
+          >
             <div>
-              <p className="font-medium text-sm">#{order.orderNumber}</p>
-              <p className="text-xs text-muted-foreground">{fmtDate(order.orderDate)}</p>
+              <p className="text-sm font-medium">#{order.orderNumber}</p>
+              <p className="text-muted-foreground text-xs">{fmtDate(order.orderDate)}</p>
             </div>
             <div className="text-right">
               <p className="font-semibold text-orange-700">{fmt(order.summary.vendorEarnings)}</p>
@@ -314,7 +353,6 @@ function HeldOrdersSection() {
   );
 }
 
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function WalletDashboardClient() {
@@ -325,7 +363,9 @@ export default function WalletDashboardClient() {
   const [loading, setLoading] = useState(true);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawing, setWithdrawing] = useState(false);
-  const [flashMsg, setFlashMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [flashMsg, setFlashMsg] = useState<{ text: string; type: "success" | "error" } | null>(
+    null
+  );
   const [activeTab, setActiveTab] = useState<"orders" | "ledger" | "payouts">("orders");
   const [ordersPage, setOrdersPage] = useState(1);
   const [ordersTotal, setOrdersTotal] = useState(0);
@@ -380,7 +420,10 @@ export default function WalletDashboardClient() {
       return;
     }
     if (wallet && amount < wallet.minimumWithdrawalThreshold) {
-      setFlashMsg({ text: `Minimum withdrawal is ${fmt(wallet.minimumWithdrawalThreshold)}.`, type: "error" });
+      setFlashMsg({
+        text: `Minimum withdrawal is ${fmt(wallet.minimumWithdrawalThreshold)}.`,
+        type: "error",
+      });
       return;
     }
     if (wallet && amount > wallet.withdrawableBalance) {
@@ -398,7 +441,10 @@ export default function WalletDashboardClient() {
       });
       const data = await res.json();
       if (res.ok) {
-        setFlashMsg({ text: "Withdrawal request submitted! Admin will process it shortly.", type: "success" });
+        setFlashMsg({
+          text: "Withdrawal request submitted! Admin will process it shortly.",
+          type: "success",
+        });
         setWithdrawAmount("");
         await fetchAll();
       } else {
@@ -421,7 +467,9 @@ export default function WalletDashboardClient() {
     return (
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+          ))}
         </div>
         <Skeleton className="h-48 w-full rounded-xl" />
         <Skeleton className="h-80 w-full rounded-xl" />
@@ -431,30 +479,38 @@ export default function WalletDashboardClient() {
 
   if (!wallet) {
     return (
-      <div className="flex items-center justify-center min-h-[300px]">
+      <div className="flex min-h-[300px] items-center justify-center">
         <div className="text-center">
-          <ShieldAlert className="h-10 w-10 text-destructive mx-auto mb-2" />
+          <ShieldAlert className="text-destructive mx-auto mb-2 h-10 w-10" />
           <p className="text-muted-foreground">Failed to load wallet. Please refresh the page.</p>
         </div>
       </div>
     );
   }
 
-  const canWithdraw = !wallet.isFrozen && !wallet.isClosed && wallet.withdrawableBalance >= wallet.minimumWithdrawalThreshold;
+  const canWithdraw =
+    !wallet.isFrozen &&
+    !wallet.isClosed &&
+    wallet.withdrawableBalance >= wallet.minimumWithdrawalThreshold;
   const totalPages = Math.ceil(ordersTotal / 15);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-
+    <div className="mx-auto max-w-6xl space-y-6">
       {/* ─ Header ─ */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Wallet</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-muted-foreground mt-1 text-sm">
             All payments collected by the platform are settled here after fee deductions.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="gap-2"
+        >
           <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
           Refresh
         </Button>
@@ -462,11 +518,14 @@ export default function WalletDashboardClient() {
 
       {/* ─ Status warnings ─ */}
       {wallet.isFrozen && (
-        <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3">
-          <ShieldAlert className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 p-4">
+          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
           <div>
-            <p className="font-semibold text-red-800 text-sm">Wallet Frozen</p>
-            <p className="text-xs text-red-700 mt-0.5">Withdrawals are disabled. This may be due to a dispute or compliance review. Contact support.</p>
+            <p className="text-sm font-semibold text-red-800">Wallet Frozen</p>
+            <p className="mt-0.5 text-xs text-red-700">
+              Withdrawals are disabled. This may be due to a dispute or compliance review. Contact
+              support.
+            </p>
           </div>
         </div>
       )}
@@ -474,54 +533,57 @@ export default function WalletDashboardClient() {
       {/* ─ Balance Cards ─ */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="border-primary/20 bg-primary/5">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-semibold uppercase text-primary tracking-wider flex items-center gap-1.5">
+          <CardHeader className="px-4 pt-4 pb-2">
+            <CardTitle className="text-primary flex items-center gap-1.5 text-xs font-semibold tracking-wider uppercase">
               <Wallet className="h-3.5 w-3.5" /> Total Balance
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <p className="text-2xl font-bold">{fmt(wallet.totalBalance)}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Pending + Withdrawable</p>
-            <div className="mt-2 text-sm text-gray-500 flex items-center gap-1">
-              <Info className="w-4 h-4" />
-              <span>Withdrawable: Delivered orders after 7 days settlement. Pending: Orders not yet delivered.</span>
+            <p className="text-muted-foreground mt-0.5 text-[10px]">Pending + Withdrawable</p>
+            <div className="mt-2 flex items-center gap-1 text-sm text-gray-500">
+              <Info className="h-4 w-4" />
+              <span>
+                Withdrawable: Delivered orders after 7 days settlement. Pending: Orders not yet
+                delivered.
+              </span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-green-200 bg-green-50/50">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-semibold uppercase text-green-700 tracking-wider flex items-center gap-1.5">
+          <CardHeader className="px-4 pt-4 pb-2">
+            <CardTitle className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-green-700 uppercase">
               <ArrowDownToLine className="h-3.5 w-3.5" /> Withdrawable
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <p className="text-2xl font-bold text-green-700">{fmt(wallet.withdrawableBalance)}</p>
-            <p className="text-[10px] text-green-600 mt-0.5">Ready to transfer to bank</p>
+            <p className="mt-0.5 text-[10px] text-green-600">Ready to transfer to bank</p>
           </CardContent>
         </Card>
 
         <Card className="border-yellow-200 bg-yellow-50/50">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-semibold uppercase text-yellow-700 tracking-wider flex items-center gap-1.5">
+          <CardHeader className="px-4 pt-4 pb-2">
+            <CardTitle className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-yellow-700 uppercase">
               <Clock className="h-3.5 w-3.5" /> Pending Clearance
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <p className="text-2xl font-bold text-yellow-700">{fmt(wallet.pendingBalance)}</p>
-            <p className="text-[10px] text-yellow-600 mt-0.5">Clears 7 days after delivery</p>
+            <p className="mt-0.5 text-[10px] text-yellow-600">Clears 7 days after delivery</p>
           </CardContent>
         </Card>
 
         <Card className="border-red-200 bg-red-50/50">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-semibold uppercase text-red-600 tracking-wider flex items-center gap-1.5">
+          <CardHeader className="px-4 pt-4 pb-2">
+            <CardTitle className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-red-600 uppercase">
               <ShieldAlert className="h-3.5 w-3.5" /> On Hold
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <p className="text-2xl font-bold text-red-600">{fmt(wallet.frozenBalance)}</p>
-            <p className="text-[10px] text-red-500 mt-0.5">Dispute / reserve hold</p>
+            <p className="mt-0.5 text-[10px] text-red-500">Dispute / reserve hold</p>
           </CardContent>
         </Card>
       </div>
@@ -529,14 +591,20 @@ export default function WalletDashboardClient() {
       <HeldOrdersSection />
 
       {/* ─ How It Works Explainer ─ */}
-      <Card className="bg-blue-50/40 border-blue-100">
+      <Card className="border-blue-100 bg-blue-50/40">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+            <Info className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
             <div className="space-y-1">
               <p className="text-sm font-semibold text-blue-900">How payments work</p>
-              <p className="text-xs text-blue-700 leading-relaxed">
-                When a customer makes a purchase, the full payment goes to the platform. After your shop's <strong>commission rate ({shopCommissionRate}%)</strong> is deducted, the remaining amount is your earnings. This amount shows as <em>Pending</em> until the order is delivered, then <strong>clears into your Withdrawable balance after 7 days</strong>. You can then request a bank transfer anytime above the ₹{wallet.minimumWithdrawalThreshold} minimum.
+              <p className="text-xs leading-relaxed text-blue-700">
+                When a customer makes a purchase, the full payment goes to the platform. After your
+                shop's <strong>commission rate ({shopCommissionRate}%)</strong> is deducted, the
+                remaining amount is your earnings. This amount shows as <em>Pending</em> until the
+                order is delivered, then{" "}
+                <strong>clears into your Withdrawable balance after 7 days</strong>. You can then
+                request a bank transfer anytime above the ₹{wallet.minimumWithdrawalThreshold}{" "}
+                minimum.
               </p>
             </div>
           </div>
@@ -550,24 +618,30 @@ export default function WalletDashboardClient() {
             <Building2 className="h-4 w-4" />
             Request Bank Transfer
           </CardTitle>
-          <CardDescription className="text-xs">Transfer your withdrawable balance to your registered bank account.</CardDescription>
+          <CardDescription className="text-xs">
+            Transfer your withdrawable balance to your registered bank account.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {flashMsg && (
-            <div className={`text-sm rounded-lg px-4 py-3 ${flashMsg.type === "success" ? "bg-green-50 border border-green-200 text-green-800" : "bg-red-50 border border-red-200 text-red-800"}`}>
+            <div
+              className={`rounded-lg px-4 py-3 text-sm ${flashMsg.type === "success" ? "border border-green-200 bg-green-50 text-green-800" : "border border-red-200 bg-red-50 text-red-800"}`}
+            >
               {flashMsg.text}
             </div>
           )}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">₹</span>
+              <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 text-sm font-medium">
+                ₹
+              </span>
               <input
                 type="number"
                 placeholder={`Min ₹${wallet.minimumWithdrawalThreshold}`}
                 value={withdrawAmount}
                 onChange={(e) => setWithdrawAmount(e.target.value)}
                 disabled={!canWithdraw || withdrawing}
-                className="w-full pl-8 pr-4 py-2.5 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:bg-muted disabled:cursor-not-allowed"
+                className="border-input focus:ring-primary disabled:bg-muted w-full rounded-md border py-2.5 pr-4 pl-8 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed"
               />
             </div>
             <Button
@@ -587,14 +661,16 @@ export default function WalletDashboardClient() {
             </Button>
           </div>
           {!canWithdraw && !wallet.isFrozen && !wallet.isClosed && (
-            <p className="text-xs text-muted-foreground">
-              You need at least {fmt(wallet.minimumWithdrawalThreshold)} in your withdrawable balance. Current:{" "}
-              {fmt(wallet.withdrawableBalance)}.
+            <p className="text-muted-foreground text-xs">
+              You need at least {fmt(wallet.minimumWithdrawalThreshold)} in your withdrawable
+              balance. Current: {fmt(wallet.withdrawableBalance)}.
             </p>
           )}
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Make sure your bank details are saved in{" "}
-            <Link href="/vendor/settings" className="text-primary hover:underline">Settings</Link>{" "}
+            <Link href="/vendor/settings" className="text-primary hover:underline">
+              Settings
+            </Link>{" "}
             before requesting a transfer.
           </p>
         </CardContent>
@@ -602,7 +678,7 @@ export default function WalletDashboardClient() {
 
       {/* ─ Tabs ─ */}
       <div>
-        <div className="flex gap-1 border-b mb-0">
+        <div className="mb-0 flex gap-1 border-b">
           {[
             { id: "orders", label: "Order Earnings", icon: Receipt },
             { id: "ledger", label: "Ledger", icon: History },
@@ -611,8 +687,10 @@ export default function WalletDashboardClient() {
             <button
               key={id}
               onClick={() => setActiveTab(id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
-                activeTab === id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+              className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+                activeTab === id
+                  ? "border-primary text-primary"
+                  : "text-muted-foreground hover:text-foreground border-transparent"
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -623,11 +701,13 @@ export default function WalletDashboardClient() {
 
         {/* Orders Tab */}
         {activeTab === "orders" && (
-          <div className="pt-4 space-y-3">
-            <p className="text-xs text-muted-foreground">{ordersTotal} orders found. Click any row to see the detailed fee breakdown.</p>
+          <div className="space-y-3 pt-4">
+            <p className="text-muted-foreground text-xs">
+              {ordersTotal} orders found. Click any row to see the detailed fee breakdown.
+            </p>
             {orders.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
-                <Receipt className="h-10 w-10 mx-auto mb-2 opacity-30" />
+              <div className="text-muted-foreground py-16 text-center">
+                <Receipt className="mx-auto mb-2 h-10 w-10 opacity-30" />
                 <p>No orders yet. Earnings will appear here once you make your first sale.</p>
               </div>
             ) : (
@@ -639,9 +719,25 @@ export default function WalletDashboardClient() {
                 </div>
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between pt-2">
-                    <Button variant="outline" size="sm" onClick={() => fetchOrders(ordersPage - 1)} disabled={ordersPage === 1}>← Previous</Button>
-                    <span className="text-sm text-muted-foreground">Page {ordersPage} of {totalPages}</span>
-                    <Button variant="outline" size="sm" onClick={() => fetchOrders(ordersPage + 1)} disabled={ordersPage === totalPages}>Next →</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchOrders(ordersPage - 1)}
+                      disabled={ordersPage === 1}
+                    >
+                      ← Previous
+                    </Button>
+                    <span className="text-muted-foreground text-sm">
+                      Page {ordersPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchOrders(ordersPage + 1)}
+                      disabled={ordersPage === totalPages}
+                    >
+                      Next →
+                    </Button>
                   </div>
                 )}
               </>
@@ -653,36 +749,49 @@ export default function WalletDashboardClient() {
         {activeTab === "ledger" && (
           <div className="pt-4">
             {ledger.length === 0 ? (
-              <p className="text-center text-muted-foreground py-12">No ledger entries yet.</p>
+              <p className="text-muted-foreground py-12 text-center">No ledger entries yet.</p>
             ) : (
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs text-muted-foreground bg-muted/40 border-b">
+                    <tr className="text-muted-foreground bg-muted/40 border-b text-left text-xs">
                       <th className="px-4 py-3 font-medium">Date</th>
                       <th className="px-4 py-3 font-medium">Type</th>
                       <th className="px-4 py-3 font-medium">Description</th>
                       <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium text-right">Amount</th>
+                      <th className="px-4 py-3 text-right font-medium">Amount</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {ledger.map((entry) => (
                       <tr key={entry._id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap text-xs">{fmtDate(entry.createdAt)}</td>
+                        <td className="text-muted-foreground px-4 py-3 text-xs whitespace-nowrap">
+                          {fmtDate(entry.createdAt)}
+                        </td>
                         <td className="px-4 py-3">
-                          <Badge variant="outline" className={`text-[10px] h-5 px-1.5 ${statusColors[entry.type] || "bg-gray-100 text-gray-600"}`}>
+                          <Badge
+                            variant="outline"
+                            className={`h-5 px-1.5 text-[10px] ${statusColors[entry.type] || "bg-gray-100 text-gray-600"}`}
+                          >
                             {entry.type}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground max-w-[200px] truncate text-xs">{entry.description}</td>
+                        <td className="text-muted-foreground max-w-[200px] truncate px-4 py-3 text-xs">
+                          {entry.description}
+                        </td>
                         <td className="px-4 py-3">
-                          <Badge variant="outline" className={`text-[10px] h-5 px-1.5 ${statusColors[entry.status] || ""}`}>
+                          <Badge
+                            variant="outline"
+                            className={`h-5 px-1.5 text-[10px] ${statusColors[entry.status] || ""}`}
+                          >
                             {entry.status}
                           </Badge>
                         </td>
-                        <td className={`px-4 py-3 text-right font-semibold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}>
-                          {entry.amount >= 0 ? "+" : ""}{fmt(entry.amount)}
+                        <td
+                          className={`px-4 py-3 text-right font-semibold ${entry.amount >= 0 ? "text-green-600" : "text-red-600"}`}
+                        >
+                          {entry.amount >= 0 ? "+" : ""}
+                          {fmt(entry.amount)}
                         </td>
                       </tr>
                     ))}
@@ -697,12 +806,12 @@ export default function WalletDashboardClient() {
         {activeTab === "payouts" && (
           <div className="pt-4">
             {payouts.length === 0 ? (
-              <p className="text-center text-muted-foreground py-12">No payout requests yet.</p>
+              <p className="text-muted-foreground py-12 text-center">No payout requests yet.</p>
             ) : (
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs text-muted-foreground bg-muted/40 border-b">
+                    <tr className="text-muted-foreground bg-muted/40 border-b text-left text-xs">
                       <th className="px-4 py-3 font-medium">Date</th>
                       <th className="px-4 py-3 font-medium">Amount</th>
                       <th className="px-4 py-3 font-medium">Status</th>
@@ -712,14 +821,21 @@ export default function WalletDashboardClient() {
                   <tbody className="divide-y">
                     {payouts.map((payout) => (
                       <tr key={payout._id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">{fmtDate(payout.createdAt)}</td>
+                        <td className="text-muted-foreground px-4 py-3 text-xs whitespace-nowrap">
+                          {fmtDate(payout.createdAt)}
+                        </td>
                         <td className="px-4 py-3 font-semibold">{fmt(payout.amount)}</td>
                         <td className="px-4 py-3">
-                          <Badge variant="outline" className={`text-[10px] h-5 px-1.5 ${statusColors[payout.status] || ""}`}>
+                          <Badge
+                            variant="outline"
+                            className={`h-5 px-1.5 text-[10px] ${statusColors[payout.status] || ""}`}
+                          >
                             {payout.status}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-muted-foreground text-xs">{payout.failureReason || "—"}</td>
+                        <td className="text-muted-foreground px-4 py-3 text-xs">
+                          {payout.failureReason || "—"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

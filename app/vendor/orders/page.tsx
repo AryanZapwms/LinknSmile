@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -14,17 +14,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Search, Eye, Package, DollarSign, Calendar, Info } from 'lucide-react';
-import { toast } from 'sonner';
-import Image from 'next/image';
+} from "@/components/ui/select";
+import { Search, Eye, Package, DollarSign, Calendar, Info } from "lucide-react";
+import { toast } from "sonner";
+import Image from "next/image";
 
 interface Order {
   _id: string;
@@ -47,8 +47,8 @@ interface Order {
 export default function VendorOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchOrders();
@@ -58,7 +58,7 @@ export default function VendorOrdersPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (statusFilter !== "all") params.append("status", statusFilter);
 
       const res = await fetch(`/api/vendor/orders?${params}`);
       const data = await res.json();
@@ -67,32 +67,32 @@ export default function VendorOrdersPage() {
         setOrders(data.orders);
       }
     } catch (error) {
-      console.error('Failed to fetch orders:', error);
-      toast.error('Failed to load orders');
+      console.error("Failed to fetch orders:", error);
+      toast.error("Failed to load orders");
     } finally {
       setLoading(false);
     }
   };
 
   const getStatusBadge = (status: string, reason?: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      pending: 'outline',
-      processing: 'secondary',
-      shipped: 'default',
-      delivered: 'default',
-      cancelled: 'destructive',
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      pending: "outline",
+      processing: "secondary",
+      shipped: "default",
+      delivered: "default",
+      cancelled: "destructive",
     };
-    
+
     const colors: Record<string, string> = {
-      pending: 'text-orange-600 border-orange-600',
-      processing: 'text-blue-600 border-blue-600',
-      shipped: 'text-purple-600 border-purple-600',
-      delivered: 'text-green-600 border-green-600',
-      cancelled: 'text-white border-red-600',
+      pending: "text-orange-600 border-orange-600",
+      processing: "text-blue-600 border-blue-600",
+      shipped: "text-purple-600 border-purple-600",
+      delivered: "text-green-600 border-green-600",
+      cancelled: "text-white border-red-600",
     };
 
     return (
-      <Badge variant={variants[status] || 'outline'} className={colors[status]}>
+      <Badge variant={variants[status] || "outline"} className={colors[status]}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
@@ -100,21 +100,34 @@ export default function VendorOrdersPage() {
 
   const getPayoutBadge = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="text-orange-500">Pending</Badge>;
-      case 'released':
-        return <Badge variant="default" className="bg-green-500">Released</Badge>;
-      case 'held':
-        return <Badge variant="outline" className="text-gray-500">Held</Badge>;
+      case "pending":
+        return (
+          <Badge variant="outline" className="text-orange-500">
+            Pending
+          </Badge>
+        );
+      case "released":
+        return (
+          <Badge variant="default" className="bg-green-500">
+            Released
+          </Badge>
+        );
+      case "held":
+        return (
+          <Badge variant="outline" className="text-gray-500">
+            Held
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const filteredOrders = orders.filter((order) =>
-    order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
-    order.user.name.toLowerCase().includes(search.toLowerCase()) ||
-    order.user.email.toLowerCase().includes(search.toLowerCase())
+  const filteredOrders = orders.filter(
+    (order) =>
+      order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
+      order.user.name.toLowerCase().includes(search.toLowerCase()) ||
+      order.user.email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -122,9 +135,7 @@ export default function VendorOrdersPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-        <p className="text-muted-foreground">
-          Manage orders containing your products
-        </p>
+        <p className="text-muted-foreground">Manage orders containing your products</p>
       </div>
 
       {/* Summary Cards */}
@@ -132,7 +143,7 @@ export default function VendorOrdersPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{orders.length}</div>
@@ -142,7 +153,7 @@ export default function VendorOrdersPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -154,12 +165,13 @@ export default function VendorOrdersPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Pending Payouts</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ₹{orders
-                .filter(o => o.payoutStatus === 'pending')
+              ₹
+              {orders
+                .filter((o) => o.payoutStatus === "pending")
                 .reduce((sum, order) => sum + order.vendorEarnings, 0)
                 .toFixed(2)}
             </div>
@@ -169,11 +181,11 @@ export default function VendorOrdersPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {orders.filter(o => o.orderStatus === 'pending').length}
+              {orders.filter((o) => o.orderStatus === "pending").length}
             </div>
           </CardContent>
         </Card>
@@ -185,9 +197,9 @@ export default function VendorOrdersPage() {
           <CardTitle>Filter Orders</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
               <Input
                 placeholder="Search by order number, customer name or email..."
                 value={search}
@@ -217,18 +229,18 @@ export default function VendorOrdersPage() {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-6 space-y-4">
+            <div className="space-y-4 p-6">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
           ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-12">
-              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <div className="py-12 text-center">
+              <Package className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
               <p className="text-muted-foreground mb-4">
-                {search || statusFilter !== 'all'
-                  ? 'No orders found matching your filters'
-                  : 'No orders yet'}
+                {search || statusFilter !== "all"
+                  ? "No orders found matching your filters"
+                  : "No orders yet"}
               </p>
             </div>
           ) : (
@@ -251,8 +263,8 @@ export default function VendorOrdersPage() {
                     <TableCell>
                       <div>
                         <p className="font-medium">#{order.orderNumber}</p>
-                        {order.paymentStatus === 'completed' && (
-                          <Badge variant="outline" className="text-green-600 text-xs mt-1">
+                        {order.paymentStatus === "completed" && (
+                          <Badge variant="outline" className="mt-1 text-xs text-green-600">
                             Paid
                           </Badge>
                         )}
@@ -261,13 +273,13 @@ export default function VendorOrdersPage() {
                     <TableCell>
                       <div>
                         <p className="font-medium">{order.user.name}</p>
-                        <p className="text-sm text-muted-foreground">{order.user.email}</p>
+                        <p className="text-muted-foreground text-sm">{order.user.email}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {order.items.slice(0, 3).map((item: any, idx: number) => (
-                          <div key={idx} className="relative w-8 h-8">
+                          <div key={idx} className="relative h-8 w-8">
                             {item.product?.image ? (
                               <Image
                                 src={item.product.image}
@@ -277,14 +289,14 @@ export default function VendorOrdersPage() {
                                 className="rounded object-cover"
                               />
                             ) : (
-                              <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
-                                <Package className="h-4 w-4 text-muted-foreground" />
+                              <div className="bg-muted flex h-8 w-8 items-center justify-center rounded">
+                                <Package className="text-muted-foreground h-4 w-4" />
                               </div>
                             )}
                           </div>
                         ))}
                         {order.items.length > 3 && (
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-muted-foreground text-xs">
                             +{order.items.length - 3}
                           </span>
                         )}
@@ -294,7 +306,7 @@ export default function VendorOrdersPage() {
                       <p className="font-medium text-green-600">
                         ₹{order.vendorEarnings.toFixed(2)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         from ₹{order.vendorSubtotal.toFixed(2)}
                       </p>
                     </TableCell>
@@ -302,24 +314,24 @@ export default function VendorOrdersPage() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {getStatusBadge(order.orderStatus)}
-                        {order.orderStatus === 'cancelled' && order.cancellationReason && (
-                          <div className="relative group">
-                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                            <div className="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded py-1 px-2 w-48 bottom-full left-1/2 -translate-x-1/2 mb-1">
+                        {order.orderStatus === "cancelled" && order.cancellationReason && (
+                          <div className="group relative">
+                            <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                            <div className="invisible absolute bottom-full left-1/2 z-10 mb-1 w-48 -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-xs text-white group-hover:visible">
                               Cancellation reason: {order.cancellationReason}
                             </div>
                           </div>
                         )}
                       </div>
-                      {order.orderStatus === 'cancelled' && order.cancellationReason && (
-                        <p className="text-xs text-red-500 mt-1 truncate max-w-[150px]">
+                      {order.orderStatus === "cancelled" && order.cancellationReason && (
+                        <p className="mt-1 max-w-[150px] truncate text-xs text-red-500">
                           Reason: {order.cancellationReason}
                         </p>
                       )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <Calendar className="text-muted-foreground h-4 w-4" />
                         <span className="text-sm">
                           {new Date(order.createdAt).toLocaleDateString()}
                         </span>
@@ -328,7 +340,7 @@ export default function VendorOrdersPage() {
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/vendor/orders/${order._id}`}>
-                          <Eye className="h-4 w-4 mr-2" />
+                          <Eye className="mr-2 h-4 w-4" />
                           View
                         </Link>
                       </Button>

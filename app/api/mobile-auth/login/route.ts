@@ -20,10 +20,7 @@ export async function POST(req: NextRequest) {
 
     if (!rawEmail || !password) {
       return withCORS(
-        NextResponse.json(
-          { error: "Email and password are required" },
-          { status: 400 }
-        )
+        NextResponse.json({ error: "Email and password are required" }, { status: 400 })
       );
     }
 
@@ -33,25 +30,18 @@ export async function POST(req: NextRequest) {
     const userDoc = await User.findOne({ email });
 
     if (!userDoc) {
-      return withCORS(
-        NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
-      );
+      return withCORS(NextResponse.json({ error: "Invalid email or password" }, { status: 401 }));
     }
 
     if (!userDoc.isVerified) {
       return withCORS(
-        NextResponse.json(
-          { error: "Please verify your email before logging in" },
-          { status: 403 }
-        )
+        NextResponse.json({ error: "Please verify your email before logging in" }, { status: 403 })
       );
     }
 
     const isValid = await verifyPassword(password, userDoc.password);
     if (!isValid) {
-      return withCORS(
-        NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
-      );
+      return withCORS(NextResponse.json({ error: "Invalid email or password" }, { status: 401 }));
     }
 
     // Auto-link shop if missing for shop_owners (mirrors NextAuth authorize logic)
@@ -94,21 +84,18 @@ export async function POST(req: NextRequest) {
       role: userDoc.role || "user",
       shopId: shopId?.toString() || null,
     };
-    
 
     console.log(`✅ Mobile login successful for: ${email}`);
 
     return withCORS(
       NextResponse.json({
         success: true,
-        token,   // ← save this in SecureStore, send as Cookie on every request
+        token, // ← save this in SecureStore, send as Cookie on every request
         user,
       })
     );
   } catch (error: any) {
     console.error("❌ Mobile login error:", error);
-    return withCORS(
-      NextResponse.json({ error: "Internal server error" }, { status: 500 })
-    );
+    return withCORS(NextResponse.json({ error: "Internal server error" }, { status: 500 }));
   }
 }

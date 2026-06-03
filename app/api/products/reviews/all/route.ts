@@ -1,18 +1,18 @@
 import { withCORS } from "@/lib/cors";
-import mongoose from "mongoose"
-import { NextResponse, type NextRequest } from "next/server"
-import { connectDB } from "@/lib/db"
-import { Review } from "@/lib/models/review"
-import { Product } from "@/lib/models/product"
-import { Company } from "@/lib/models/company" 
+import mongoose from "mongoose";
+import { NextResponse, type NextRequest } from "next/server";
+import { connectDB } from "@/lib/db";
+import { Review } from "@/lib/models/review";
+import { Product } from "@/lib/models/product";
+import { Company } from "@/lib/models/company";
 
 export async function GET(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
   try {
-    await connectDB()
+    await connectDB();
 
     // Fetch all reviews with product and company details
     const reviews = await Review.find()
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         select: "name",
       })
       .sort({ createdAt: -1 })
-      .lean()
+      .lean();
 
     // Map reviews to the expected format
     const mappedReviews = reviews.map((review: any) => ({
@@ -39,22 +39,26 @@ export async function GET(request: NextRequest) {
       rating: review.rating || 5,
       comment: review.comment || "",
       createdAt: review.createdAt,
-    }))
+    }));
 
-    return withCORS(NextResponse.json({
-      success: true,
-      reviews: mappedReviews,
-      count: mappedReviews.length,
-    }))
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        reviews: mappedReviews,
+        count: mappedReviews.length,
+      })
+    );
   } catch (error) {
-    console.error("Error fetching all reviews:", error)
-    return withCORS(NextResponse.json(
-      {
-        success: false,
-        error: "Failed to fetch reviews",
-        reviews: [],
-      },
-      { status: 500 }
-    ))
+    console.error("Error fetching all reviews:", error);
+    return withCORS(
+      NextResponse.json(
+        {
+          success: false,
+          error: "Failed to fetch reviews",
+          reviews: [],
+        },
+        { status: 500 }
+      )
+    );
   }
 }

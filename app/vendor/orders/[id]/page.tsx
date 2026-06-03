@@ -10,7 +10,7 @@
 // import { Separator } from '@/components/ui/separator';
 // import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 // import {
-//   ArrowLeft, Package, User, MapPin, CreditCard, 
+//   ArrowLeft, Package, User, MapPin, CreditCard,
 //   DollarSign, Calendar, AlertCircle, CheckCircle
 // } from 'lucide-react';
 // import { toast } from 'sonner';
@@ -168,8 +168,8 @@
 //         <CardContent>
 //           <div className="flex flex-wrap gap-3">
 //             {order.orderStatus === 'pending' && (
-//               <Button 
-//                 onClick={() => updateStatus('processing')} 
+//               <Button
+//                 onClick={() => updateStatus('processing')}
 //                 disabled={updating}
 //                 className="bg-blue-600 hover:bg-blue-700"
 //               >
@@ -177,8 +177,8 @@
 //               </Button>
 //             )}
 //             {(order.orderStatus === 'pending' || order.orderStatus === 'processing') && (
-//               <Button 
-//                 onClick={() => updateStatus('shipped')} 
+//               <Button
+//                 onClick={() => updateStatus('shipped')}
 //                 disabled={updating}
 //                 className="bg-purple-600 hover:bg-purple-700"
 //               >
@@ -186,8 +186,8 @@
 //               </Button>
 //             )}
 //             {order.orderStatus === 'shipped' && (
-//               <Button 
-//                 onClick={() => updateStatus('delivered')} 
+//               <Button
+//                 onClick={() => updateStatus('delivered')}
 //                 disabled={updating}
 //                 className="bg-green-600 hover:bg-green-700"
 //               >
@@ -195,9 +195,9 @@
 //               </Button>
 //             )}
 //             {order.orderStatus !== 'delivered' && order.orderStatus !== 'cancelled' && (
-//               <Button 
-//                 variant="outline" 
-//                 onClick={() => updateStatus('cancelled')} 
+//               <Button
+//                 variant="outline"
+//                 onClick={() => updateStatus('cancelled')}
 //                 disabled={updating}
 //                 className="text-red-600 border-red-200 hover:bg-red-50"
 //               >
@@ -209,14 +209,13 @@
 //         </CardContent>
 //       </Card>
 
-
 //       {/* Payout Status Alert */}
 //       {order.payoutStatus === 'pending' && order.orderStatus === 'delivered' && (
 //         <Alert>
 //           <DollarSign className="h-4 w-4" />
 //           <AlertTitle>Payout Pending</AlertTitle>
 //           <AlertDescription>
-//             Your earnings of ₹{order.vendorEarnings.toFixed(2)} for this order are ready to be released. 
+//             Your earnings of ₹{order.vendorEarnings.toFixed(2)} for this order are ready to be released.
 //             Payout will be processed once you request it from the Payouts page.
 //           </AlertDescription>
 //         </Alert>
@@ -289,7 +288,7 @@
 //               <div className="flex justify-between text-sm">
 //                 <span>Payout Status</span>
 //                 <Badge variant={order.payoutStatus === 'released' ? 'default' : 'outline'}>
-//                   {order.payoutStatus === 'pending' ? 'Pending' : 
+//                   {order.payoutStatus === 'pending' ? 'Pending' :
 //                    order.payoutStatus === 'released' ? 'Released' : 'Held'}
 //                 </Badge>
 //               </div>
@@ -390,23 +389,19 @@
 //   );
 // }
 
-
-
-
-
 // app/vendor/orders/[id]/page.tsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -414,13 +409,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
-  ArrowLeft, Package, User, MapPin, CreditCard,
-  DollarSign, Calendar, AlertCircle, CheckCircle, XCircle,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import Image from 'next/image';
+  ArrowLeft,
+  Package,
+  User,
+  MapPin,
+  CreditCard,
+  DollarSign,
+  Calendar,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+import Image from "next/image";
 
 interface Order {
   _id: string;
@@ -457,7 +460,7 @@ export default function VendorOrderDetailPage() {
 
   // Cancellation dialog state
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [cancellationReason, setCancellationReason] = useState('');
+  const [cancellationReason, setCancellationReason] = useState("");
 
   useEffect(() => {
     if (orderId) fetchOrder();
@@ -471,13 +474,13 @@ export default function VendorOrderDetailPage() {
       if (data.success) {
         setOrder(data.order);
       } else {
-        toast.error(data.message || 'Order not found');
-        router.push('/vendor/orders');
+        toast.error(data.message || "Order not found");
+        router.push("/vendor/orders");
       }
     } catch (error) {
-      console.error('Failed to fetch order:', error);
-      toast.error('Failed to load order');
-      router.push('/vendor/orders');
+      console.error("Failed to fetch order:", error);
+      toast.error("Failed to load order");
+      router.push("/vendor/orders");
     } finally {
       setLoading(false);
     }
@@ -490,8 +493,8 @@ export default function VendorOrderDetailPage() {
       if (reason) body.cancellationReason = reason;
 
       const res = await fetch(`/api/vendor/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
@@ -500,11 +503,11 @@ export default function VendorOrderDetailPage() {
         toast.success(`Order status updated to ${newStatus}`);
         await fetchOrder();
       } else {
-        toast.error(data.message || 'Failed to update status');
+        toast.error(data.message || "Failed to update status");
       }
     } catch (error) {
-      console.error('Update status error:', error);
-      toast.error('Failed to update status');
+      console.error("Update status error:", error);
+      toast.error("Failed to update status");
     } finally {
       setUpdating(false);
     }
@@ -512,12 +515,12 @@ export default function VendorOrderDetailPage() {
 
   const handleCancel = () => {
     if (!cancellationReason.trim()) {
-      toast.error('Please provide a reason for cancellation');
+      toast.error("Please provide a reason for cancellation");
       return;
     }
     setShowCancelDialog(false);
-    updateStatus('cancelled', cancellationReason.trim());
-    setCancellationReason('');
+    updateStatus("cancelled", cancellationReason.trim());
+    setCancellationReason("");
   };
 
   if (loading) {
@@ -544,11 +547,11 @@ export default function VendorOrderDetailPage() {
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { variant: any; className: string }> = {
-      pending:    { variant: 'outline',     className: 'text-orange-600 border-orange-300' },
-      processing: { variant: 'secondary',   className: 'text-blue-600 border-blue-300' },
-      shipped:    { variant: 'outline',     className: 'text-purple-600 border-purple-300' },
-      delivered:  { variant: 'default',     className: 'bg-green-600 text-white' },
-      cancelled:  { variant: 'destructive', className: '' },
+      pending: { variant: "outline", className: "text-orange-600 border-orange-300" },
+      processing: { variant: "secondary", className: "text-blue-600 border-blue-300" },
+      shipped: { variant: "outline", className: "text-purple-600 border-purple-300" },
+      delivered: { variant: "default", className: "bg-green-600 text-white" },
+      cancelled: { variant: "destructive", className: "" },
     };
     const c = config[status] || config.pending;
     return (
@@ -569,11 +572,14 @@ export default function VendorOrderDetailPage() {
               Cancel Order #{order.orderNumber}
             </DialogTitle>
             <DialogDescription>
-              Please provide a reason for cancellation. This will be shared with the customer and their refund will be initiated.
+              Please provide a reason for cancellation. This will be shared with the customer and
+              their refund will be initiated.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <Label htmlFor="cancel-reason">Reason for Cancellation <span className="text-red-500">*</span></Label>
+            <Label htmlFor="cancel-reason">
+              Reason for Cancellation <span className="text-red-500">*</span>
+            </Label>
             <Textarea
               id="cancel-reason"
               placeholder="e.g. Item out of stock, unable to fulfil the order at this time..."
@@ -581,12 +587,22 @@ export default function VendorOrderDetailPage() {
               onChange={(e) => setCancellationReason(e.target.value)}
               className="min-h-[100px]"
             />
-            <p className="text-xs text-muted-foreground">
-              The customer will receive: <em>"We're sorry, your order was cancelled. [Your reason]. Your payment will be refunded within 5–7 business days."</em>
+            <p className="text-muted-foreground text-xs">
+              The customer will receive:{" "}
+              <em>
+                "We're sorry, your order was cancelled. [Your reason]. Your payment will be refunded
+                within 5–7 business days."
+              </em>
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowCancelDialog(false); setCancellationReason(''); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCancelDialog(false);
+                setCancellationReason("");
+              }}
+            >
               Keep Order
             </Button>
             <Button
@@ -594,7 +610,7 @@ export default function VendorOrderDetailPage() {
               onClick={handleCancel}
               disabled={!cancellationReason.trim() || updating}
             >
-              {updating ? 'Cancelling...' : 'Cancel Order'}
+              {updating ? "Cancelling..." : "Cancel Order"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -603,7 +619,7 @@ export default function VendorOrderDetailPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => router.push('/vendor/orders')}>
+          <Button variant="outline" size="icon" onClick={() => router.push("/vendor/orders")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
@@ -612,9 +628,9 @@ export default function VendorOrderDetailPage() {
           </div>
           <div className="flex gap-2">
             {getStatusBadge(order.orderStatus)}
-            {order.paymentStatus === 'completed' && (
-              <Badge variant="outline" className="text-green-600 border-green-300">
-                <CheckCircle className="h-3 w-3 mr-1" />
+            {order.paymentStatus === "completed" && (
+              <Badge variant="outline" className="border-green-300 text-green-600">
+                <CheckCircle className="mr-1 h-3 w-3" />
                 Paid
               </Badge>
             )}
@@ -622,52 +638,57 @@ export default function VendorOrderDetailPage() {
         </div>
 
         {/* Cancellation notice */}
-        {order.orderStatus === 'cancelled' && (
+        {order.orderStatus === "cancelled" && (
           <Alert variant="destructive">
             <XCircle className="h-4 w-4" />
             <AlertTitle>Order Cancelled</AlertTitle>
             <AlertDescription className="space-y-1">
               <p>This order has been cancelled.</p>
               {order.cancellationReason && (
-                <p><strong>Reason:</strong> {order.cancellationReason}</p>
+                <p>
+                  <strong>Reason:</strong> {order.cancellationReason}
+                </p>
               )}
-              <p className="text-sm mt-1">The customer has been notified and their refund will be processed within 5–7 business days.</p>
+              <p className="mt-1 text-sm">
+                The customer has been notified and their refund will be processed within 5–7
+                business days.
+              </p>
             </AlertDescription>
           </Alert>
         )}
 
         {/* Status Management */}
-        {order.orderStatus !== 'cancelled' && order.orderStatus !== 'delivered' && (
+        {order.orderStatus !== "cancelled" && order.orderStatus !== "delivered" && (
           <Card className="border-purple-200 bg-purple-50/30">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <Package className="h-4 w-4 text-purple-600" />
                 Update Order Status
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3">
-                {order.orderStatus === 'pending' && (
+                {order.orderStatus === "pending" && (
                   <Button
-                    onClick={() => updateStatus('processing')}
+                    onClick={() => updateStatus("processing")}
                     disabled={updating}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     Start Processing
                   </Button>
                 )}
-                {(order.orderStatus === 'pending' || order.orderStatus === 'processing') && (
+                {(order.orderStatus === "pending" || order.orderStatus === "processing") && (
                   <Button
-                    onClick={() => updateStatus('shipped')}
+                    onClick={() => updateStatus("shipped")}
                     disabled={updating}
                     className="bg-purple-600 hover:bg-purple-700"
                   >
                     Mark as Shipped
                   </Button>
                 )}
-                {order.orderStatus === 'shipped' && (
+                {order.orderStatus === "shipped" && (
                   <Button
-                    onClick={() => updateStatus('delivered')}
+                    onClick={() => updateStatus("delivered")}
                     disabled={updating}
                     className="bg-green-600 hover:bg-green-700"
                   >
@@ -678,12 +699,12 @@ export default function VendorOrderDetailPage() {
                   variant="outline"
                   onClick={() => setShowCancelDialog(true)}
                   disabled={updating}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
+                  className="border-red-200 text-red-600 hover:bg-red-50"
                 >
                   Cancel Order
                 </Button>
                 {updating && (
-                  <span className="text-sm text-muted-foreground animate-pulse self-center">
+                  <span className="text-muted-foreground animate-pulse self-center text-sm">
                     Updating...
                   </span>
                 )}
@@ -693,13 +714,13 @@ export default function VendorOrderDetailPage() {
         )}
 
         {/* Payout Status Alert */}
-        {order.payoutStatus === 'pending' && order.orderStatus === 'delivered' && (
+        {order.payoutStatus === "pending" && order.orderStatus === "delivered" && (
           <Alert>
             <DollarSign className="h-4 w-4" />
             <AlertTitle>Payout Pending</AlertTitle>
             <AlertDescription>
-              Your earnings of ₹{order.vendorEarnings.toFixed(2)} will be released to your wallet
-              7 days after delivery. You can then request a bank transfer from your wallet.
+              Your earnings of ₹{order.vendorEarnings.toFixed(2)} will be released to your wallet 7
+              days after delivery. You can then request a bank transfer from your wallet.
             </AlertDescription>
           </Alert>
         )}
@@ -716,7 +737,7 @@ export default function VendorOrderDetailPage() {
             <CardContent>
               <div className="space-y-4">
                 {order.items.map((item: any, index: number) => (
-                  <div key={index} className="flex gap-4 pb-4 border-b last:border-0">
+                  <div key={index} className="flex gap-4 border-b pb-4 last:border-0">
                     {item.product?.image ? (
                       <Image
                         src={item.product.image}
@@ -726,19 +747,20 @@ export default function VendorOrderDetailPage() {
                         className="rounded object-cover"
                       />
                     ) : (
-                      <div className="w-16 h-16 bg-muted rounded flex items-center justify-center">
-                        <Package className="h-8 w-8 text-muted-foreground" />
+                      <div className="bg-muted flex h-16 w-16 items-center justify-center rounded">
+                        <Package className="text-muted-foreground h-8 w-8" />
                       </div>
                     )}
                     <div className="flex-1">
-                      <h4 className="font-medium">{item.product?.name || 'Product'}</h4>
+                      <h4 className="font-medium">{item.product?.name || "Product"}</h4>
                       {item.selectedSize && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           Size: {item.selectedSize.size}
-                          {item.selectedSize.quantity && ` (${item.selectedSize.quantity}${item.selectedSize.unit})`}
+                          {item.selectedSize.quantity &&
+                            ` (${item.selectedSize.quantity}${item.selectedSize.unit})`}
                         </p>
                       )}
-                      <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+                      <p className="text-muted-foreground text-sm">Quantity: {item.quantity}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium">
@@ -761,21 +783,26 @@ export default function VendorOrderDetailPage() {
                   <span>Subtotal (Your Items)</span>
                   <span>₹{order.vendorSubtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-muted-foreground">
+                <div className="text-muted-foreground flex justify-between text-sm">
                   <span>Platform Commission</span>
                   <span>- ₹{order.platformCommission.toFixed(2)}</span>
                 </div>
                 <Separator />
-                <div className="flex justify-between font-bold text-lg">
+                <div className="flex justify-between text-lg font-bold">
                   <span>Your Earnings</span>
                   <span className="text-green-600">₹{order.vendorEarnings.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Payout Status</span>
-                  <Badge variant={order.payoutStatus === 'released' ? 'default' : 'outline'}
-                    className={order.payoutStatus === 'released' ? 'bg-green-600' : ''}>
-                    {order.payoutStatus === 'pending' ? 'Pending' :
-                     order.payoutStatus === 'released' ? 'Released' : 'Held'}
+                  <Badge
+                    variant={order.payoutStatus === "released" ? "default" : "outline"}
+                    className={order.payoutStatus === "released" ? "bg-green-600" : ""}
+                  >
+                    {order.payoutStatus === "pending"
+                      ? "Pending"
+                      : order.payoutStatus === "released"
+                        ? "Released"
+                        : "Held"}
                   </Badge>
                 </div>
               </div>
@@ -792,23 +819,25 @@ export default function VendorOrderDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Name</p>
+                <p className="text-muted-foreground text-sm font-medium">Name</p>
                 <p className="font-medium">{order.user?.name}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Email</p>
+                <p className="text-muted-foreground text-sm font-medium">Email</p>
                 <p className="font-medium">{order.user?.email}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                <p className="text-muted-foreground text-sm font-medium">Phone</p>
                 <p className="font-medium">{order.user?.phone}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Order Date</p>
-                <p className="font-medium flex items-center gap-2">
+                <p className="text-muted-foreground text-sm font-medium">Order Date</p>
+                <p className="flex items-center gap-2 font-medium">
                   <Calendar className="h-4 w-4" />
-                  {new Date(order.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric', month: 'long', day: 'numeric',
+                  {new Date(order.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                   })}
                 </p>
               </div>
@@ -827,10 +856,13 @@ export default function VendorOrderDetailPage() {
               {order.shippingAddress ? (
                 <div className="space-y-2">
                   <p className="font-medium">{order.shippingAddress.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {order.shippingAddress.street}<br />
-                    {order.shippingAddress.city}, {order.shippingAddress.state}<br />
-                    {order.shippingAddress.zipCode || order.shippingAddress.pincode}<br />
+                  <p className="text-muted-foreground text-sm">
+                    {order.shippingAddress.street}
+                    <br />
+                    {order.shippingAddress.city}, {order.shippingAddress.state}
+                    <br />
+                    {order.shippingAddress.zipCode || order.shippingAddress.pincode}
+                    <br />
                     {order.shippingAddress.country}
                   </p>
                   {order.shippingAddress.phone && (
@@ -854,25 +886,27 @@ export default function VendorOrderDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Payment Method</p>
+                  <p className="text-muted-foreground text-sm font-medium">Payment Method</p>
                   <p className="font-medium capitalize">{order.paymentMethod}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Payment Status</p>
+                  <p className="text-muted-foreground text-sm font-medium">Payment Status</p>
                   <Badge
-                    className={order.paymentStatus === 'completed'
-                      ? 'border border-green-700 bg-green-100 text-green-700'
-                      : ''}
-                    variant={order.paymentStatus === 'completed' ? 'default' : 'outline'}
+                    className={
+                      order.paymentStatus === "completed"
+                        ? "border border-green-700 bg-green-100 text-green-700"
+                        : ""
+                    }
+                    variant={order.paymentStatus === "completed" ? "default" : "outline"}
                   >
-                    {order.paymentStatus === 'completed' ? 'Completed' : 'Pending'}
+                    {order.paymentStatus === "completed" ? "Completed" : "Pending"}
                   </Badge>
                 </div>
                 {order.razorpayPaymentId && (
                   <div className="col-span-2">
-                    <p className="text-sm font-medium text-muted-foreground">Payment ID</p>
+                    <p className="text-muted-foreground text-sm font-medium">Payment ID</p>
                     <p className="font-mono text-sm">{order.razorpayPaymentId}</p>
                   </div>
                 )}

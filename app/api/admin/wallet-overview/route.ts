@@ -10,42 +10,42 @@
  */
 
 import { withCORS } from "@/lib/cors";
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { connectDB } from '@/lib/db';
-import { Wallet } from '@/lib/models/wallet';
-import Payout from '@/lib/models/payout';
-import { LedgerEntry } from '@/lib/models/ledger';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { connectDB } from "@/lib/db";
+import { Wallet } from "@/lib/models/wallet";
+import Payout from "@/lib/models/payout";
+import { LedgerEntry } from "@/lib/models/ledger";
 
 export async function GET(req: NextRequest) {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
-      return withCORS(NextResponse.json({ message: 'Unauthorized' }, { status: 401 }));
+    if (!session || session.user.role !== "admin") {
+      return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
 
     await connectDB();
 
     // Aggregate all vendor wallets
     const walletStats = await Wallet.aggregate([
-      { $match: { type: 'VENDOR' } },
+      { $match: { type: "VENDOR" } },
       {
         $group: {
           _id: null,
           totalVendors: { $sum: 1 },
-          totalPendingLiability: { $sum: '$pendingBalance' },
-          totalWithdrawableLiability: { $sum: '$withdrawableBalance' },
-          totalFrozenAmount: { $sum: '$frozenBalance' },
+          totalPendingLiability: { $sum: "$pendingBalance" },
+          totalWithdrawableLiability: { $sum: "$withdrawableBalance" },
+          totalFrozenAmount: { $sum: "$frozenBalance" },
           activeWallets: {
-            $sum: { $cond: [{ $eq: ['$status', 'ACTIVE'] }, 1, 0] },
+            $sum: { $cond: [{ $eq: ["$status", "ACTIVE"] }, 1, 0] },
           },
           frozenWallets: {
-            $sum: { $cond: [{ $eq: ['$status', 'FROZEN'] }, 1, 0] },
+            $sum: { $cond: [{ $eq: ["$status", "FROZEN"] }, 1, 0] },
           },
         },
       },
@@ -60,19 +60,18 @@ export async function GET(req: NextRequest) {
       frozenWallets: 0,
     };
 
-    const totalVendorLiability =
-      stats.totalPendingLiability + stats.totalWithdrawableLiability;
+    const totalVendorLiability = stats.totalPendingLiability + stats.totalWithdrawableLiability;
 
     // Platform commission earned
-    const platformWallet = await Wallet.findOne({ type: 'PLATFORM_REVENUE' });
+    const platformWallet = await Wallet.findOne({ type: "PLATFORM_REVENUE" });
     const platformRevenue = platformWallet?.withdrawableBalance || 0;
 
     // Total paid out (completed payouts)
     const payoutTotals = await Payout.aggregate([
       {
         $group: {
-          _id: '$status',
-          total: { $sum: '$amount' },
+          _id: "$status",
+          total: { $sum: "$amount" },
           count: { $sum: 1 },
         },
       },
@@ -85,9 +84,9 @@ export async function GET(req: NextRequest) {
 
     // Pending payouts awaiting admin action
     const pendingPayouts = await Payout.find({
-      status: { $in: ['REQUESTED', 'APPROVED', 'PROCESSING'] },
+      status: { $in: ["REQUESTED", "APPROVED", "PROCESSING"] },
     })
-      .populate('shopId', 'shopName')
+      .populate("shopId", "shopName")
       .sort({ createdAt: 1 })
       .limit(20);
 
@@ -97,34 +96,38 @@ export async function GET(req: NextRequest) {
       { $match: { createdAt: { $gte: since } } },
       {
         $group: {
-          _id: '$type',
+          _id: "$type",
           count: { $sum: 1 },
-          totalAmount: { $sum: '$amount' },
+          totalAmount: { $sum: "$amount" },
         },
       },
     ]);
 
-    return withCORS(NextResponse.json({
-      success: true,
-      overview: {
-        totalVendorLiability,
-        totalPendingLiability: stats.totalPendingLiability,
-        totalWithdrawableLiability: stats.totalWithdrawableLiability,
-        totalFrozenAmount: stats.totalFrozenAmount,
-        platformRevenue,
-        vendorCount: stats.totalVendors,
-        activeWallets: stats.activeWallets,
-        frozenWallets: stats.frozenWallets,
-      },
-      payoutBreakdown,
-      pendingPayouts,
-      recentActivity,
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        overview: {
+          totalVendorLiability,
+          totalPendingLiability: stats.totalPendingLiability,
+          totalWithdrawableLiability: stats.totalWithdrawableLiability,
+          totalFrozenAmount: stats.totalFrozenAmount,
+          platformRevenue,
+          vendorCount: stats.totalVendors,
+          activeWallets: stats.activeWallets,
+          frozenWallets: stats.frozenWallets,
+        },
+        payoutBreakdown,
+        pendingPayouts,
+        recentActivity,
+      })
+    );
   } catch (error: any) {
-    console.error('Admin wallet overview error:', error);
-    return withCORS(NextResponse.json(
-      { message: 'Failed to fetch wallet overview', error: error.message },
-      { status: 500 }
-    ));
+    console.error("Admin wallet overview error:", error);
+    return withCORS(
+      NextResponse.json(
+        { message: "Failed to fetch wallet overview", error: error.message },
+        { status: 500 }
+      )
+    );
   }
 }

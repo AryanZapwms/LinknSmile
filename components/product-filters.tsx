@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ProductFiltersProps {
-  companies: Array<{ _id: string; name: string; slug: string }>
-  onFilterChange: (filters: { company?: string; priceRange?: [number, number] }) => void
+  companies: Array<{ _id: string; name: string; slug: string }>;
+  onFilterChange: (filters: { company?: string; priceRange?: [number, number] }) => void;
 }
 
 export function ProductFilters({ companies, onFilterChange }: ProductFiltersProps) {
-  const [selectedCompany, setSelectedCompany] = useState<string>("")
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000])
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
 
   const handleCompanyChange = (slug: string) => {
-    setSelectedCompany(slug)
-    onFilterChange({ company: slug, priceRange })
-  }
+    setSelectedCompany(slug);
+    onFilterChange({ company: slug, priceRange });
+  };
 
   const handlePriceChange = (newRange: [number, number]) => {
-    setPriceRange(newRange)
-    onFilterChange({ company: selectedCompany, priceRange: newRange })
-  }
+    setPriceRange(newRange);
+    onFilterChange({ company: selectedCompany, priceRange: newRange });
+  };
 
   return (
     <Card>
@@ -31,7 +31,7 @@ export function ProductFilters({ companies, onFilterChange }: ProductFiltersProp
       <CardContent className="space-y-6">
         {/* Brand Filter */}
         <div>
-          <h3 className="font-semibold text-sm mb-3">Brands</h3>
+          <h3 className="mb-3 text-sm font-semibold">Brands</h3>
           <div className="space-y-2">
             <Button
               variant={selectedCompany === "" ? "default" : "outline"}
@@ -55,32 +55,36 @@ export function ProductFilters({ companies, onFilterChange }: ProductFiltersProp
 
         {/* Price Filter */}
         <div>
-          <h3 className="font-semibold text-sm mb-3">Price Range</h3>
+          <h3 className="mb-3 text-sm font-semibold">Price Range</h3>
           <div className="space-y-2">
             <div className="flex gap-2">
               <input
                 type="number"
                 min="0"
                 value={priceRange[0]}
-                onChange={(e) => handlePriceChange([Number.parseInt(e.target.value), priceRange[1]])}
-                className="w-full px-2 py-1 border border-border rounded text-sm"
+                onChange={(e) =>
+                  handlePriceChange([Number.parseInt(e.target.value), priceRange[1]])
+                }
+                className="border-border w-full rounded border px-2 py-1 text-sm"
                 placeholder="Min"
               />
               <input
                 type="number"
                 max="10000"
                 value={priceRange[1]}
-                onChange={(e) => handlePriceChange([priceRange[0], Number.parseInt(e.target.value)])}
-                className="w-full px-2 py-1 border border-border rounded text-sm"
+                onChange={(e) =>
+                  handlePriceChange([priceRange[0], Number.parseInt(e.target.value)])
+                }
+                className="border-border w-full rounded border px-2 py-1 text-sm"
                 placeholder="Max"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               ₹{priceRange[0]} - ₹{priceRange[1]}
             </p>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

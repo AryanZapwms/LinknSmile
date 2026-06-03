@@ -30,10 +30,12 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const shopId = await getShopIdForUser(session.user.id, session.user.shopId ?? undefined);
     if (!shopId) {
-      return withCORS(NextResponse.json(
-        { message: "Shop ID not found. Please complete vendor setup." },
-        { status: 404 }
-      ));
+      return withCORS(
+        NextResponse.json(
+          { message: "Shop ID not found. Please complete vendor setup." },
+          { status: 404 }
+        )
+      );
     }
 
     const { searchParams } = new URL(req.url);
@@ -65,17 +67,21 @@ export async function GET(req: NextRequest) {
       Product.countDocuments(query),
     ]);
 
-    return withCORS(NextResponse.json({
-      success: true,
-      products,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        products,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      })
+    );
   } catch (error: any) {
     console.error("Vendor products fetch error:", error);
-    return withCORS(NextResponse.json(
-      { message: "Failed to fetch products", error: error.message },
-      { status: 500 }
-    ));
+    return withCORS(
+      NextResponse.json(
+        { message: "Failed to fetch products", error: error.message },
+        { status: 500 }
+      )
+    );
   }
 }
 
@@ -88,24 +94,34 @@ export async function POST(req: NextRequest) {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
     if (session.user.role !== "shop_owner") {
-      return withCORS(NextResponse.json({ message: "Unauthorized - not a shop owner" }, { status: 401 }));
+      return withCORS(
+        NextResponse.json({ message: "Unauthorized - not a shop owner" }, { status: 401 })
+      );
     }
 
     await connectDB();
     const Shop = (await import("@/lib/models/shop")).default;
     const shopId = await getShopIdForUser(session.user.id, session.user.shopId ?? undefined);
     if (!shopId) {
-      return withCORS(NextResponse.json(
-        { message: "Shop ID not found. Please complete vendor setup." },
-        { status: 401 }
-      ));
+      return withCORS(
+        NextResponse.json(
+          { message: "Shop ID not found. Please complete vendor setup." },
+          { status: 401 }
+        )
+      );
     }
 
     const shop = await Shop.findById(shopId);
     if (!shop || !shop.isApproved) {
-      return withCORS(NextResponse.json({
-        message: "Your shop is pending approval. You can only add products after your shop is approved.",
-      }, { status: 403 }));
+      return withCORS(
+        NextResponse.json(
+          {
+            message:
+              "Your shop is pending approval. You can only add products after your shop is approved.",
+          },
+          { status: 403 }
+        )
+      );
     }
 
     const body = await req.json();
@@ -121,7 +137,7 @@ export async function POST(req: NextRequest) {
       company,
       stock,
       sku,
-      origin,       // ← now properly destructured
+      origin, // ← now properly destructured
       ingredients,
       benefits,
       usage,
@@ -131,18 +147,16 @@ export async function POST(req: NextRequest) {
     } = body;
 
     if (!name || !slug || !price) {
-      return withCORS(NextResponse.json(
-        { message: "Name, slug, and price are required" },
-        { status: 400 }
-      ));
+      return withCORS(
+        NextResponse.json({ message: "Name, slug, and price are required" }, { status: 400 })
+      );
     }
 
     const existingProduct = await Product.findOne({ slug });
     if (existingProduct) {
-      return withCORS(NextResponse.json(
-        { message: "A product with this slug already exists" },
-        { status: 400 }
-      ));
+      return withCORS(
+        NextResponse.json({ message: "A product with this slug already exists" }, { status: 400 })
+      );
     }
 
     const product = await Product.create({
@@ -158,7 +172,7 @@ export async function POST(req: NextRequest) {
       shopId,
       stock: stock || 0,
       sku,
-      origin: VALID_ORIGINS.includes(origin) ? origin : "unspecified",  // ← saved
+      origin: VALID_ORIGINS.includes(origin) ? origin : "unspecified", // ← saved
       ingredients: ingredients || [],
       benefits: benefits || [],
       usage,
@@ -170,16 +184,20 @@ export async function POST(req: NextRequest) {
       isActive: false,
     });
 
-    return withCORS(NextResponse.json({
-      success: true,
-      message: "Product created and submitted for approval",
-      product,
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        message: "Product created and submitted for approval",
+        product,
+      })
+    );
   } catch (error: any) {
     console.error("Product creation error:", error);
-    return withCORS(NextResponse.json(
-      { message: "Failed to create product", error: error.message },
-      { status: 500 }
-    ));
+    return withCORS(
+      NextResponse.json(
+        { message: "Failed to create product", error: error.message },
+        { status: 500 }
+      )
+    );
   }
 }

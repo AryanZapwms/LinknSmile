@@ -62,10 +62,18 @@ export default function OtpForm({ email, onSuccess }: Props) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">{info}</p>
-      {error && <div className="p-2 text-sm text-destructive bg-destructive/10 rounded">{error}</div>}
+      <p className="text-muted-foreground text-sm">{info}</p>
+      {error && (
+        <div className="text-destructive bg-destructive/10 rounded p-2 text-sm">{error}</div>
+      )}
       <form onSubmit={verifyOtp} className="space-y-3">
-        <Input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter 6-digit code" required maxLength={6} />
+        <Input
+          value={otp}
+          onChange={(e) => setOtp(e.target.value)}
+          placeholder="Enter 6-digit code"
+          required
+          maxLength={6}
+        />
         <div className="flex gap-2">
           <Button type="submit" disabled={isLoading}>
             {isLoading ? "Verifying..." : "Verify"}

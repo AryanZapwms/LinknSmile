@@ -1,31 +1,28 @@
 import { withCORS } from "@/lib/cors";
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { connectDB } from '@/lib/db';
-import { Product } from '@/lib/models/product';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { connectDB } from "@/lib/db";
+import { Product } from "@/lib/models/product";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'shop_owner') {
-      return withCORS(NextResponse.json({ message: 'Unauthorized' }, { status: 401 }));
+    if (!session || session.user.role !== "shop_owner") {
+      return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
 
     await connectDB();
 
     const product = await Product.findById(id)
-      .populate('category', 'name')
-      .populate('company', 'name')
+      .populate("category", "name")
+      .populate("company", "name")
       .lean();
 
     if (!product) {
-      return withCORS(NextResponse.json({ message: 'Product not found' }, { status: 404 }));
+      return withCORS(NextResponse.json({ message: "Product not found" }, { status: 404 }));
     }
 
     let shopId = session.user.shopId;
@@ -36,29 +33,30 @@ export async function GET(
     }
 
     if (product.shopId?.toString() !== shopId) {
-      return withCORS(NextResponse.json({ message: 'Unauthorized - Not your product' }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ message: "Unauthorized - Not your product" }, { status: 403 })
+      );
     }
 
     return withCORS(NextResponse.json({ success: true, product }));
   } catch (error: any) {
-    console.error('Product fetch error:', error);
-    return withCORS(NextResponse.json(
-      { message: 'Failed to fetch product', error: error.message },
-      { status: 500 }
-    ));
+    console.error("Product fetch error:", error);
+    return withCORS(
+      NextResponse.json(
+        { message: "Failed to fetch product", error: error.message },
+        { status: 500 }
+      )
+    );
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'shop_owner') {
-      return withCORS(NextResponse.json({ message: 'Unauthorized' }, { status: 401 }));
+    if (!session || session.user.role !== "shop_owner") {
+      return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
 
     await connectDB();
@@ -66,7 +64,7 @@ export async function PUT(
     const product = await Product.findById(id);
 
     if (!product) {
-      return withCORS(NextResponse.json({ message: 'Product not found' }, { status: 404 }));
+      return withCORS(NextResponse.json({ message: "Product not found" }, { status: 404 }));
     }
 
     let shopId = session.user.shopId;
@@ -77,7 +75,9 @@ export async function PUT(
     }
 
     if (product.shopId?.toString() !== shopId) {
-      return withCORS(NextResponse.json({ message: 'Unauthorized - Not your product' }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ message: "Unauthorized - Not your product" }, { status: 403 })
+      );
     }
 
     const body = await req.json();
@@ -86,18 +86,18 @@ export async function PUT(
     // reach Mongoose, it will throw a CastError and the update silently fails.
     const sanitized: Record<string, any> = { ...body };
 
-    if (!sanitized.category || sanitized.category === 'none') {
+    if (!sanitized.category || sanitized.category === "none") {
       // Use $unset to clear the field rather than setting it to ""
       delete sanitized.category;
     }
-    if (!sanitized.company || sanitized.company === 'none') {
+    if (!sanitized.company || sanitized.company === "none") {
       delete sanitized.company;
     }
 
     // If product is currently approved and vendor is making changes,
     // reset approval so admin has to re-approve with new details
-    if (product.approvalStatus === 'approved') {
-      sanitized.approvalStatus = 'pending';
+    if (product.approvalStatus === "approved") {
+      sanitized.approvalStatus = "pending";
       sanitized.submittedAt = new Date();
       sanitized.isActive = false;
     }
@@ -110,32 +110,34 @@ export async function PUT(
       { new: true, runValidators: true }
     );
 
-    return withCORS(NextResponse.json({
-      success: true,
-      message: product.approvalStatus === 'approved'
-        ? 'Product updated and resubmitted for approval'
-        : 'Product updated successfully',
-      product: updatedProduct,
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        message:
+          product.approvalStatus === "approved"
+            ? "Product updated and resubmitted for approval"
+            : "Product updated successfully",
+        product: updatedProduct,
+      })
+    );
   } catch (error: any) {
-    console.error('Product update error:', error);
-    return withCORS(NextResponse.json(
-      { message: 'Failed to update product', error: error.message },
-      { status: 500 }
-    ));
+    console.error("Product update error:", error);
+    return withCORS(
+      NextResponse.json(
+        { message: "Failed to update product", error: error.message },
+        { status: 500 }
+      )
+    );
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'shop_owner') {
-      return withCORS(NextResponse.json({ message: 'Unauthorized' }, { status: 401 }));
+    if (!session || session.user.role !== "shop_owner") {
+      return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
 
     await connectDB();
@@ -143,7 +145,7 @@ export async function DELETE(
     const product = await Product.findById(id);
 
     if (!product) {
-      return withCORS(NextResponse.json({ message: 'Product not found' }, { status: 404 }));
+      return withCORS(NextResponse.json({ message: "Product not found" }, { status: 404 }));
     }
 
     let shopId = session.user.shopId;
@@ -154,17 +156,21 @@ export async function DELETE(
     }
 
     if (product.shopId?.toString() !== shopId) {
-      return withCORS(NextResponse.json({ message: 'Unauthorized - Not your product' }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ message: "Unauthorized - Not your product" }, { status: 403 })
+      );
     }
 
     await Product.findByIdAndDelete(id);
 
-    return withCORS(NextResponse.json({ success: true, message: 'Product deleted successfully' }));
+    return withCORS(NextResponse.json({ success: true, message: "Product deleted successfully" }));
   } catch (error: any) {
-    console.error('Product delete error:', error);
-    return withCORS(NextResponse.json(
-      { message: 'Failed to delete product', error: error.message },
-      { status: 500 }
-    ));
+    console.error("Product delete error:", error);
+    return withCORS(
+      NextResponse.json(
+        { message: "Failed to delete product", error: error.message },
+        { status: 500 }
+      )
+    );
   }
 }

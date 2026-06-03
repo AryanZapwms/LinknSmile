@@ -1,5 +1,5 @@
 // lib/models/review.ts
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const replySchema = new mongoose.Schema(
   {
@@ -8,8 +8,8 @@ const replySchema = new mongoose.Schema(
     repliedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     repliedByName: { type: String, required: true },
   },
-  { _id: false },
-)
+  { _id: false }
+);
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -20,11 +20,11 @@ const reviewSchema = new mongoose.Schema(
     comment: { type: String, required: true },
     userName: { type: String, required: true },
     userEmail: { type: String, required: true },
-    status: { 
-      type: String, 
-      enum: ['PENDING', 'APPROVED', 'REJECTED'], 
-      default: 'PENDING',
-      index: true
+    status: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "REJECTED"],
+      default: "PENDING",
+      index: true,
     },
     isVerifiedBuyer: { type: Boolean, default: false },
     moderatedAt: { type: Date },
@@ -34,14 +34,14 @@ const reviewSchema = new mongoose.Schema(
         action: { type: String, required: true },
         timestamp: { type: Date, default: Date.now },
         metadata: { type: mongoose.Schema.Types.Mixed },
-      }
+      },
     ],
     isDeleted: { type: Boolean, default: false },
     reply: replySchema,
   },
-  { timestamps: true },
-)
+  { timestamps: true }
+);
 
-reviewSchema.index({ product: 1, user: 1 }, { unique: true })
+reviewSchema.index({ product: 1, user: 1 }, { unique: true });
 
-export const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema)
+export const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema);

@@ -1,5 +1,5 @@
 // lib/models/product.ts
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 import "@/lib/models/shop";
 import "@/lib/models/category";
 import "@/lib/models/company";
@@ -66,7 +66,7 @@ const productSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
-)
+);
 
 productSchema.index({ isActive: 1, category: 1 });
 productSchema.index({ createdAt: -1 });
@@ -78,4 +78,4 @@ productSchema.index({ approvalStatus: 1 });
 // New index for origin filtering
 productSchema.index({ origin: 1, isActive: 1 });
 
-export const Product = mongoose.models.Product || mongoose.model("Product", productSchema)
+export const Product = mongoose.models.Product || mongoose.model("Product", productSchema);

@@ -8,7 +8,7 @@ import { sendOTP } from "@/lib/otp";
 import { Otp } from "@/lib/models/otp";
 
 export async function POST(req: NextRequest) {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -33,19 +33,17 @@ export async function POST(req: NextRequest) {
 
     // Basic validation
     if (!name || !email || !password || !shopName || !street || !city || !state || !pincode) {
-      return withCORS(NextResponse.json(
-        { message: "All required fields must be provided" },
-        { status: 400 }
-      ));
+      return withCORS(
+        NextResponse.json({ message: "All required fields must be provided" }, { status: 400 })
+      );
     }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser && existingUser.isVerified) {
-      return withCORS(NextResponse.json(
-        { message: "User with this email already exists" },
-        { status: 400 }
-      ));
+      return withCORS(
+        NextResponse.json({ message: "User with this email already exists" }, { status: 400 })
+      );
     }
 
     // Generate OTP
@@ -73,17 +71,24 @@ export async function POST(req: NextRequest) {
       pendingPanNumber: panNumber,
     });
 
-    return withCORS(NextResponse.json({
-      success: true,
-      message: "Vendor registration initiated. Please verify your email to complete the process.",
-      email: email,
-    }, { status: 201 }));
-
+    return withCORS(
+      NextResponse.json(
+        {
+          success: true,
+          message:
+            "Vendor registration initiated. Please verify your email to complete the process.",
+          email: email,
+        },
+        { status: 201 }
+      )
+    );
   } catch (error: any) {
     console.error("Vendor registration error:", error);
-    return withCORS(NextResponse.json(
-      { message: "Registration failed. Please try again.", error: error.message },
-      { status: 500 }
-    ));
+    return withCORS(
+      NextResponse.json(
+        { message: "Registration failed. Please try again.", error: error.message },
+        { status: 500 }
+      )
+    );
   }
 }

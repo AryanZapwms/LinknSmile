@@ -7,7 +7,7 @@ import { Order } from "@/lib/models/order";
 import Shop from "@/lib/models/shop";
 import { Wallet } from "@/lib/models/wallet";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -39,8 +39,10 @@ export async function GET() {
     }
 
     // Recalculate balances from orders
-    const orders = await Order.find({ 'items.shopId': shop._id });
-    let withdrawable = 0, pending = 0, frozen = 0;
+    const orders = await Order.find({ "items.shopId": shop._id });
+    let withdrawable = 0,
+      pending = 0,
+      frozen = 0;
 
     for (const order of orders) {
       const vendorPayout = order.vendorPayouts?.find(

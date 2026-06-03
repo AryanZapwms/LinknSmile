@@ -2,53 +2,55 @@
 
 :root {
   /* ===== PRIMARY COLORS - Black, White, Gray Foundation ===== */
-  --color-white: #FFFFFF;
-  --color-off-white: #F8FAFC;
-  --color-gray-50: #F9FAFB;
-  --color-gray-100: #F3F4F6;
-  --color-gray-200: #E5E7EB;
-  --color-gray-300: #D1D5DB;
-  --color-gray-400: #9CA3AF;
-  --color-gray-500: #6B7280;
-  --color-gray-600: #4B5563;
+  --color-white: #ffffff;
+  --color-off-white: #f8fafc;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
   --color-gray-700: #374151;
-  --color-gray-800: #1F2937;
+  --color-gray-800: #1f2937;
   --color-gray-900: #111827;
   --color-black: #030712;
 
   /* ===== ACCENT COLOR - Charcoal Navy with Purple Undertones ===== */
-  --color-navy-50: #F0F4FA;
-  --color-navy-100: #E1E9F5;
-  --color-navy-200: #C2D2E8;
-  --color-navy-300: #9EB0D3;
-  --color-navy-400: #6C7FA0;
-  --color-navy-500: #4A5C7A;
+  --color-navy-50: #f0f4fa;
+  --color-navy-100: #e1e9f5;
+  --color-navy-200: #c2d2e8;
+  --color-navy-300: #9eb0d3;
+  --color-navy-400: #6c7fa0;
+  --color-navy-500: #4a5c7a;
   --color-navy-600: #334155;
-  --color-navy-700: #1E2A3A;
-  --color-navy-800: #0F1A2A;
-  --color-navy-900: #0A0F1A;
-  
+  --color-navy-700: #1e2a3a;
+  --color-navy-800: #0f1a2a;
+  --color-navy-900: #0a0f1a;
+
   /* Primary accent - Charcoal navy with purple undertone */
-  --color-accent: #1A2634;
-  --color-accent-light: #2C3A4A;
-  --color-accent-soft: #F5F7FA;
+  --color-accent: #1a2634;
+  --color-accent-light: #2c3a4a;
+  --color-accent-soft: #f5f7fa;
   --color-accent-glow: rgba(26, 38, 52, 0.08);
-  
+
   /* Accent highlight - subtle purple/blue for interactive elements */
-  --color-accent-highlight: #4F5E75;
-  --color-accent-hover: #2C3A4A;
-  --color-accent-border: #3A4A5C;
+  --color-accent-highlight: #4f5e75;
+  --color-accent-hover: #2c3a4a;
+  --color-accent-border: #3a4a5c;
 
   /* ===== TYPOGRAPHY ===== */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  --font-heading:
+    "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+
   /* Font weights */
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
+
   /* Line heights */
   --line-height-tight: 1.2;
   --line-height-normal: 1.5;
@@ -69,14 +71,14 @@
   --border-radius-lg: 0.75rem;
   --border-radius-xl: 1rem;
   --border-radius-full: 9999px;
-  
+
   /* Light mode shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.01);
   --shadow-accent: 0 4px 14px 0 rgba(26, 38, 52, 0.12);
-  
+
   /* ===== TRANSITIONS ===== */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -86,24 +88,24 @@
 /* ===== DARK MODE VARIABLES ===== */
 .dark {
   --color-white: #030712;
-  --color-off-white: #0F1A2A;
-  --color-gray-50: #1A2634;
-  --color-gray-100: #2C3A4A;
-  --color-gray-200: #3A4A5C;
-  --color-gray-300: #4F5E75;
-  --color-gray-400: #6C7FA0;
-  --color-gray-500: #9EB0D3;
-  --color-gray-600: #C2D2E8;
-  --color-gray-700: #E1E9F5;
-  --color-gray-800: #F0F4FA;
-  --color-gray-900: #FCFCFD;
-  --color-black: #FFFFFF;
-  
-  --color-accent: #C2D2E8;
-  --color-accent-light: #E1E9F5;
-  --color-accent-soft: #1A2634;
+  --color-off-white: #0f1a2a;
+  --color-gray-50: #1a2634;
+  --color-gray-100: #2c3a4a;
+  --color-gray-200: #3a4a5c;
+  --color-gray-300: #4f5e75;
+  --color-gray-400: #6c7fa0;
+  --color-gray-500: #9eb0d3;
+  --color-gray-600: #c2d2e8;
+  --color-gray-700: #e1e9f5;
+  --color-gray-800: #f0f4fa;
+  --color-gray-900: #fcfcfd;
+  --color-black: #ffffff;
+
+  --color-accent: #c2d2e8;
+  --color-accent-light: #e1e9f5;
+  --color-accent-soft: #1a2634;
   --color-accent-glow: rgba(194, 210, 232, 0.12);
-  
+
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
@@ -122,7 +124,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
@@ -238,7 +245,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .link-underline::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 0;
   height: 1.5px;
@@ -354,7 +361,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-link.active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
@@ -417,7 +424,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .divider::before,
 .divider::after {
-  content: '';
+  content: "";
   flex: 1;
   border-bottom: 1px solid var(--color-gray-200);
 }

@@ -1,18 +1,18 @@
 // email.tsx
-import nodemailer from "nodemailer"
-let transporter: nodemailer.Transporter | null = null
+import nodemailer from "nodemailer";
+let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter() {
   if (transporter) {
-    return transporter
+    return transporter;
   }
 
-  const email = process.env.GMAIL_EMAIL
-  const appPassword = process.env.GMAIL_APP_PASSWORD
+  const email = process.env.GMAIL_EMAIL;
+  const appPassword = process.env.GMAIL_APP_PASSWORD;
 
   if (!email || !appPassword) {
-    console.error("Gmail credentials not configured in environment variables")
-    return null
+    console.error("Gmail credentials not configured in environment variables");
+    return null;
   }
 
   transporter = nodemailer.createTransport({
@@ -22,11 +22,11 @@ function getTransporter() {
       pass: appPassword, // Use App Password, not regular password
     },
     tls: {
-    rejectUnauthorized: false, 
-  },
-  })
+      rejectUnauthorized: false,
+    },
+  });
 
-  return transporter
+  return transporter;
 }
 
 export async function sendEmail({
@@ -34,16 +34,16 @@ export async function sendEmail({
   subject,
   html,
 }: {
-  to: string
-  subject: string
-  html: string
+  to: string;
+  subject: string;
+  html: string;
 }) {
   try {
-    const emailTransporter = getTransporter()
+    const emailTransporter = getTransporter();
 
     if (!emailTransporter) {
-      console.error(" Email transporter not configured")
-      return false
+      console.error(" Email transporter not configured");
+      return false;
     }
 
     await emailTransporter.sendMail({
@@ -51,13 +51,13 @@ export async function sendEmail({
       to,
       subject,
       html,
-    })
+    });
 
-    console.log(` Email sent successfully to ${to}`)
-    return true
+    console.log(` Email sent successfully to ${to}`);
+    return true;
   } catch (error) {
-    console.error(" Email sending failed:", error)
-    return false
+    console.error(" Email sending failed:", error);
+    return false;
   }
 }
 
@@ -281,7 +281,7 @@ export function getWelcomeEmail(name: string) {
         </div>
       </body>
     </html>
-  `
+  `;
 }
 
 export function getOrderConfirmationEmail({
@@ -292,23 +292,23 @@ export function getOrderConfirmationEmail({
   orderDate,
   paymentStatus = "pending",
 }: {
-  customerName: string
-  orderId: string
+  customerName: string;
+  orderId: string;
   items: Array<{
-    name: string
-    quantity: number
-    price: number
+    name: string;
+    quantity: number;
+    price: number;
     selectedSize?: {
-      size: string
-      unit: string
-      quantity: number
-      price: number
-      discountPrice?: number
-    }
-  }>
-  total: number
-  orderDate?: string
-  paymentStatus?: string
+      size: string;
+      unit: string;
+      quantity: number;
+      price: number;
+      discountPrice?: number;
+    };
+  }>;
+  total: number;
+  orderDate?: string;
+  paymentStatus?: string;
 }) {
   const itemsHtml = (items || [])
     .map(
@@ -331,11 +331,11 @@ export function getOrderConfirmationEmail({
           ₹${(item.price * item.quantity).toFixed(2)}
         </td>
       </tr>
-    `,
+    `
     )
-    .join("")
+    .join("");
 
-  const itemsSubtotal = (items || []).reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const itemsSubtotal = (items || []).reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return `
     <!DOCTYPE html>
@@ -571,12 +571,12 @@ export function getOrderConfirmationEmail({
                 </div>
                 <div class="order-info-row">
                   <span class="order-info-label">Order Date</span>
-                  <span class="order-info-value">${orderDate || new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  <span class="order-info-value">${orderDate || new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</span>
                 </div>
                 <div class="order-info-row">
                   <span class="order-info-label">Payment Status</span>
-                  <span class="order-info-value" style="color: ${paymentStatus === 'completed' ? '#27ae60' : '#f39c12'}; font-weight: 700;">
-                    ${paymentStatus === 'completed' ? '✓ Payment Received' : '⏱ Pending - Pay on Delivery'}
+                  <span class="order-info-value" style="color: ${paymentStatus === "completed" ? "#27ae60" : "#f39c12"}; font-weight: 700;">
+                    ${paymentStatus === "completed" ? "✓ Payment Received" : "⏱ Pending - Pay on Delivery"}
                   </span>
                 </div>
               </div>
@@ -655,7 +655,7 @@ export function getOrderConfirmationEmail({
         </div>
       </body>
     </html>
-  `
+  `;
 }
 
 export function getOrderStatusUpdateEmail({
@@ -666,23 +666,23 @@ export function getOrderStatusUpdateEmail({
   paymentStatus,
   totalAmount,
 }: {
-  customerName: string
-  orderId: string
-  orderStatus: string
+  customerName: string;
+  orderId: string;
+  orderStatus: string;
   items: Array<{
-    name: string
-    quantity: number
-    price: number
+    name: string;
+    quantity: number;
+    price: number;
     selectedSize?: {
-      size: string
-      unit: string
-      quantity: number
-      price: number
-      discountPrice?: number
-    }
-  }>
-  paymentStatus: string
-  totalAmount: number
+      size: string;
+      unit: string;
+      quantity: number;
+      price: number;
+      discountPrice?: number;
+    };
+  }>;
+  paymentStatus: string;
+  totalAmount: number;
 }) {
   const itemsHtml = (items || [])
     .map(
@@ -701,9 +701,9 @@ export function getOrderStatusUpdateEmail({
         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: center; color: #34495e;">${item.quantity}</td>
         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">₹${(item.price * item.quantity).toFixed(2)}</td>
       </tr>
-    `,
+    `
     )
-    .join("")
+    .join("");
 
   const statusColors: { [key: string]: string } = {
     pending: "#ffc107",
@@ -711,20 +711,21 @@ export function getOrderStatusUpdateEmail({
     shipped: "#2ecc71",
     delivered: "#27ae60",
     cancelled: "#e74c3c",
-  }
+  };
 
-  const statusBgColor = statusColors[orderStatus] || "#95a5a6"
+  const statusBgColor = statusColors[orderStatus] || "#95a5a6";
   const statusMessage: { [key: string]: string } = {
     pending: "Your order is pending and will be processed soon.",
     processing: "Your order is being packed and will ship soon.",
     shipped: "Your order has been shipped! Track it now.",
     delivered: "Your order has been delivered. Thank you for your purchase!",
     cancelled: "Your order has been cancelled.",
-  }
+  };
 
-  const paymentInfo = paymentStatus === "completed" 
-    ? `<p style="color: #27ae60; font-weight: 600;">✓ Payment Received: ₹${totalAmount.toFixed(2)}</p>`
-    : `<p style="color: #f39c12; font-weight: 600;">⏱ Amount to Pay on Delivery: ₹${totalAmount.toFixed(2)}</p>`
+  const paymentInfo =
+    paymentStatus === "completed"
+      ? `<p style="color: #27ae60; font-weight: 600;">✓ Payment Received: ₹${totalAmount.toFixed(2)}</p>`
+      : `<p style="color: #f39c12; font-weight: 600;">⏱ Amount to Pay on Delivery: ₹${totalAmount.toFixed(2)}</p>`;
 
   return `
     <!DOCTYPE html>
@@ -975,7 +976,7 @@ export function getOrderStatusUpdateEmail({
         </div>
       </body>
     </html>
-  `
+  `;
 }
 
 export function getAdminOrderNotificationEmail({
@@ -990,35 +991,35 @@ export function getAdminOrderNotificationEmail({
   shippingAddress,
   orderDate,
 }: {
-  customerName: string
-  customerEmail: string
-  customerPhone: string
-  orderId: string
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  orderId: string;
   items: Array<{
-    name: string
-    quantity: number
-    price: number
+    name: string;
+    quantity: number;
+    price: number;
     selectedSize?: {
-      size: string
-      unit: string
-      quantity: number
-      price: number
-      discountPrice?: number
-    }
-  }>
-  totalAmount: number
-  paymentStatus: string
-  paymentMethod: string
+      size: string;
+      unit: string;
+      quantity: number;
+      price: number;
+      discountPrice?: number;
+    };
+  }>;
+  totalAmount: number;
+  paymentStatus: string;
+  paymentMethod: string;
   shippingAddress: {
-    name: string
-    phone: string
-    street: string
-    city: string
-    state: string
-    zipCode: string
-    country: string
-  }
-  orderDate?: string
+    name: string;
+    phone: string;
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  orderDate?: string;
 }) {
   const itemsHtml = (items || [])
     .map(
@@ -1037,14 +1038,14 @@ export function getAdminOrderNotificationEmail({
         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: center; color: #34495e;">${item.quantity}</td>
         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">₹${(item.price * item.quantity).toFixed(2)}</td>
       </tr>
-    `,
+    `
     )
-    .join("")
+    .join("");
 
-  const itemsSubtotal = (items || []).reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const itemsSubtotal = (items || []).reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const paymentStatusColor = paymentStatus === 'completed' ? '#27ae60' : '#f39c12'
-  const paymentStatusText = paymentStatus === 'completed' ? '✓ PAID' : '⏱ PENDING - COD'
+  const paymentStatusColor = paymentStatus === "completed" ? "#27ae60" : "#f39c12";
+  const paymentStatusText = paymentStatus === "completed" ? "✓ PAID" : "⏱ PENDING - COD";
 
   return `
     <!DOCTYPE html>
@@ -1225,7 +1226,7 @@ export function getAdminOrderNotificationEmail({
             <!-- Alert Header -->
             <div class="alert-header">
               <h1>🚨 NEW ORDER RECEIVED</h1>
-              <p>Order ID: ${orderId} | ${orderDate || new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p>Order ID: ${orderId} | ${orderDate || new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
             </div>
 
             <!-- Content -->
@@ -1314,10 +1315,18 @@ export function getAdminOrderNotificationEmail({
         </div>
       </body>
     </html>
-  `
+  `;
 }
 
-export function getPayoutRequestedEmail({ shopName, amount, requestId }: { shopName: string, amount: number, requestId: string }) {
+export function getPayoutRequestedEmail({
+  shopName,
+  amount,
+  requestId,
+}: {
+  shopName: string;
+  amount: number;
+  requestId: string;
+}) {
   return `
     <!DOCTYPE html>
     <html>
@@ -1339,26 +1348,42 @@ export function getPayoutRequestedEmail({ shopName, amount, requestId }: { shopN
         </div>
       </body>
     </html>
-  `
+  `;
 }
 
-export function getPayoutStatusEmail({ shopName, amount, status, transactionId, failureReason }: { shopName: string, amount: number, status: string, transactionId?: string, failureReason?: string }) {
-  const statusColors: any = { 'processing': '#3498db', 'completed': '#27ae60', 'failed': '#e74c3c' };
-  const statusTitles: any = { 'processing': 'Payout Approved', 'completed': 'Payout Completed', 'failed': 'Payout Rejected' };
-  
+export function getPayoutStatusEmail({
+  shopName,
+  amount,
+  status,
+  transactionId,
+  failureReason,
+}: {
+  shopName: string;
+  amount: number;
+  status: string;
+  transactionId?: string;
+  failureReason?: string;
+}) {
+  const statusColors: any = { processing: "#3498db", completed: "#27ae60", failed: "#e74c3c" };
+  const statusTitles: any = {
+    processing: "Payout Approved",
+    completed: "Payout Completed",
+    failed: "Payout Rejected",
+  };
+
   return `
     <!DOCTYPE html>
     <html>
-      <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:${statusColors[status] || '#7c3aed'};color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
+      <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:${statusColors[status] || "#7c3aed"};color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
       <body>
         <div class="container">
-          <div class="header"><h1>${statusTitles[status] || 'Payout Update'}</h1></div>
+          <div class="header"><h1>${statusTitles[status] || "Payout Update"}</h1></div>
           <div class="content">
             <p>Hello ${shopName},</p>
             <p>Your payout request for <strong>₹${amount.toLocaleString()}</strong> has been updated to <strong>${status}</strong>.</p>
             
-            ${transactionId ? `<p><strong>Transaction ID:</strong> ${transactionId}</p>` : ''}
-            ${failureReason ? `<p style="color:#e74c3c"><strong>Reason:</strong> ${failureReason}</p>` : ''}
+            ${transactionId ? `<p><strong>Transaction ID:</strong> ${transactionId}</p>` : ""}
+            ${failureReason ? `<p style="color:#e74c3c"><strong>Reason:</strong> ${failureReason}</p>` : ""}
             
             <p>You can track all your payouts in your dashboard.</p>
             <div style="text-align:center;"><a href="https://linkandsmile.com/vendor/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Check Dashboard</a></div>
@@ -1367,5 +1392,5 @@ export function getPayoutStatusEmail({ shopName, amount, status, transactionId, 
         </div>
       </body>
     </html>
-  `
+  `;
 }

@@ -23,5 +23,4 @@ const paymentSettingsSchema = new mongoose.Schema(
 );
 
 export const PaymentSettings =
-  mongoose.models.PaymentSettings ||
-  mongoose.model("PaymentSettings", paymentSettingsSchema);
+  mongoose.models.PaymentSettings || mongoose.model("PaymentSettings", paymentSettingsSchema);

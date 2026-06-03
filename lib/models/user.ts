@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema(
     },
     resetOtpHash: { type: String },
     resetOtpExpires: { type: Date },
-    
+
     // ✅ ADD THESE NEW FIELDS
     shopId: {
       type: mongoose.Schema.Types.ObjectId,

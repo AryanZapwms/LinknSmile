@@ -71,8 +71,7 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
- 
-    async jwt({ token, user, trigger, session  }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -96,7 +95,6 @@ export const authOptions: NextAuthOptions = {
     },
   },
 
-
   pages: {
     signIn: "/auth/login",
     error: "/auth/login",
@@ -112,10 +110,9 @@ export const authOptions: NextAuthOptions = {
     maxAge: 60 * 60, // Match session maxAge
   },
 
-
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
 };
 
-const handler = NextAuth(authOptions); 
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

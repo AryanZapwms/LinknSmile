@@ -9,7 +9,7 @@ import { sendEmail, getWelcomeEmail } from "@/lib/email";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
           .toLowerCase()
           .replace(/[^\w\s]/gi, "")
           .replace(/\s+/g, "-");
-          
+
         shop = await Shop.create({
           ownerId: user._id,
           shopName: otpDoc.pendingShopName,

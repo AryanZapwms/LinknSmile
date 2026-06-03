@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 
 export async function GET(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -21,8 +21,6 @@ export async function GET(request: NextRequest) {
     const flat = searchParams.get("flat") === "true";
 
     let query: any = { isActive: true };
-
-
 
     if (all === "true") {
       query = {};
@@ -51,15 +49,12 @@ export async function GET(request: NextRequest) {
     return withCORS(NextResponse.json(hierarchical));
   } catch (error) {
     // console.error("Error fetching categories:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to fetch categories" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 }));
   }
 }
 
 export async function POST(request: Request) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -76,7 +71,9 @@ export async function POST(request: Request) {
     const user = await User.findOne({ email: session.user.email });
 
     if (!user || user.role !== "admin") {
-      return withCORS(NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 })
+      );
     }
 
     const body = await request.json();
@@ -97,9 +94,6 @@ export async function POST(request: Request) {
     return withCORS(NextResponse.json(category, { status: 201 }));
   } catch (error) {
     // console.error("Error creating category:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to create category" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to create category" }, { status: 500 }));
   }
 }

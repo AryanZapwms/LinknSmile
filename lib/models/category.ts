@@ -37,10 +37,8 @@ const categorySchema = new mongoose.Schema(
       { slug: 1 },
       // Index for parent-child relationships
       { parent: 1 },
-    ]
+    ],
   }
 );
 
-
-export const Category =
-  mongoose.models.Category || mongoose.model("Category", categorySchema);
+export const Category = mongoose.models.Category || mongoose.model("Category", categorySchema);

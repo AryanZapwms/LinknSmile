@@ -4,7 +4,7 @@ import { Company } from "@/lib/models/company";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -73,18 +73,17 @@ export async function POST() {
       }
     }
 
-    return withCORS(NextResponse.json({
-      message: "Brand setup completed",
-      created: createdBrands.length,
-      errors: errors.length,
-      brands: createdBrands,
-      errorMessages: errors,
-    }));
+    return withCORS(
+      NextResponse.json({
+        message: "Brand setup completed",
+        created: createdBrands.length,
+        errors: errors.length,
+        brands: createdBrands,
+        errorMessages: errors,
+      })
+    );
   } catch (error) {
     console.error("Error setting up brands:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to setup brands" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to setup brands" }, { status: 500 }));
   }
 }

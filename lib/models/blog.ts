@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const blogSchema = new mongoose.Schema(
   {
@@ -32,7 +32,7 @@ const blogSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true },
-)
+  { timestamps: true }
+);
 
-export const Blog = mongoose.models.Blog || mongoose.model("Blog", blogSchema)
+export const Blog = mongoose.models.Blog || mongoose.model("Blog", blogSchema);

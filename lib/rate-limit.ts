@@ -40,12 +40,15 @@ interface RateLimitResult {
 const store = new Map<string, { count: number; resetAt: number }>();
 
 // Clean up expired entries every 5 minutes to avoid memory leaks
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, value] of store.entries()) {
-    if (value.resetAt < now) store.delete(key);
-  }
-}, 5 * 60 * 1000);
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, value] of store.entries()) {
+      if (value.resetAt < now) store.delete(key);
+    }
+  },
+  5 * 60 * 1000
+);
 
 export function rateLimit(
   namespace: string,
@@ -72,11 +75,9 @@ export function rateLimit(
 }
 
 // Pre-configured limiters for common routes — import these directly
-export const otpLimiter = (ip: string) =>
-  rateLimit("otp", ip, { limit: 5, windowMs: 60_000 }); // 5 OTPs per minute
+export const otpLimiter = (ip: string) => rateLimit("otp", ip, { limit: 5, windowMs: 60_000 }); // 5 OTPs per minute
 
-export const loginLimiter = (ip: string) =>
-  rateLimit("login", ip, { limit: 10, windowMs: 60_000 }); // 10 attempts per minute
+export const loginLimiter = (ip: string) => rateLimit("login", ip, { limit: 10, windowMs: 60_000 }); // 10 attempts per minute
 
 export const paymentLimiter = (ip: string) =>
   rateLimit("payment", ip, { limit: 5, windowMs: 60_000 }); // 5 payment attempts per minute

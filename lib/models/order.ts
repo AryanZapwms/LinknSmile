@@ -38,7 +38,11 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: { type: String, enum: ["pending", "completed", "failed"], default: "pending" },
     paymentMethod: { type: String, enum: ["cod", "razorpay"], default: "razorpay" },
-    orderStatus: { type: String, enum: ["pending", "processing", "shipped", "delivered", "cancelled"], default: "pending" },
+    orderStatus: {
+      type: String,
+      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+      default: "pending",
+    },
     cancellationReason: { type: String, default: null },
     razorpayOrderId: String,
     razorpayPaymentId: String,
@@ -60,7 +64,7 @@ orderSchema.index({ "vendorPayouts.shopId": 1, "vendorPayouts.status": 1 });
 orderSchema.index({ orderStatus: 1, "vendorPayouts.status": 1 });
 
 // ✅ FIXED: pre-save hook without `next` (async function)
-orderSchema.pre("save", function() {
+orderSchema.pre("save", function () {
   if (!this.isNew) return;
 
   const shopTotals = new Map<string, { shopId: mongoose.Types.ObjectId; amount: number }>();

@@ -1,13 +1,13 @@
 import { withCORS } from "@/lib/cors";
-import mongoose from "mongoose"
-import { NextResponse, type NextRequest } from "next/server"
-import { connectDB } from "@/lib/db"
-import { Review } from "@/lib/models/review"
-import { Product } from "@/lib/models/product"
-import { Order } from "@/lib/models/order"
-import Shop from "@/lib/models/shop"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import mongoose from "mongoose";
+import { NextResponse, type NextRequest } from "next/server";
+import { connectDB } from "@/lib/db";
+import { Review } from "@/lib/models/review";
+import { Product } from "@/lib/models/product";
+import { Order } from "@/lib/models/order";
+import Shop from "@/lib/models/shop";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 const emptySummary = {
   total: 0,
@@ -19,28 +19,28 @@ const emptySummary = {
     4: 0,
     5: 0,
   },
-}
+};
 
 function buildSummary(reviews: any[]) {
-  const approvedReviews = reviews.filter(r => r.status === 'APPROVED');
+  const approvedReviews = reviews.filter((r) => r.status === "APPROVED");
   if (!approvedReviews.length) {
-    return emptySummary
+    return emptySummary;
   }
-  const ratingCounts = { ...emptySummary.ratingCounts }
-  let sum = 0
+  const ratingCounts = { ...emptySummary.ratingCounts };
+  let sum = 0;
   for (const review of approvedReviews) {
-    const rating = review.rating || 0
+    const rating = review.rating || 0;
     if (ratingCounts[review.rating as keyof typeof ratingCounts] !== undefined) {
-      ratingCounts[review.rating as keyof typeof ratingCounts] += 1
+      ratingCounts[review.rating as keyof typeof ratingCounts] += 1;
     }
-    sum += rating
+    sum += rating;
   }
-  const average = Number((sum / approvedReviews.length).toFixed(1))
+  const average = Number((sum / approvedReviews.length).toFixed(1));
   return {
     total: approvedReviews.length,
     averageRating: average,
     ratingCounts,
-  }
+  };
 }
 
 function mapReview(review: any) {
@@ -65,121 +65,127 @@ function mapReview(review: any) {
       : null,
     createdAt: review.createdAt,
     updatedAt: review.updatedAt,
-  }
+  };
 }
 
-export async function GET(
-  request: NextRequest, 
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id: productId } = await params
-    
+    const { id: productId } = await params;
+
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return withCORS(NextResponse.json({ error: "Invalid product id" }, { status: 400 }))
+      return withCORS(NextResponse.json({ error: "Invalid product id" }, { status: 400 }));
     }
 
-    await connectDB()
+    await connectDB();
 
     // Requirements: Never calculate ratings from unapproved reviews.
     // Fetch all reviews to build summary but only return approved ones for listing.
-    const allReviews = await Review.find({ product: productId, isDeleted: false }).lean()
-    const summary = buildSummary(allReviews)
-    
-    const approvedReviews = allReviews.filter(r => r.status === 'APPROVED')
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    const allReviews = await Review.find({ product: productId, isDeleted: false }).lean();
+    const summary = buildSummary(allReviews);
 
-    return withCORS(NextResponse.json({
-      reviews: approvedReviews.map(mapReview),
-      summary,
-    }))
+    const approvedReviews = allReviews
+      .filter((r) => r.status === "APPROVED")
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return withCORS(
+      NextResponse.json({
+        reviews: approvedReviews.map(mapReview),
+        summary,
+      })
+    );
   } catch (error) {
-    console.error("Error fetching reviews:", error)
-    return withCORS(NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 }))
+    console.error("Error fetching reviews:", error);
+    return withCORS(NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 }));
   }
 }
 
-export async function POST(
-  request: NextRequest, 
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }))
+      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
 
-    const { id: productId } = await params
-    
+    const { id: productId } = await params;
+
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return withCORS(NextResponse.json({ error: "Invalid product id" }, { status: 400 }))
+      return withCORS(NextResponse.json({ error: "Invalid product id" }, { status: 400 }));
     }
 
-    const body = await request.json()
-    const rating = Number(body.rating)
-    const comment = typeof body.comment === "string" ? body.comment.trim() : ""
-    const bodyName = typeof body.userName === "string" ? body.userName.trim() : ""
-    const bodyEmail = typeof body.userEmail === "string" ? body.userEmail.trim() : ""
+    const body = await request.json();
+    const rating = Number(body.rating);
+    const comment = typeof body.comment === "string" ? body.comment.trim() : "";
+    const bodyName = typeof body.userName === "string" ? body.userName.trim() : "";
+    const bodyEmail = typeof body.userEmail === "string" ? body.userEmail.trim() : "";
 
     if (!rating || rating < 1 || rating > 5) {
-      return withCORS(NextResponse.json({ error: "Rating must be between 1 and 5" }, { status: 400 }))
+      return withCORS(
+        NextResponse.json({ error: "Rating must be between 1 and 5" }, { status: 400 })
+      );
     }
 
     if (!comment) {
-      return withCORS(NextResponse.json({ error: "Comment is required" }, { status: 400 }))
+      return withCORS(NextResponse.json({ error: "Comment is required" }, { status: 400 }));
     }
 
-    await connectDB()
+    await connectDB();
 
-    const product = await Product.findById(productId).select("company shopId")
+    const product = await Product.findById(productId).select("company shopId");
     if (!product) {
-      return withCORS(NextResponse.json({ error: "Product not found" }, { status: 404 }))
+      return withCORS(NextResponse.json({ error: "Product not found" }, { status: 404 }));
     }
 
     // Security: Prevent vendor reviewing themselves
     if (product.shopId) {
-        const shop = await Shop.findById(product.shopId)
-        if (shop && shop.owner?.toString() === session.user.id) {
-            return withCORS(NextResponse.json({ error: "Vendors cannot review their own products" }, { status: 403 }))
-        }
+      const shop = await Shop.findById(product.shopId);
+      if (shop && shop.owner?.toString() === session.user.id) {
+        return withCORS(
+          NextResponse.json({ error: "Vendors cannot review their own products" }, { status: 403 })
+        );
+      }
     }
 
-    const companyId = product.company
+    const companyId = product.company;
     if (!companyId) {
-      return withCORS(NextResponse.json({ error: "Product company missing" }, { status: 400 }))
+      return withCORS(NextResponse.json({ error: "Product company missing" }, { status: 400 }));
     }
 
     // Requirement: Only verified buyers can review
     const hasOrder = await Order.findOne({
       user: session.user.id,
       "items.product": productId,
-      orderStatus: "delivered"
-    })
+      orderStatus: "delivered",
+    });
 
     if (!hasOrder) {
-        return withCORS(NextResponse.json({ error: "Only verified buyers who have received the product can submit a review." }, { status: 403 }))
+      return withCORS(
+        NextResponse.json(
+          { error: "Only verified buyers who have received the product can submit a review." },
+          { status: 403 }
+        )
+      );
     }
 
-    const userId = session.user.id
-    const userName = bodyName || session.user.name || ""
-    const userEmail = bodyEmail || session.user.email || ""
+    const userId = session.user.id;
+    const userName = bodyName || session.user.name || "";
+    const userEmail = bodyEmail || session.user.email || "";
 
-    const existingReview = await Review.findOne({ product: productId, user: userId })
-    let review
-    let created = false
+    const existingReview = await Review.findOne({ product: productId, user: userId });
+    let review;
+    let created = false;
 
     if (existingReview) {
-      existingReview.rating = rating
-      existingReview.comment = comment
-      existingReview.userName = userName
-      existingReview.userEmail = userEmail
-      existingReview.status = 'PENDING' // Reset to pending for re-moderation
+      existingReview.rating = rating;
+      existingReview.comment = comment;
+      existingReview.userName = userName;
+      existingReview.userEmail = userEmail;
+      existingReview.status = "PENDING"; // Reset to pending for re-moderation
       existingReview.auditLog.push({
-          action: "REVIEW_UPDATED",
-          timestamp: new Date(),
-          metadata: { rating, comment }
-      })
-      review = await existingReview.save()
+        action: "REVIEW_UPDATED",
+        timestamp: new Date(),
+        metadata: { rating, comment },
+      });
+      review = await existingReview.save();
     } else {
       review = await Review.create({
         product: productId,
@@ -190,33 +196,39 @@ export async function POST(
         userName,
         userEmail,
         isVerifiedBuyer: true,
-        status: 'PENDING',
-        auditLog: [{
+        status: "PENDING",
+        auditLog: [
+          {
             action: "REVIEW_CREATED",
             timestamp: new Date(),
-            metadata: { rating, comment }
-        }]
-      })
-      created = true
+            metadata: { rating, comment },
+          },
+        ],
+      });
+      created = true;
     }
 
     // Build summary based on ALL approved reviews
-    const allReviews = await Review.find({ product: productId }).lean()
-    const summary = buildSummary(allReviews)
+    const allReviews = await Review.find({ product: productId }).lean();
+    const summary = buildSummary(allReviews);
 
-    return withCORS(NextResponse.json(
-      {
-        review: mapReview(review.toObject ? review.toObject() : review),
-        summary,
-        message: "Your review has been submitted and is pending moderation."
-      },
-      { status: created ? 201 : 200 },
-    ))
+    return withCORS(
+      NextResponse.json(
+        {
+          review: mapReview(review.toObject ? review.toObject() : review),
+          summary,
+          message: "Your review has been submitted and is pending moderation.",
+        },
+        { status: created ? 201 : 200 }
+      )
+    );
   } catch (error: any) {
-    console.error("Error submitting review:", error)
+    console.error("Error submitting review:", error);
     if (error?.code === 11000) {
-      return withCORS(NextResponse.json({ error: "You have already reviewed this product" }, { status: 409 }))
+      return withCORS(
+        NextResponse.json({ error: "You have already reviewed this product" }, { status: 409 })
+      );
     }
-    return withCORS(NextResponse.json({ error: "Failed to submit review" }, { status: 500 }))
+    return withCORS(NextResponse.json({ error: "Failed to submit review" }, { status: 500 }));
   }
 }

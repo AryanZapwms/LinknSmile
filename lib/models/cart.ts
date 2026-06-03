@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const cartItemSchema = new mongoose.Schema(
   {
@@ -23,26 +23,32 @@ const cartItemSchema = new mongoose.Schema(
     },
   },
   { _id: true }
-)
+);
 
 const cartSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+      index: true,
+    },
     items: [cartItemSchema],
     totalPrice: { type: Number, default: 0 },
     version: { type: Number, default: 0 }, // For optimistic locking
   },
   { timestamps: true }
-)
+);
 
 // Pre-save hook to calculate total price
 cartSchema.pre("save", function (next) {
   this.totalPrice = this.items.reduce((total, item) => {
-    const price = item.selectedSize?.price || item.price
-    const finalPrice = item.selectedSize?.discountPrice || item.discountPrice || price
-    return total + finalPrice * item.quantity
-  }, 0)
-  next()
-})
+    const price = item.selectedSize?.price || item.price;
+    const finalPrice = item.selectedSize?.discountPrice || item.discountPrice || price;
+    return total + finalPrice * item.quantity;
+  }, 0);
+  next();
+});
 
-export const Cart = mongoose.models.Cart || mongoose.model("Cart", cartSchema)
+export const Cart = mongoose.models.Cart || mongoose.model("Cart", cartSchema);

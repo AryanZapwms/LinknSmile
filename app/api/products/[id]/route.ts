@@ -3,9 +3,9 @@ import { withCORS } from "@/lib/cors";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
 
-import "@/lib/models/company";    
-import "@/lib/models/category";   
-import "@/lib/models/shop";        
+import "@/lib/models/company";
+import "@/lib/models/category";
+import "@/lib/models/shop";
 
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
@@ -14,10 +14,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 export const dynamic = "force-dynamic";
 
 // ---------------- GET PRODUCT ----------------
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params; //  await params
 
@@ -54,22 +51,16 @@ export async function GET(
   }
 }
 
-
-
 // ---------------- UPDATE PRODUCT ----------------
-export async function PUT(
-  request: Request,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params; //  await params
     const session = await getServerSession(authOptions);
 
     if (!session?.user || session.user.role !== "admin") {
-      return withCORS(NextResponse.json(
-        { error: "Access denied. Admin privileges required." },
-        { status: 403 }
-      ));
+      return withCORS(
+        NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 })
+      );
     }
 
     await connectDB();
@@ -118,7 +109,11 @@ export async function PUT(
       isActive,
     };
 
-    const product = await Product.findByIdAndUpdate(id, { $set: updateData }, { new: true, runValidators: true });
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
 
     if (!product) {
       return withCORS(NextResponse.json({ error: "Product not found" }, { status: 404 }));
@@ -140,48 +135,38 @@ export async function PUT(
 }
 
 // ---------------- DELETE PRODUCT ----------------
-export async function DELETE(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await context.params   // ✅ MUST await
+    const { id } = await context.params; // ✅ MUST await
 
-    console.log("Deleting product:", id)
+    console.log("Deleting product:", id);
 
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
 
     if (!session?.user || session.user.role !== "admin") {
       return NextResponse.json(
         { error: "Access denied. Admin privileges required." },
         { status: 403 }
-      )
+      );
     }
 
-    await connectDB()
+    await connectDB();
 
-    const product = await Product.findByIdAndDelete(id)
+    const product = await Product.findByIdAndDelete(id);
 
     if (!product) {
-      console.warn("⚠️ Product not found for deletion:", id)
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      )
+      console.warn("⚠️ Product not found for deletion:", id);
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    console.log("✅ Product deleted:", product._id)
+    console.log("✅ Product deleted:", product._id);
 
     return NextResponse.json({
       message: "Product deleted successfully",
-    })
-
+    });
   } catch (error) {
-    console.error("Delete error:", error)
+    console.error("Delete error:", error);
 
-    return NextResponse.json(
-      { error: "Failed to delete product" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
   }
 }

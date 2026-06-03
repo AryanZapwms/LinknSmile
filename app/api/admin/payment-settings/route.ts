@@ -6,7 +6,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 
 export async function GET(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
 
     //  SECURITY CHECK: Only admins can access payment settings
     if (!user || user.role !== "admin") {
-      return withCORS(NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 })
+      );
     }
 
     let settings = await PaymentSettings.findOne();
@@ -40,15 +42,14 @@ export async function GET(request: NextRequest) {
     return withCORS(NextResponse.json(settings));
   } catch (error) {
     console.error("Error fetching payment settings:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to fetch payment settings" },
-      { status: 500 }
-    ));
+    return withCORS(
+      NextResponse.json({ error: "Failed to fetch payment settings" }, { status: 500 })
+    );
   }
 }
 
 export async function PUT(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -65,11 +66,12 @@ export async function PUT(request: NextRequest) {
 
     // ⚠️ SECURITY CHECK: Only admins can update payment settings
     if (!user || user.role !== "admin") {
-      return withCORS(NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 })
+      );
     }
 
-    const { enableCOD, enableRazorpay, minCODAmount, maxCODAmount } =
-      await request.json();
+    const { enableCOD, enableRazorpay, minCODAmount, maxCODAmount } = await request.json();
 
     let settings = await PaymentSettings.findOne();
 
@@ -91,9 +93,8 @@ export async function PUT(request: NextRequest) {
     return withCORS(NextResponse.json(settings));
   } catch (error) {
     console.error("Error updating payment settings:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to update payment settings" },
-      { status: 500 }
-    ));
+    return withCORS(
+      NextResponse.json({ error: "Failed to update payment settings" }, { status: 500 })
+    );
   }
 }

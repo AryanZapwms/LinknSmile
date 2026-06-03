@@ -1,26 +1,26 @@
 // app/vendor/products/edit/[id]/page.tsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-import { Loader2, Upload, X, AlertCircle, ArrowLeft } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import { Loader2, Upload, X, AlertCircle, ArrowLeft } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 interface Category {
   _id: string;
@@ -66,21 +66,21 @@ export default function EditProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
 
   const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    price: '',
-    discountPrice: '',
-    image: '',
+    name: "",
+    slug: "",
+    description: "",
+    price: "",
+    discountPrice: "",
+    image: "",
     images: [] as string[],
-    category: '',
-    company: '',
-    stock: '',
-    sku: '',
-    ingredients: '',
-    benefits: '',
-    usage: '',
-    suitableFor: '',
+    category: "",
+    company: "",
+    stock: "",
+    sku: "",
+    ingredients: "",
+    benefits: "",
+    usage: "",
+    suitableFor: "",
   });
 
   useEffect(() => {
@@ -98,29 +98,29 @@ export default function EditProductPage() {
         const prod = data.product;
         setProduct(prod);
         setFormData({
-          name: prod.name || '',
-          slug: prod.slug || '',
-          description: prod.description || '',
-          price: prod.price?.toString() || '',
-          discountPrice: prod.discountPrice?.toString() || '',
-          image: prod.image || '',
+          name: prod.name || "",
+          slug: prod.slug || "",
+          description: prod.description || "",
+          price: prod.price?.toString() || "",
+          discountPrice: prod.discountPrice?.toString() || "",
+          image: prod.image || "",
           images: prod.images || [],
-          category: prod.category?._id || '',
-          company: prod.company?._id || '',
-          stock: prod.stock?.toString() || '0',
-          sku: prod.sku || '',
-          ingredients: prod.ingredients?.join('\n') || '',
-          benefits: prod.benefits?.join('\n') || '',
-          usage: prod.usage || '',
-          suitableFor: prod.suitableFor?.join(', ') || '',
+          category: prod.category?._id || "",
+          company: prod.company?._id || "",
+          stock: prod.stock?.toString() || "0",
+          sku: prod.sku || "",
+          ingredients: prod.ingredients?.join("\n") || "",
+          benefits: prod.benefits?.join("\n") || "",
+          usage: prod.usage || "",
+          suitableFor: prod.suitableFor?.join(", ") || "",
         });
       } else {
-        toast.error('Product not found');
-        router.push('/vendor/products');
+        toast.error("Product not found");
+        router.push("/vendor/products");
       }
     } catch (error) {
-      console.error('Failed to fetch product:', error);
-      toast.error('Failed to load product');
+      console.error("Failed to fetch product:", error);
+      toast.error("Failed to load product");
     } finally {
       setLoading(false);
     }
@@ -128,21 +128,21 @@ export default function EditProductPage() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('/api/categories');
+      const res = await fetch("/api/categories");
       const data = await res.json();
       setCategories(data);
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      console.error("Failed to fetch categories:", error);
     }
   };
 
   const fetchCompanies = async () => {
     try {
-      const res = await fetch('/api/companies');
+      const res = await fetch("/api/companies");
       const data = await res.json();
       setCompanies(data);
     } catch (error) {
-      console.error('Failed to fetch companies:', error);
+      console.error("Failed to fetch companies:", error);
     }
   };
 
@@ -154,12 +154,12 @@ export default function EditProductPage() {
     const uploadFormData = new FormData();
 
     Array.from(files).forEach((file) => {
-      uploadFormData.append('files', file);
+      uploadFormData.append("files", file);
     });
 
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
+      const res = await fetch("/api/upload", {
+        method: "POST",
         body: uploadFormData,
       });
 
@@ -171,11 +171,11 @@ export default function EditProductPage() {
           image: prev.image || data.urls[0],
           images: [...prev.images, ...data.urls],
         }));
-        toast.success('Images uploaded successfully');
+        toast.success("Images uploaded successfully");
       }
     } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload images');
+      console.error("Upload error:", error);
+      toast.error("Failed to upload images");
     } finally {
       setUploading(false);
     }
@@ -187,7 +187,7 @@ export default function EditProductPage() {
       return {
         ...prev,
         images: newImages,
-        image: index === 0 ? (newImages[0] || '') : prev.image,
+        image: index === 0 ? newImages[0] || "" : prev.image,
       };
     });
   };
@@ -196,7 +196,7 @@ export default function EditProductPage() {
     e.preventDefault();
 
     if (!formData.name || !formData.slug || !formData.price || !formData.company) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -208,29 +208,34 @@ export default function EditProductPage() {
         price: parseFloat(formData.price),
         discountPrice: formData.discountPrice ? parseFloat(formData.discountPrice) : undefined,
         stock: formData.stock ? parseInt(formData.stock) : 0,
-        ingredients: formData.ingredients ? formData.ingredients.split('\n').filter(Boolean) : [],
-        benefits: formData.benefits ? formData.benefits.split('\n').filter(Boolean) : [],
-        suitableFor: formData.suitableFor ? formData.suitableFor.split(',').map(s => s.trim()).filter(Boolean) : [],
+        ingredients: formData.ingredients ? formData.ingredients.split("\n").filter(Boolean) : [],
+        benefits: formData.benefits ? formData.benefits.split("\n").filter(Boolean) : [],
+        suitableFor: formData.suitableFor
+          ? formData.suitableFor
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [],
         category: formData.category || undefined,
       };
 
       const res = await fetch(`/api/vendor/products/${productId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(data.message || 'Product updated successfully!');
-        router.push('/vendor/products');
+        toast.success(data.message || "Product updated successfully!");
+        router.push("/vendor/products");
       } else {
-        toast.error(data.message || 'Failed to update product');
+        toast.error(data.message || "Failed to update product");
       }
     } catch (error) {
-      console.error('Update error:', error);
-      toast.error('Failed to update product');
+      console.error("Update error:", error);
+      toast.error("Failed to update product");
     } finally {
       setSaving(false);
     }
@@ -238,10 +243,10 @@ export default function EditProductPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         <Skeleton className="h-8 w-64" />
         <Card>
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="space-y-4 p-6">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-32 w-full" />
@@ -262,7 +267,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" onClick={() => router.back()}>
@@ -270,17 +275,15 @@ export default function EditProductPage() {
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight">Edit Product</h1>
-          <p className="text-muted-foreground">
-            Update product details
-          </p>
+          <p className="text-muted-foreground">Update product details</p>
         </div>
         <Badge
           variant={
-            product.approvalStatus === 'approved'
-              ? 'default'
-              : product.approvalStatus === 'pending'
-              ? 'outline'
-              : 'destructive'
+            product.approvalStatus === "approved"
+              ? "default"
+              : product.approvalStatus === "pending"
+                ? "outline"
+                : "destructive"
           }
         >
           {product.approvalStatus}
@@ -288,17 +291,18 @@ export default function EditProductPage() {
       </div>
 
       {/* Alerts */}
-      {product.approvalStatus === 'approved' && (
+      {product.approvalStatus === "approved" && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Re-approval Required</AlertTitle>
           <AlertDescription>
-            This product is currently approved. Making changes will require admin re-approval before the changes are visible to customers.
+            This product is currently approved. Making changes will require admin re-approval before
+            the changes are visible to customers.
           </AlertDescription>
         </Alert>
       )}
 
-      {product.approvalStatus === 'rejected' && product.rejectionReason && (
+      {product.approvalStatus === "rejected" && product.rejectionReason && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Product Rejected</AlertTitle>
@@ -316,7 +320,7 @@ export default function EditProductPage() {
             <CardDescription>Essential product details</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name">Product Name *</Label>
                 <Input
@@ -439,16 +443,16 @@ export default function EditProductPage() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="images" className="cursor-pointer">
-                <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
+                <div className="hover:border-primary rounded-lg border-2 border-dashed p-8 text-center transition-colors">
                   {uploading ? (
                     <div className="flex flex-col items-center justify-center">
-                      <Loader2 className="h-8 w-8 mb-2 text-primary animate-spin" />
-                      <p className="font-medium text-primary">Uploading...</p>
+                      <Loader2 className="text-primary mb-2 h-8 w-8 animate-spin" />
+                      <p className="text-primary font-medium">Uploading...</p>
                     </div>
                   ) : (
                     <>
-                      <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
+                      <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
+                      <p className="text-muted-foreground text-sm">
                         Click to upload or drag and drop
                       </p>
                     </>
@@ -467,26 +471,24 @@ export default function EditProductPage() {
             </div>
 
             {formData.images.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 {formData.images.map((image, index) => (
-                  <div key={index} className="relative group">
+                  <div key={index} className="group relative">
                     <img
                       src={image}
                       alt={`Product ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
+                      className="h-32 w-full rounded-lg object-cover"
                     />
                     <Button
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
                       onClick={() => removeImage(index)}
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                    {index === 0 && (
-                      <Badge className="absolute bottom-2 left-2">Main Image</Badge>
-                    )}
+                    {index === 0 && <Badge className="absolute bottom-2 left-2">Main Image</Badge>}
                   </div>
                 ))}
               </div>
@@ -545,14 +547,9 @@ export default function EditProductPage() {
         <div className="flex gap-4">
           <Button type="submit" size="lg" disabled={saving || uploading}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            asChild
-          >
+          <Button type="button" variant="outline" size="lg" asChild>
             <Link href="/vendor/products">Cancel</Link>
           </Button>
         </div>

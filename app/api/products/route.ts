@@ -10,7 +10,9 @@ import { type NextRequest, NextResponse } from "next/server";
 const apiCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 1000 * 60 * 2;
 
-function getCacheKey(params: any) { return JSON.stringify(params); }
+function getCacheKey(params: any) {
+  return JSON.stringify(params);
+}
 
 function getCachedResponse(key: string) {
   const cached = apiCache.get(key);
@@ -32,10 +34,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
-    const origin   = searchParams.get("origin");
-    const exclude  = searchParams.get("exclude");
-    const shopId   = searchParams.get("shopId");
-    const page  = Math.max(1, parseInt(searchParams.get("page")  || "1")  || 1);
+    const origin = searchParams.get("origin");
+    const exclude = searchParams.get("exclude");
+    const shopId = searchParams.get("shopId");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
     const limit = Math.max(1, parseInt(searchParams.get("limit") || "12") || 12);
 
     const cacheKey = getCacheKey({ category, origin, page, limit, exclude, shopId });
@@ -56,9 +58,13 @@ export async function GET(request: NextRequest) {
       // Support both ObjectId and slug
       let categoryDoc = null;
       if (mongoose.Types.ObjectId.isValid(category)) {
-        categoryDoc = await Category.findOne({ _id: category, isActive: true }).select("_id parent");
+        categoryDoc = await Category.findOne({ _id: category, isActive: true }).select(
+          "_id parent"
+        );
       } else {
-        categoryDoc = await Category.findOne({ slug: category, isActive: true }).select("_id parent");
+        categoryDoc = await Category.findOne({ slug: category, isActive: true }).select(
+          "_id parent"
+        );
       }
 
       if (categoryDoc) {
@@ -83,27 +89,29 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Shop filter ──────────────────────────────────────────
-      if (shopId && mongoose.Types.ObjectId.isValid(shopId)) {
-        query.shopId = shopId;
+    if (shopId && mongoose.Types.ObjectId.isValid(shopId)) {
+      query.shopId = shopId;
+    }
+
+    // ── Ids filter (for favourites page) ────────────────────
+    const ids = searchParams.get("ids");
+    if (ids) {
+      const idList = ids
+        .split(",")
+        .filter((i) => mongoose.Types.ObjectId.isValid(i))
+        .map((i) => new mongoose.Types.ObjectId(i));
+
+      if (idList.length === 0) {
+        return withCORS(
+          NextResponse.json({
+            products: [],
+            pagination: { total: 0, page: 1, limit: 0, pages: 0 },
+          })
+        );
       }
 
-      // ── Ids filter (for favourites page) ────────────────────
-      const ids = searchParams.get("ids");
-        if (ids) {
-          const idList = ids
-           .split(",")
-           .filter((i) => mongoose.Types.ObjectId.isValid(i))
-           .map((i) => new mongoose.Types.ObjectId(i));
-
-       if (idList.length === 0) {
-           return withCORS(NextResponse.json({
-             products: [],
-             pagination: { total: 0, page: 1, limit: 0, pages: 0 },
-          }));
-      }
-
-       query._id = { $in: idList };
-      }
+      query._id = { $in: idList };
+    }
 
     // ── Exclude a specific product ───────────────────────────
     if (exclude && mongoose.Types.ObjectId.isValid(exclude)) {
@@ -140,7 +148,10 @@ export async function GET(request: NextRequest) {
     console.error("Products API error:", error);
     return withCORS(
       NextResponse.json(
-        { error: "Failed to fetch products", details: error instanceof Error ? error.message : String(error) },
+        {
+          error: "Failed to fetch products",
+          details: error instanceof Error ? error.message : String(error),
+        },
         { status: 500 }
       )
     );

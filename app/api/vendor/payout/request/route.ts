@@ -8,11 +8,11 @@ import Payout from "@/lib/models/payout";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
-import { sendPushNotificationToVendor } from '@/lib/services/push-notification';
+import { sendPushNotificationToVendor } from "@/lib/services/push-notification";
 import crypto from "crypto";
 
 export async function POST(request: Request) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -48,46 +48,53 @@ export async function POST(request: Request) {
       (bd?.ifscCode?.trim() || bd?.swiftCode?.trim())
     );
     if (!bankReady) {
-      return withCORS(NextResponse.json(
-        {
-          error:
-            "Bank details are incomplete. Please add your bank account information from the Bank Details section before requesting a payout.",
-        },
-        { status: 422 }
-      ));
+      return withCORS(
+        NextResponse.json(
+          {
+            error:
+              "Bank details are incomplete. Please add your bank account information from the Bank Details section before requesting a payout.",
+          },
+          { status: 422 }
+        )
+      );
     }
 
     const wallet = await Wallet.findOne({ shopId: shop._id, type: "VENDOR" });
     if (!wallet) return withCORS(NextResponse.json({ error: "Wallet not found" }, { status: 404 }));
 
     if (wallet.status !== "ACTIVE") {
-      return withCORS(NextResponse.json(
-        { error: `Wallet is ${wallet.status}. Withdrawals are disabled.` },
-        { status: 403 }
-      ));
+      return withCORS(
+        NextResponse.json(
+          { error: `Wallet is ${wallet.status}. Withdrawals are disabled.` },
+          { status: 403 }
+        )
+      );
     }
 
     if (amount < wallet.minimumThreshold) {
-      return withCORS(NextResponse.json(
-        { error: `Minimum withdrawal is ₹${wallet.minimumThreshold}` },
-        { status: 400 }
-      ));
+      return withCORS(
+        NextResponse.json(
+          { error: `Minimum withdrawal is ₹${wallet.minimumThreshold}` },
+          { status: 400 }
+        )
+      );
     }
 
     if (wallet.withdrawableBalance < amount) {
-      return withCORS(NextResponse.json(
-        { error: `Insufficient withdrawable balance. Available: ₹${wallet.withdrawableBalance}` },
-        { status: 400 }
-      ));
+      return withCORS(
+        NextResponse.json(
+          { error: `Insufficient withdrawable balance. Available: ₹${wallet.withdrawableBalance}` },
+          { status: 400 }
+        )
+      );
     }
 
-await sendPushNotificationToVendor(
-  shop._id.toString(),
-  '💰 Payout Request Submitted',
-  `Your request for ₹${amount} has been submitted. It will be processed within 3-5 business days.`,
-  { screen: 'wallet' }
-);
-
+    await sendPushNotificationToVendor(
+      shop._id.toString(),
+      "💰 Payout Request Submitted",
+      `Your request for ₹${amount} has been submitted. It will be processed within 3-5 business days.`,
+      { screen: "wallet" }
+    );
 
     // Check for any pending payout already in flight (prevent double-submit)
     const pendingPayout = await Payout.findOne({
@@ -95,10 +102,12 @@ await sendPushNotificationToVendor(
       status: { $in: ["REQUESTED", "APPROVED", "PROCESSING"] },
     });
     if (pendingPayout) {
-      return withCORS(NextResponse.json(
-        { error: "You already have a payout in progress. Wait for it to complete." },
-        { status: 409 }
-      ));
+      return withCORS(
+        NextResponse.json(
+          { error: "You already have a payout in progress. Wait for it to complete." },
+          { status: 409 }
+        )
+      );
     }
 
     // Generate idempotency key: hash of shopId + amount + day (one request per amount per day max)
@@ -110,11 +119,13 @@ await sendPushNotificationToVendor(
     // Upsert-safe: if same key exists, return existing payout (idempotent)
     const existingPayout = await Payout.findOne({ idempotencyKey });
     if (existingPayout) {
-      return withCORS(NextResponse.json({
-        success: true,
-        payoutId: existingPayout._id,
-        message: "Payout request already submitted (idempotent)",
-      }));
+      return withCORS(
+        NextResponse.json({
+          success: true,
+          payoutId: existingPayout._id,
+          message: "Payout request already submitted (idempotent)",
+        })
+      );
     }
 
     // Create payout record
@@ -132,25 +143,24 @@ await sendPushNotificationToVendor(
       payoutId: payout._id.toString(),
     });
 
-      await sendPushNotificationToVendor(
-  shop._id.toString(),
-  '💰 Payout Request Submitted',
-  `Your request for ₹${amount} has been submitted. It will be processed within 3-5 business days.`,
-  { screen: 'wallet' }
-);
-    
+    await sendPushNotificationToVendor(
+      shop._id.toString(),
+      "💰 Payout Request Submitted",
+      `Your request for ₹${amount} has been submitted. It will be processed within 3-5 business days.`,
+      { screen: "wallet" }
+    );
 
-    return withCORS(NextResponse.json({
-      success: true,
-      payoutId: payout._id,
-      message: "Payout request submitted successfully",
-    }));
-
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        payoutId: payout._id,
+        message: "Payout request submitted successfully",
+      })
+    );
   } catch (error: any) {
     console.error("[Payout Request]", error);
-    return withCORS(NextResponse.json(
-      { error: error.message || "Internal server error" },
-      { status: 500 }
-    ));
+    return withCORS(
+      NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 })
+    );
   }
 }

@@ -5,10 +5,7 @@ import { User } from "@/lib/models/user";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     await connectDB();
@@ -18,26 +15,17 @@ export async function GET(
       .populate("parent", "name slug");
 
     if (!category) {
-      return withCORS(NextResponse.json(
-        { error: "Category not found" },
-        { status: 404 }
-      ));
+      return withCORS(NextResponse.json({ error: "Category not found" }, { status: 404 }));
     }
 
     return withCORS(NextResponse.json(category));
   } catch (error) {
     // console.error("Error fetching category:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to fetch category" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to fetch category" }, { status: 500 }));
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getServerSession();
@@ -52,7 +40,9 @@ export async function PUT(
     const user = await User.findOne({ email: session.user.email });
 
     if (!user || user.role !== "admin") {
-      return withCORS(NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 })
+      );
     }
 
     const body = await request.json();
@@ -72,26 +62,17 @@ export async function PUT(
     );
 
     if (!category) {
-      return withCORS(NextResponse.json(
-        { error: "Category not found" },
-        { status: 404 }
-      ));
+      return withCORS(NextResponse.json({ error: "Category not found" }, { status: 404 }));
     }
 
     return withCORS(NextResponse.json(category));
   } catch (error) {
     // console.error("Error updating category:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to update category" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to update category" }, { status: 500 }));
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const session = await getServerSession();
@@ -106,24 +87,20 @@ export async function DELETE(
     const user = await User.findOne({ email: session.user.email });
 
     if (!user || user.role !== "admin") {
-      return withCORS(NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 }));
+      return withCORS(
+        NextResponse.json({ error: "Access denied. Admin privileges required." }, { status: 403 })
+      );
     }
 
     const category = await Category.findByIdAndDelete(id);
 
     if (!category) {
-      return withCORS(NextResponse.json(
-        { error: "Category not found" },
-        { status: 404 }
-      ));
+      return withCORS(NextResponse.json({ error: "Category not found" }, { status: 404 }));
     }
 
     return withCORS(NextResponse.json({ message: "Category deleted successfully" }));
   } catch (error) {
     // console.error("Error deleting category:", error);
-    return withCORS(NextResponse.json(
-      { error: "Failed to delete category" },
-      { status: 500 }
-    ));
+    return withCORS(NextResponse.json({ error: "Failed to delete category" }, { status: 500 }));
   }
 }

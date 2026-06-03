@@ -1,4 +1,4 @@
- import { connectDB } from "../db";
+import { connectDB } from "../db";
 import { Wallet } from "../models/wallet";
 import { LedgerEntry } from "../models/ledger";
 import mongoose from "mongoose";
@@ -14,13 +14,13 @@ export async function reconcileAllWallets() {
       {
         $group: {
           _id: "$status",
-          total: { $sum: "$amount" }
-        }
-      }
+          total: { $sum: "$amount" },
+        },
+      },
     ]);
 
-    const pendingSum = aggregate.find(a => a._id === 'PENDING')?.total || 0;
-    const clearedSum = aggregate.find(a => a._id === 'CLEARED')?.total || 0;
+    const pendingSum = aggregate.find((a) => a._id === "PENDING")?.total || 0;
+    const clearedSum = aggregate.find((a) => a._id === "CLEARED")?.total || 0;
 
     const issues = [];
     if (wallet.pendingBalance !== pendingSum) {
@@ -34,18 +34,18 @@ export async function reconcileAllWallets() {
       reports.push({
         walletId: wallet._id,
         shopId: wallet.shopId,
-        issues
+        issues,
       });
-      
+
       // Auto-correct cache in reconciliation (optional but safer to log first)
       await Wallet.updateOne(
         { _id: wallet._id },
-        { 
-            $set: { 
-                pendingBalance: pendingSum, 
-                withdrawableBalance: clearedSum,
-                lastReconciledAt: new Date()
-            } 
+        {
+          $set: {
+            pendingBalance: pendingSum,
+            withdrawableBalance: clearedSum,
+            lastReconciledAt: new Date(),
+          },
         }
       );
     }
@@ -56,19 +56,21 @@ export async function reconcileAllWallets() {
 
 // Check Platform Liability
 export async function checkSystemIntegrity() {
-    const totalLiabilities = await Wallet.aggregate([
-        { $match: { type: 'VENDOR' } },
-        { $group: { _id: null, total: { $sum: { $add: ["$pendingBalance", "$withdrawableBalance"] } } } }
-    ]);
+  const totalLiabilities = await Wallet.aggregate([
+    { $match: { type: "VENDOR" } },
+    {
+      $group: { _id: null, total: { $sum: { $add: ["$pendingBalance", "$withdrawableBalance"] } } },
+    },
+  ]);
 
-    const platformRevenue = await Wallet.findOne({ type: 'PLATFORM_REVENUE' });
-    
-    // In a real system, you'd fetch the actual Bank Account balance via API here
-    // const bankBalance = await BankAPI.getBalance();
-    
-    return {
-        vendorLiabilities: totalLiabilities[0]?.total || 0,
-        platformRevenue: platformRevenue?.withdrawableBalance || 0,
-        // integrity: bankBalance >= (vendorLiabilities + platformRevenue)
-    };
+  const platformRevenue = await Wallet.findOne({ type: "PLATFORM_REVENUE" });
+
+  // In a real system, you'd fetch the actual Bank Account balance via API here
+  // const bankBalance = await BankAPI.getBalance();
+
+  return {
+    vendorLiabilities: totalLiabilities[0]?.total || 0,
+    platformRevenue: platformRevenue?.withdrawableBalance || 0,
+    // integrity: bankBalance >= (vendorLiabilities + platformRevenue)
+  };
 }

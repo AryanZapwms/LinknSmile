@@ -12,7 +12,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 
 export async function POST() {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -44,14 +44,22 @@ export async function POST() {
         shopId: shop._id,
         reason: "Vendor exit with no wallet found",
       });
-      return withCORS(NextResponse.json({ success: true, message: "Account closed successfully." }));
+      return withCORS(
+        NextResponse.json({ success: true, message: "Account closed successfully." })
+      );
     }
 
     // 1. Block exit if wallet is FROZEN (active dispute)
     if (wallet.status === "FROZEN") {
-      return withCORS(NextResponse.json({
-        error: "Your wallet is currently frozen due to an active dispute or review. Please contact support.",
-      }, { status: 400 }));
+      return withCORS(
+        NextResponse.json(
+          {
+            error:
+              "Your wallet is currently frozen due to an active dispute or review. Please contact support.",
+          },
+          { status: 400 }
+        )
+      );
     }
 
     // 2. Block exit if there are PENDING ledger entries (undelivered orders)
@@ -62,10 +70,16 @@ export async function POST() {
     });
 
     if (pendingCount > 0) {
-      return withCORS(NextResponse.json({
-        error: `Cannot exit yet. You have ${pendingCount} pending order(s) not yet cleared. ` +
-          `Please wait for them to be delivered and cleared (T+7 days from delivery).`,
-      }, { status: 400 }));
+      return withCORS(
+        NextResponse.json(
+          {
+            error:
+              `Cannot exit yet. You have ${pendingCount} pending order(s) not yet cleared. ` +
+              `Please wait for them to be delivered and cleared (T+7 days from delivery).`,
+          },
+          { status: 400 }
+        )
+      );
     }
 
     // 3. Block if there's an in-flight payout
@@ -74,9 +88,14 @@ export async function POST() {
       status: { $in: ["REQUESTED", "APPROVED", "PROCESSING"] },
     });
     if (inFlightPayout) {
-      return withCORS(NextResponse.json({
-        error: `Cannot exit while a payout request (₹${inFlightPayout.amount}) is being processed. Please wait for it to complete.`,
-      }, { status: 400 }));
+      return withCORS(
+        NextResponse.json(
+          {
+            error: `Cannot exit while a payout request (₹${inFlightPayout.amount}) is being processed. Please wait for it to complete.`,
+          },
+          { status: 400 }
+        )
+      );
     }
 
     // 4. If there's a withdrawable balance, create final settlement payout
@@ -84,9 +103,14 @@ export async function POST() {
 
     if (settleableAmount > 0) {
       if (!shop.bankDetails?.accountNumber) {
-        return withCORS(NextResponse.json({
-          error: `You have ₹${settleableAmount} remaining balance. Please add bank account details in Settings so we can process your final settlement.`,
-        }, { status: 400 }));
+        return withCORS(
+          NextResponse.json(
+            {
+              error: `You have ₹${settleableAmount} remaining balance. Please add bank account details in Settings so we can process your final settlement.`,
+            },
+            { status: 400 }
+          )
+        );
       }
 
       // Override minimum threshold for exit settlement
@@ -136,14 +160,19 @@ export async function POST() {
       reason: "Vendor voluntarily exited the platform",
     });
 
-    return withCORS(NextResponse.json({
-      success: true,
-      message: settleableAmount > 0
-        ? `Your account has been closed. Final settlement of ₹${settleableAmount.toFixed(2)} will be processed to your bank account within 3-5 business days.`
-        : "Your account has been closed successfully.",
-    }));
+    return withCORS(
+      NextResponse.json({
+        success: true,
+        message:
+          settleableAmount > 0
+            ? `Your account has been closed. Final settlement of ₹${settleableAmount.toFixed(2)} will be processed to your bank account within 3-5 business days.`
+            : "Your account has been closed successfully.",
+      })
+    );
   } catch (error: any) {
     console.error("Vendor exit error:", error);
-    return withCORS(NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 }));
+    return withCORS(
+      NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 })
+    );
   }
 }

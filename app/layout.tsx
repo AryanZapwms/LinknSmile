@@ -1,27 +1,26 @@
 // app/layout.tsx
-import type React from "react"
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
-import { AuthSessionProvider } from "@/components/auth/session-provider"
-import { Header } from "@/components/header"
-import { PromoBar } from "@/components/promo-bar"
-import { CartSync } from "@/components/cart-sync"
-import { Toaster } from "@/components/ui/toaster"
-import FavouritesLoader from "@/components/FavouritesLoader"
-import Footer from "@/components/footer"
-import GTMScripts from "@/components/gtm-scripts"
-import "./globals.css"
+import type React from "react";
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { AuthSessionProvider } from "@/components/auth/session-provider";
+import { Header } from "@/components/header";
+import { PromoBar } from "@/components/promo-bar";
+import { CartSync } from "@/components/cart-sync";
+import { Toaster } from "@/components/ui/toaster";
+import FavouritesLoader from "@/components/FavouritesLoader";
+import Footer from "@/components/footer";
+import GTMScripts from "@/components/gtm-scripts";
+import "./globals.css";
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const _geist = Geist({ subsets: ["latin"] });
+const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
-  if (process.env.NODE_ENV === "production") return "https://linknsmile.com"
-  return `http://localhost:${process.env.PORT || 3004}`
-}
-
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.NODE_ENV === "production") return "https://linknsmile.com";
+  return `http://localhost:${process.env.PORT || 3004}`;
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
@@ -29,13 +28,9 @@ export const metadata: Metadata = {
   description:
     "Discover premium skincare solutions from LinkAndSmile. Professional-grade products for your skin.",
   alternates: { canonical: "https://linknsmile.com" },
-}
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${_geist.className} ${_geistMono.className}`}>
       <head>
@@ -72,5 +67,5 @@ export default function RootLayout({
         <Analytics />
       </body>
     </html>
-  )
+  );
 }

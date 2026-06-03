@@ -29,10 +29,10 @@ export function CartIcon() {
       onClick={() => router.push("/cart")}
       aria-label="Open cart"
     >
-      <ShoppingCart className="w-5 h-5" />
+      <ShoppingCart className="h-5 w-5" />
       {showBadge && (
         <span
-          className="absolute -top-2 -right-2 bg-destructive text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+          className="bg-destructive absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white"
           aria-live="polite"
         >
           {totalItems}

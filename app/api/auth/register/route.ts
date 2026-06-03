@@ -10,7 +10,7 @@ import { sendOtpEmail } from "@/lib/EmailOtp";
 import { generateNumericOtp, hashOtp } from "@/lib/otp";
 
 export async function POST(request: NextRequest) {
-  if (request.method === 'OPTIONS') {
+  if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }
 
@@ -53,13 +53,15 @@ export async function POST(request: NextRequest) {
 
     await sendOtpEmail(normalizedEmail, validation.data.name.trim(), otpPlain);
 
-    return withCORS(NextResponse.json(
-      {
-        message: "OTP sent to email.",
-        email: normalizedEmail,
-      },
-      { status: 201 },
-    ));
+    return withCORS(
+      NextResponse.json(
+        {
+          message: "OTP sent to email.",
+          email: normalizedEmail,
+        },
+        { status: 201 }
+      )
+    );
   } catch (error) {
     // console.error("Registration error:", error);
     return withCORS(NextResponse.json({ error: "Internal server error" }, { status: 500 }));

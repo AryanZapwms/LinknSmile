@@ -1,29 +1,29 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  DollarSign, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  History, 
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DollarSign,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  History,
   ArrowRight,
   Wallet,
   Building2,
-  Info
-} from 'lucide-react';
-import { toast } from 'sonner';
-import Link from 'next/link';
+  Info,
+} from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
 
 interface PayoutRequest {
   _id: string;
   amount: number;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: "pending" | "processing" | "completed" | "failed";
   requestDate: string;
   processedDate?: string;
   transactionId?: string;
@@ -40,13 +40,12 @@ interface PayoutStats {
 }
 
 // Formats a number as an Indian rupee string, defaulting to 0 if undefined/null
-const formatINR = (value: number | undefined | null) =>
-  `₹${(value ?? 0).toLocaleString('en-IN')}`;
+const formatINR = (value: number | undefined | null) => `₹${(value ?? 0).toLocaleString("en-IN")}`;
 
 export default function VendorPayoutsPage() {
   const [data, setData] = useState<PayoutStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [requestAmount, setRequestAmount] = useState<string>('');
+  const [requestAmount, setRequestAmount] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -55,15 +54,15 @@ export default function VendorPayoutsPage() {
 
   const fetchPayouts = async () => {
     try {
-      const res = await fetch('/api/vendor/payouts');
+      const res = await fetch("/api/vendor/payouts");
       const json = await res.json();
       if (json.success) {
         setData(json);
       } else {
-        toast.error(json.message || 'Failed to fetch payouts');
+        toast.error(json.message || "Failed to fetch payouts");
       }
     } catch (error) {
-      toast.error('Something went wrong');
+      toast.error("Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -74,33 +73,33 @@ export default function VendorPayoutsPage() {
     const amount = parseFloat(requestAmount);
 
     if (isNaN(amount) || amount < 500) {
-      toast.error('Minimum withdrawal amount is ₹500');
+      toast.error("Minimum withdrawal amount is ₹500");
       return;
     }
 
     if (amount > (data?.availableBalance || 0)) {
-      toast.error('Amount exceeds available balance');
+      toast.error("Amount exceeds available balance");
       return;
     }
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/vendor/payouts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/vendor/payouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount }),
       });
       const json = await res.json();
 
       if (json.success) {
-        toast.success('Payout request submitted successfully!');
-        setRequestAmount('');
+        toast.success("Payout request submitted successfully!");
+        setRequestAmount("");
         fetchPayouts();
       } else {
-        toast.error(json.message || 'Failed to submit request');
+        toast.error(json.message || "Failed to submit request");
       }
     } catch (error) {
-      toast.error('Failed to submit request');
+      toast.error("Failed to submit request");
     } finally {
       setSubmitting(false);
     }
@@ -108,113 +107,132 @@ export default function VendorPayoutsPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending': return <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">Pending</Badge>;
-      case 'processing': return <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">Processing</Badge>;
-      case 'completed': return <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">Completed</Badge>;
-      case 'failed': return <Badge variant="destructive">Failed</Badge>;
-      default: return <Badge variant="secondary">{status}</Badge>;
+      case "pending":
+        return (
+          <Badge variant="outline" className="border-yellow-200 bg-yellow-100 text-yellow-700">
+            Pending
+          </Badge>
+        );
+      case "processing":
+        return (
+          <Badge variant="outline" className="border-blue-200 bg-blue-100 text-blue-700">
+            Processing
+          </Badge>
+        );
+      case "completed":
+        return (
+          <Badge variant="outline" className="border-green-200 bg-green-100 text-green-700">
+            Completed
+          </Badge>
+        );
+      case "failed":
+        return <Badge variant="destructive">Failed</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-48" />
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32 w-full" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 w-full" />
+          ))}
         </div>
         <div className="grid gap-6 lg:grid-cols-3">
-          <Skeleton className="lg:col-span-1 h-[400px]" />
-          <Skeleton className="lg:col-span-2 h-[400px]" />
+          <Skeleton className="h-[400px] lg:col-span-1" />
+          <Skeleton className="h-[400px] lg:col-span-2" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="mx-auto max-w-7xl space-y-6">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Earnings & Payouts</h1>
-        <p className="text-muted-foreground">Manage your withdrawals and track your shop performance.</p>
+        <p className="text-muted-foreground">
+          Manage your withdrawals and track your shop performance.
+        </p>
       </div>
 
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-primary/5 border-primary/10">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <Wallet className="text-primary h-4 w-4" />
               Available Balance
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatINR(data?.availableBalance)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Ready to withdraw</p>
+            <p className="text-muted-foreground mt-1 text-xs">Ready to withdraw</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <DollarSign className="h-4 w-4 text-green-600" />
               Total Earnings
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatINR(data?.totalEarnings)}</div>
-            <p className="text-xs text-muted-foreground mt-1">All-time revenue</p>
+            <p className="text-muted-foreground mt-1 text-xs">All-time revenue</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Clock className="h-4 w-4 text-yellow-600" />
               Pending Payouts
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatINR(data?.pendingPayouts)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Under processing</p>
+            <p className="text-muted-foreground mt-1 text-xs">Under processing</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <CheckCircle2 className="h-4 w-4 text-blue-600" />
               Total Withdrawn
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatINR(data?.releasedPayouts)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Successfully paid</p>
+            <p className="text-muted-foreground mt-1 text-xs">Successfully paid</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Request Payout Form */}
-        <Card className="lg:col-span-1 shadow-sm border-muted-foreground/10">
+        <Card className="border-muted-foreground/10 shadow-sm lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ArrowRight className="h-5 w-5 text-primary" />
+              <ArrowRight className="text-primary h-5 w-5" />
               Request Withdrawal
             </CardTitle>
-            <CardDescription>
-              Submit a request to withdraw your earnings.
-            </CardDescription>
+            <CardDescription>Submit a request to withdraw your earnings.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRequestPayout} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Amount to Withdraw</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-muted-foreground">₹</span>
-                  <Input 
-                    placeholder="Min. 500" 
+                  <span className="text-muted-foreground absolute top-2.5 left-3">₹</span>
+                  <Input
+                    placeholder="Min. 500"
                     className="pl-7"
                     type="number"
                     min="500"
@@ -224,12 +242,10 @@ export default function VendorPayoutsPage() {
                     required
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Minimum withdrawal amount is ₹500
-                </p>
+                <p className="text-muted-foreground text-xs">Minimum withdrawal amount is ₹500</p>
               </div>
 
-              <div className="p-4 rounded-lg bg-muted/50 border space-y-3">
+              <div className="bg-muted/50 space-y-3 rounded-lg border p-4">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground flex items-center gap-1">
                     <Building2 className="h-3 w-3" />
@@ -239,23 +255,23 @@ export default function VendorPayoutsPage() {
                     Edit Settings
                   </Link>
                 </div>
-                <div className="text-xs text-muted-foreground italic">
+                <div className="text-muted-foreground text-xs italic">
                   Payouts will be sent to the bank account linked in your shop settings.
                 </div>
               </div>
 
-              <Button 
-                className="w-full" 
-                size="lg" 
+              <Button
+                className="w-full"
+                size="lg"
                 disabled={submitting || (data?.availableBalance || 0) < 500}
                 type="submit"
               >
-                {submitting ? 'Submitting...' : 'Request Payout'}
+                {submitting ? "Submitting..." : "Request Payout"}
               </Button>
 
               {(data?.availableBalance || 0) < 500 && (
-                <div className="bg-yellow-50 border border-yellow-100 rounded-md p-3 flex gap-2">
-                  <AlertCircle className="h-4 w-4 text-yellow-600 shrink-0" />
+                <div className="flex gap-2 rounded-md border border-yellow-100 bg-yellow-50 p-3">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-yellow-600" />
                   <p className="text-xs text-yellow-700">
                     You need at least ₹500 available balance to request a payout.
                   </p>
@@ -266,11 +282,11 @@ export default function VendorPayoutsPage() {
         </Card>
 
         {/* Payout History */}
-        <Card className="lg:col-span-2 shadow-sm border-muted-foreground/10">
+        <Card className="border-muted-foreground/10 shadow-sm lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="flex items-center gap-2">
-                <History className="h-5 w-5 text-primary" />
+                <History className="text-primary h-5 w-5" />
                 Payout History
               </CardTitle>
               <CardDescription>
@@ -282,7 +298,7 @@ export default function VendorPayoutsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-muted-foreground">
+                  <tr className="text-muted-foreground border-b text-left">
                     <th className="pb-3 font-medium">Request Date</th>
                     <th className="pb-3 font-medium">Amount</th>
                     <th className="pb-3 font-medium">Status</th>
@@ -292,7 +308,7 @@ export default function VendorPayoutsPage() {
                 <tbody className="divide-y">
                   {data?.payouts.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-10 text-center text-muted-foreground">
+                      <td colSpan={4} className="text-muted-foreground py-10 text-center">
                         No payout history found.
                       </td>
                     </tr>
@@ -301,18 +317,22 @@ export default function VendorPayoutsPage() {
                       <tr key={payout._id} className="hover:bg-muted/50 transition-colors">
                         <td className="py-4">
                           {new Date(payout.requestDate).toLocaleDateString(undefined, {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
                           })}
                         </td>
                         <td className="py-4 font-medium">{formatINR(payout.amount)}</td>
                         <td className="py-4">{getStatusBadge(payout.status)}</td>
                         <td className="py-4">
                           {payout.transactionId ? (
-                            <code className="text-xs bg-muted p-1 rounded font-mono">{payout.transactionId}</code>
+                            <code className="bg-muted rounded p-1 font-mono text-xs">
+                              {payout.transactionId}
+                            </code>
                           ) : (
-                            <span className="text-muted-foreground text-xs italic">Pending processing</span>
+                            <span className="text-muted-foreground text-xs italic">
+                              Pending processing
+                            </span>
                           )}
                         </td>
                       </tr>
@@ -321,14 +341,14 @@ export default function VendorPayoutsPage() {
                 </tbody>
               </table>
             </div>
-            
-            <div className="mt-6 p-4 rounded-lg bg-blue-50/50 border border-blue-100 flex gap-3">
-              <Info className="h-5 w-5 text-blue-500 shrink-0" />
+
+            <div className="mt-6 flex gap-3 rounded-lg border border-blue-100 bg-blue-50/50 p-4">
+              <Info className="h-5 w-5 shrink-0 text-blue-500" />
               <div className="space-y-1">
                 <p className="text-sm font-medium text-blue-900">Important Note</p>
-                <p className="text-xs text-blue-700 leading-relaxed">
-                  Payouts are usually processed within 3-5 business days after approval. 
-                  If you have any issues with your payment, please contact support with the Transaction ID.
+                <p className="text-xs leading-relaxed text-blue-700">
+                  Payouts are usually processed within 3-5 business days after approval. If you have
+                  any issues with your payment, please contact support with the Transaction ID.
                 </p>
               </div>
             </div>

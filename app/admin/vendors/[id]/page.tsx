@@ -1,142 +1,147 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { useSession } from "next-auth/react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
-import { CheckCircle, XCircle, Store, DollarSign, Package, ShoppingBag, CreditCard, Building2, Globe, ShieldCheck } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import {
+  CheckCircle,
+  XCircle,
+  Store,
+  DollarSign,
+  Package,
+  ShoppingBag,
+  CreditCard,
+  Building2,
+  Globe,
+  ShieldCheck,
+} from "lucide-react";
 
 export default function VendorDetailsPage() {
-  const params = useParams()
-  const id = params?.id as string
-  const router = useRouter()
-  const { data: session, status } = useSession()
-  const { toast } = useToast()
+  const params = useParams();
+  const id = params?.id as string;
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const { toast } = useToast();
 
-  const [vendor, setVendor] = useState<any>(null)
-  const [products, setProducts] = useState<any[]>([])
-  const [orders, setOrders] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [commission, setCommission] = useState("10")
-  const [updating, setUpdating] = useState(false)
+  const [vendor, setVendor] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [commission, setCommission] = useState("10");
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
-    if (status === "loading") return
+    if (status === "loading") return;
 
     if (status === "unauthenticated") {
-      router.replace("/auth/login")
-      return
+      router.replace("/auth/login");
+      return;
     }
 
     if (id) {
-      fetchVendorDetails()
+      fetchVendorDetails();
     }
-  }, [id, status])
+  }, [id, status]);
 
   const fetchVendorDetails = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
 
-      const res = await fetch(`/api/admin/vendors/${id}`)
-      if (!res.ok) throw new Error("Failed to fetch vendor")
+      const res = await fetch(`/api/admin/vendors/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch vendor");
 
-      const data = await res.json()
-      console.log("Vendor API response:", data)
-
+      const data = await res.json();
+      console.log("Vendor API response:", data);
 
       // ✅ SAFE STATE ASSIGNMENTS
-      setVendor(data?.shop ?? null)
-      setProducts(Array.isArray(data?.products) ? data.products : [])
-      setOrders(Array.isArray(data?.orders) ? data.orders : [])
-      setCommission(data?.shop?.commissionRate?.toString() ?? "10")
+      setVendor(data?.shop ?? null);
+      setProducts(Array.isArray(data?.products) ? data.products : []);
+      setOrders(Array.isArray(data?.orders) ? data.orders : []);
+      setCommission(data?.shop?.commissionRate?.toString() ?? "10");
     } catch (error) {
-      console.error("Error:", error)
+      console.error("Error:", error);
       toast({
         title: "Error",
         description: "Could not load vendor details",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const updateCommission = async () => {
-    setUpdating(true)
+    setUpdating(true);
     try {
       const res = await fetch(`/api/admin/vendors/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ commissionRate: Number(commission) }),
-      })
+      });
 
-      if (!res.ok) throw new Error("Update failed")
+      if (!res.ok) throw new Error("Update failed");
 
-      toast({ title: "Success", description: "Commission rate updated" })
-      await fetchVendorDetails()
+      toast({ title: "Success", description: "Commission rate updated" });
+      await fetchVendorDetails();
     } catch (error) {
       toast({
         title: "Error",
         description: "Update failed",
         variant: "destructive",
-      })
+      });
     } finally {
-      setUpdating(false)
+      setUpdating(false);
     }
-  }
+  };
 
   const toggleStatus = async (action: "approve" | "deactivate" | "activate") => {
     try {
       const body =
         action === "approve"
           ? { isApproved: true, isActive: true }
-          : { isActive: action === "activate" }
+          : { isActive: action === "activate" };
 
       const res = await fetch(`/api/admin/vendors/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-      })
+      });
 
-      if (!res.ok) throw new Error("Status update failed")
+      if (!res.ok) throw new Error("Status update failed");
 
       toast({
         title: "Success",
         description: `Vendor ${action}d successfully`,
-      })
+      });
 
-      await fetchVendorDetails()
+      await fetchVendorDetails();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to update status",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   if (loading)
-    return (
-      <div className="p-8 text-center text-muted-foreground">
-        Loading vendor details...
-      </div>
-    )
+    return <div className="text-muted-foreground p-8 text-center">Loading vendor details...</div>;
 
-  if (!vendor)
-    return <div className="p-8 text-center">Vendor not found</div>
+  if (!vendor) return <div className="p-8 text-center">Vendor not found</div>;
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto space-y-8 py-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Store className="w-8 h-8 text-purple-600" />
+          <h1 className="flex items-center gap-2 text-3xl font-bold">
+            <Store className="h-8 w-8 text-purple-600" />
             {vendor?.shopName}
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -150,17 +155,14 @@ export default function VendorDetailsPage() {
               className="bg-green-600 hover:bg-green-700"
               onClick={() => toggleStatus("approve")}
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
+              <CheckCircle className="mr-2 h-4 w-4" />
               Approve Store
             </Button>
           )}
 
           {vendor?.isActive ? (
-            <Button
-              variant="destructive"
-              onClick={() => toggleStatus("deactivate")}
-            >
-              <XCircle className="w-4 h-4 mr-2" />
+            <Button variant="destructive" onClick={() => toggleStatus("deactivate")}>
+              <XCircle className="mr-2 h-4 w-4" />
               Deactivate Store
             </Button>
           ) : (
@@ -169,7 +171,7 @@ export default function VendorDetailsPage() {
               className="border-green-600 text-green-600 hover:bg-green-50"
               onClick={() => toggleStatus("activate")}
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
+              <CheckCircle className="mr-2 h-4 w-4" />
               Activate Store
             </Button>
           )}
@@ -177,13 +179,13 @@ export default function VendorDetailsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               Total Revenue
             </CardTitle>
-            <DollarSign className="w-4 h-4 text-purple-600" />
+            <DollarSign className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -194,30 +196,24 @@ export default function VendorDetailsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               Total Orders
             </CardTitle>
-            <ShoppingBag className="w-4 h-4 text-purple-600" />
+            <ShoppingBag className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {vendor?.stats?.totalOrders ?? 0}
-            </div>
+            <div className="text-2xl font-bold">{vendor?.stats?.totalOrders ?? 0}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Products
-            </CardTitle>
-            <Package className="w-4 h-4 text-purple-600" />
+            <CardTitle className="text-muted-foreground text-sm font-medium">Products</CardTitle>
+            <Package className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             {/* ✅ SAFE LENGTH */}
-            <div className="text-2xl font-bold">
-              {products?.length ?? 0}
-            </div>
+            <div className="text-2xl font-bold">{products?.length ?? 0}</div>
           </CardContent>
         </Card>
       </div>
@@ -236,9 +232,9 @@ export default function VendorDetailsPage() {
             <CardHeader>
               <CardTitle>Business Details</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <h3 className="font-semibold mb-2">Address</h3>
+                <h3 className="mb-2 font-semibold">Address</h3>
                 <p className="text-sm text-gray-600">
                   {vendor?.address?.street}, {vendor?.address?.city}
                   <br />
@@ -246,7 +242,7 @@ export default function VendorDetailsPage() {
                 </p>
               </div>
               <div>
-                <h3 className="font-semibold mb-2">Contact</h3>
+                <h3 className="mb-2 font-semibold">Contact</h3>
                 <p className="text-sm text-gray-600">
                   Phone: {vendor?.contactInfo?.phone}
                   <br />
@@ -282,9 +278,7 @@ export default function VendorDetailsPage() {
                           <td className="py-2">₹{p.price}</td>
                           <td className="py-2">{p.stock}</td>
                           <td className="py-2">
-                            <Badge
-                              variant={p.isActive ? "default" : "secondary"}
-                            >
+                            <Badge variant={p.isActive ? "default" : "secondary"}>
                               {p.isActive ? "Active" : "Inactive"}
                             </Badge>
                           </td>
@@ -303,10 +297,7 @@ export default function VendorDetailsPage() {
                       ))
                     ) : (
                       <tr>
-                        <td
-                          colSpan={5}
-                          className="py-4 text-center text-muted-foreground"
-                        >
+                        <td colSpan={5} className="text-muted-foreground py-4 text-center">
                           No products found
                         </td>
                       </tr>
@@ -322,12 +313,12 @@ export default function VendorDetailsPage() {
         <TabsContent value="bank" className="space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center gap-3 pb-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <CreditCard className="w-5 h-5 text-blue-600" />
+              <div className="rounded-lg bg-blue-50 p-2">
+                <CreditCard className="h-5 w-5 text-blue-600" />
               </div>
               <div>
                 <CardTitle>Payout Bank Account</CardTitle>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <p className="text-muted-foreground mt-0.5 text-sm">
                   Sensitive — only visible to admin.
                 </p>
               </div>
@@ -337,66 +328,78 @@ export default function VendorDetailsPage() {
                 <div className="grid gap-6 md:grid-cols-2">
                   {/* Account Holder */}
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Account Holder Name</p>
-                    <p className="font-semibold text-base">{vendor.bankDetails.accountHolderName || '—'}</p>
+                    <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                      Account Holder Name
+                    </p>
+                    <p className="text-base font-semibold">
+                      {vendor.bankDetails.accountHolderName || "—"}
+                    </p>
                   </div>
 
                   {/* Bank Name */}
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                    <p className="text-muted-foreground flex items-center gap-1 text-xs font-medium tracking-wide uppercase">
                       <Building2 className="h-3 w-3" /> Bank Name
                     </p>
-                    <p className="font-semibold text-base">{vendor.bankDetails.bankName || '—'}</p>
+                    <p className="text-base font-semibold">{vendor.bankDetails.bankName || "—"}</p>
                   </div>
 
                   {/* Account Number — masked */}
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                    <p className="text-muted-foreground flex items-center gap-1 text-xs font-medium tracking-wide uppercase">
                       <CreditCard className="h-3 w-3" /> Account Number
                     </p>
-                    <p className="font-mono font-semibold text-base tracking-widest">
+                    <p className="font-mono text-base font-semibold tracking-widest">
                       {vendor.bankDetails.accountNumber
-                        ? '•'.repeat(Math.max(0, vendor.bankDetails.accountNumber.length - 4)) +
+                        ? "•".repeat(Math.max(0, vendor.bankDetails.accountNumber.length - 4)) +
                           vendor.bankDetails.accountNumber.slice(-4)
-                        : '—'}
+                        : "—"}
                     </p>
                   </div>
 
                   {/* IFSC */}
                   <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">IFSC Code</p>
-                    <p className="font-mono font-semibold text-base tracking-wider">{vendor.bankDetails.ifscCode || '—'}</p>
+                    <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                      IFSC Code
+                    </p>
+                    <p className="font-mono text-base font-semibold tracking-wider">
+                      {vendor.bankDetails.ifscCode || "—"}
+                    </p>
                   </div>
 
                   {/* SWIFT */}
                   {vendor.bankDetails.swiftCode && (
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      <p className="text-muted-foreground flex items-center gap-1 text-xs font-medium tracking-wide uppercase">
                         <Globe className="h-3 w-3" /> SWIFT / BIC Code
                       </p>
-                      <p className="font-mono font-semibold text-base tracking-wider">{vendor.bankDetails.swiftCode}</p>
+                      <p className="font-mono text-base font-semibold tracking-wider">
+                        {vendor.bankDetails.swiftCode}
+                      </p>
                     </div>
                   )}
 
                   {/* UPI */}
                   {vendor.bankDetails.upiId && (
                     <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">UPI ID</p>
-                      <p className="font-semibold text-base">{vendor.bankDetails.upiId}</p>
+                      <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                        UPI ID
+                      </p>
+                      <p className="text-base font-semibold">{vendor.bankDetails.upiId}</p>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
-                  <div className="p-3 bg-gray-100 rounded-full">
-                    <CreditCard className="w-7 h-7 text-gray-400" />
+                <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+                  <div className="rounded-full bg-gray-100 p-3">
+                    <CreditCard className="h-7 w-7 text-gray-400" />
                   </div>
-                  <p className="font-medium text-muted-foreground">No bank details on file</p>
-                  <p className="text-sm text-muted-foreground max-w-xs">
+                  <p className="text-muted-foreground font-medium">No bank details on file</p>
+                  <p className="text-muted-foreground max-w-xs text-sm">
                     This vendor has not added their bank account information yet. Payouts cannot be
                     processed until this is complete.
                   </p>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-full">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs font-medium text-orange-600">
                     ⚠ Vendor must add bank details before payout
                   </span>
                 </div>
@@ -405,9 +408,9 @@ export default function VendorDetailsPage() {
           </Card>
 
           {/* Security note for admin */}
-          <div className="flex gap-2.5 items-start p-4 bg-blue-50 border border-blue-100 rounded-xl">
-            <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-700 leading-relaxed">
+          <div className="flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50 p-4">
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
+            <p className="text-xs leading-relaxed text-blue-700">
               <strong>Admin Only:</strong> This bank information is encrypted and stored securely.
               Account numbers are shown partially masked. Only use this data for legitimate payout
               operations and dispute resolution. Do not share or copy these details.
@@ -421,12 +424,9 @@ export default function VendorDetailsPage() {
               <CardTitle>Commission Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-end gap-4 max-w-sm">
-                <div className="grid gap-2 w-full">
-                  <label
-                    htmlFor="commission"
-                    className="text-sm font-medium"
-                  >
+              <div className="flex max-w-sm items-end gap-4">
+                <div className="grid w-full gap-2">
+                  <label htmlFor="commission" className="text-sm font-medium">
                     Platform Commission (%)
                   </label>
                   <Input
@@ -442,7 +442,7 @@ export default function VendorDetailsPage() {
                   {updating ? "Saving..." : "Save"}
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-muted-foreground mt-2 text-sm">
                 This percentage will be deducted from each sale made by this vendor.
               </p>
             </CardContent>
@@ -450,5 +450,5 @@ export default function VendorDetailsPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
