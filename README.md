@@ -1,330 +1,589 @@
-<!-- README.md -->
-<p align="center">
-  <img src="./public/companylogo.jpg" alt="Instapeels logo" width="220" />
-</p>
+# LinknSmile — Complete Project Documentation
 
-<h1 align="center">Instapeels.com</h1>
-
-<p align="center"><strong>Multi-brand skincare commerce platform with a production-ready storefront, checkout engine, and admin suite.</strong></p>
-
-<p align="center">
-  <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-15-black?style=flat&logo=nextdotjs" alt="Next.js" /></a>
-  <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=000" alt="React" /></a>
-  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=fff" alt="TypeScript" /></a>
-  <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/TailwindCSS-4-38BDF8?style=flat&logo=tailwindcss&logoColor=fff" alt="TailwindCSS" /></a>
-  <a href="https://mongoosejs.com"><img src="https://img.shields.io/badge/Mongoose-ODM-AA2929?style=flat&logo=mongoose" alt="Mongoose" /></a>
-</p>
+> A multi-vendor e-commerce platform for handcrafted & local Indian products.  
+> Built with Next.js 15, MongoDB, NextAuth, Razorpay, and Tailwind CSS.
 
 ---
 
-# Table of Contents
+## Table of Contents
 
-1. [Overview](#overview)
-2. [Key Product Pillars](#key-product-pillars)
-3. [Tech Stack](#tech-stack)
-4. [Solution Architecture](#solution-architecture)
-5. [Major Application Areas](#major-application-areas)
-6. [Project Structure](#project-structure)
-7. [Environment Configuration](#environment-configuration)
-8. [Getting Started](#getting-started)
-9. [Available Scripts](#available-scripts)
-10. [Business Flows](#business-flows)
-11. [Integrations & 3rd-Party Services](#integrations--3rd-party-services)
-12. [Security & Compliance](#security--compliance)
-13. [Performance & Observability](#performance--observability)
-14. [Deployment Guide](#deployment-guide)
-15. [Maintenance & Ops](#maintenance--ops)
-16. [Additional Documentation](#additional-documentation)
-17. [Contribution Guidelines](#contribution-guidelines)
-18. [Acknowledgements](#acknowledgements)
+1. [Project Overview](#1-project-overview)
+2. [Tech Stack](#2-tech-stack)
+3. [Project Structure](#3-project-structure)
+4. [Environment Variables](#4-environment-variables)
+5. [Getting Started](#5-getting-started)
+6. [Authentication Flow](#6-authentication-flow)
+7. [API Reference](#7-api-reference)
+8. [Database Models](#8-database-models)
+9. [Admin Panel](#9-admin-panel)
+10. [Payment Integration](#10-payment-integration)
+11. [Email System](#11-email-system)
+12. [Deployment Guide](#12-deployment-guide)
+13. [Known Issues & Fixes](#13-known-issues--fixes)
+14. [Security Checklist](#14-security-checklist)
 
 ---
 
-# Overview
+## 1. Project Overview
 
-Instapeels2 is a full-stack e-commerce platform focused on premium skincare brands. It ships as a production-ready Next.js App Router project that combines a customer-facing storefront, a checkout system powered by Razorpay & Cash-on-Delivery, and a feature-rich admin workspace with analytics, catalog management, and marketing tooling.
+LinknSmile is a full-stack multi-vendor marketplace where local Indian sellers can list and sell products. It includes:
 
-The application is built for scalability, with serverless-friendly API routes, MongoDB persistence, distributed caching hooks, marketing pixels, and robust transactional email capabilities.
+- A customer-facing storefront with product discovery, cart, and checkout
+- A vendor portal for sellers to manage their listings
+- A full-featured admin dashboard for platform operations
+- Razorpay-powered payments with Cash on Delivery fallback
+- OTP-based authentication with email notifications
 
----
-
-# Key Product Pillars
-
-- **Multi-brand Storefront**: Curated product listings, concern-based merchandising, blog support, and rich marketing content.
-- **Conversion-Optimized Checkout**: Persistent cart, authenticated flow, Razorpay integration, COD fallback, and analytics tagging.
-- **Admin Operations Suite**: Comprehensive analytics dashboard, catalog CRUD, order fulfillment tooling, promotional management, and user administration.
-- **Lifecycle Messaging**: OTP-based onboarding, post-purchase confirmations, admin alerts, and status update notifications via Gmail SMTP.
-- **Scalable Foundation**: App Router, shadcn/ui design system, optimized images, Vercel Analytics, and structured SEO metadata.
+**Live URL:** https://linknsmile.com  
+**Repository:** https://github.com/AryanZapwms/LinknSmile  
+**Dev Port:** 3004
 
 ---
 
-# Tech Stack
+## 2. Tech Stack
 
-- **Framework**: Next.js 15 (App Router) with React 19 and TypeScript 5.
-- **Styling**: Tailwind CSS 4, shadcn/ui component primitives, Lucide iconography.
-- **State Management**: Zustand (cart persistence), React Query-style caching helpers (`lib/cacheClient`).
-- **Forms & Validation**: React Hook Form, Zod schemas, Radix UI form controls.
-- **Authentication**: NextAuth (credentials provider + JWT sessions), OTP verification flows.
-- **Database**: MongoDB via Mongoose ODM (`lib/db.ts`).
-- **Payments**: Razorpay order creation & verification APIs with signed webhook-style validation, Cash on Delivery pathway.
-- **Email**: Nodemailer Gmail transporter, HTML templates in `lib/email.tsx` & `lib/EmailOtp.ts`.
-- **Analytics**: Google Tag Manager, Google Ads conversion tracking, Facebook Pixel, Vercel Analytics.
-
----
-
-# Solution Architecture
-
-- **App Router**: Segregated routes for public pages (`app/page.tsx`, `app/shop`, `app/blog`), account management (`app/profile`), and admin modules (`app/admin`).
-- **API Layer**: `/app/api/**` exposes RESTful endpoints for authentication, catalog, orders, Razorpay integration, uploads, and analytics. Each handler uses `connectDB()` to reuse MongoDB connections across edge invocations.
-- **Middleware**: `middleware.ts` enforces authentication on `/checkout`, `/admin`, and dashboard routes using NextAuth session tokens.
-- **Data Source**: MongoDB collections for products, orders, users, reviews, companies, promos, and analytics aggregates.
-- **Caching Strategy**: Custom `fetchWithCache` & `getCachedSync` utilities allow time-based caching of storefront queries with background refresh.
-- **Email Templates**: JSX-based templates render rich transactional emails dispatched via `lib/email.tsx`.
-- **Front-End Composition**: shadcn/ui components plus custom modules (carousels, shop-by-concern, testimonials) deliver a modern UX optimized for conversion and storytelling.
+| Layer      | Technology                                           |
+| ---------- | ---------------------------------------------------- |
+| Framework  | Next.js 15 (App Router)                              |
+| Language   | TypeScript 5                                         |
+| Styling    | Tailwind CSS 4 + shadcn/ui                           |
+| Database   | MongoDB via Mongoose                                 |
+| Auth       | NextAuth.js (Credentials + JWT)                      |
+| Payments   | Razorpay + Cash on Delivery                          |
+| Email      | Nodemailer (Gmail SMTP)                              |
+| State      | Zustand (cart store)                                 |
+| Images     | Cloudinary                                           |
+| Analytics  | Google Tag Manager, Facebook Pixel, Vercel Analytics |
+| Deployment | Docker / VPS (linknsmile.com)                        |
 
 ---
 
-# Major Application Areas
+## 3. Project Structure
 
-## Storefront
-
-- **Home Experience**: Carousel, concern-based product discovery, featured collections, social proof components.
-- **Catalog**: Dynamic company + category pages at `app/shop/[company]` and `app/shop/[company]/[category]` with filtering, sorting, and pagination support.
-- **Content**: Rich CMS-powered blog (`app/blog`) to boost organic traffic and thought leadership.
-- **Informational Pages**: About Us, Contact, Privacy Policy, Terms of Service, Refund Policy, Orders & Returns.
-
-## Customer Account & Auth
-
-- **Registration**: OTP-verified signup ensuring valid contact information before enabling access.
-- **Login**: Credential-based sign-in with JWT sessions maintained via HTTP-only cookies.
-- **Password Recovery**: OTP-secured reset flows (`/auth/forgot-password`, `/auth/verify-reset-otp`, `/auth/reset-password`).
-- **Profile Area**: Order history, account details, and address management under `app/profile` and nested routes.
-
-Refer to [AuthFlow.md](./AuthFlow.md) for a deep-dive into the authentication lifecycle.
-
-## Checkout & Orders
-
-- **Cart Persistence**: Stored in Zustand + `localStorage` to recover across sessions.
-- **Checkout Screen**: Auth-gated flow with address capture, payment method selection, and real-time validation.
-- **Payment Options**: Razorpay embedded checkout for prepaid transactions, Cash on Delivery for alternate payment preference.
-- **Order Success**: Post-payment confirmation screens under `/order-success/[id]` with order summary.
-
-Refer to [CheckoutFlow.md](./CheckoutFlow.md) for detailed sequence diagrams and endpoint mapping.
-
-## Admin Suite
-
-- **Dashboard**: Extensive analytics (revenue, orders, customer insights, product performance, geographic heatmaps) built atop Recharts.
-- **Catalog Operations**: CRUD for companies, categories, products, promos, blogs, and reviews.
-- **Order Management**: Status updates, payment tracking, stock adjustments.
-- **User Directory**: Insight into customer base and role management.
-- **Setup Wizards**: Guided flows for bootstrapping brands, categories, and initial inventory.
-
----
-
-# Project Structure
-
-```bash
-Instapeels2/
-├─ app/
-│  ├─ page.tsx                # Storefront landing page
-│  ├─ layout.tsx              # Global layout, SEO metadata, tracking pixels
-│  ├─ auth/                   # Login, register, OTP, reset pages
-│  ├─ cart/, checkout/, order-success/  # Customer purchase journey
-│  ├─ profile/                # Account + order history
-│  ├─ admin/                  # Operations dashboard & CRUD modules
-│  └─ api/                    # Server routes (auth, products, orders, razorpay, etc.)
-├─ components/                # Reusable UI primitives & feature components
-├─ hooks/                     # Custom React hooks
-├─ lib/                       # Database, auth, email, cache utilities, stores
-├─ public/                    # Static assets (logo, images, fonts)
-├─ styles/                    # Global styling overrides
-├─ AuthFlow.md                # Authentication system documentation
-├─ CheckoutFlow.md            # Checkout process documentation
-├─ next.config.mjs            # Next.js configuration
-├─ package.json               # npm scripts & dependencies
-└─ tsconfig.json              # TypeScript configuration
+```
+LinknSmile/
+├── app/
+│   ├── page.tsx                  # Homepage / storefront landing
+│   ├── layout.tsx                # Global layout, SEO, tracking pixels
+│   ├── globals.css
+│   ├── auth/
+│   │   ├── login/                # Login page
+│   │   ├── register/             # Registration + OTP
+│   │   ├── forgot-password/      # Password reset - step 1
+│   │   ├── verify-reset-otp/     # Password reset - step 2
+│   │   └── reset-password/       # Password reset - step 3
+│   ├── shop/
+│   │   └── [company]/
+│   │       └── [category]/       # Dynamic product listing pages
+│   ├── product/[id]/             # Product detail page
+│   ├── cart/                     # Cart page
+│   ├── checkout/                 # Checkout (auth-gated)
+│   ├── order-success/[id]/       # Post-payment confirmation
+│   ├── profile/
+│   │   ├── page.tsx              # Account details
+│   │   └── orders/               # Order history
+│   ├── blog/                     # Blog listing + detail pages
+│   ├── admin/
+│   │   ├── page.tsx              # Dashboard with analytics
+│   │   ├── orders/               # Order management
+│   │   ├── products/             # Product CRUD
+│   │   ├── categories/           # Category management
+│   │   ├── users/                # User directory & role management
+│   │   ├── vendors/              # Vendor management
+│   │   ├── finance/              # Finance overview
+│   │   ├── vendor-payouts/       # Payout management
+│   │   ├── payment-settings/     # Payment configuration
+│   │   ├── product-approvals/    # Approve vendor product listings
+│   │   └── promo-bar/            # Manage promotional banner
+│   └── api/
+│       ├── auth/[...nextauth]/   # NextAuth handler
+│       ├── users/                # All users list (admin)
+│       ├── users/[id]/           # Update/delete user
+│       ├── users/profile/        # Current user profile CRUD
+│       ├── products/             # Products API
+│       ├── categories/           # Categories API
+│       ├── orders/               # Orders API
+│       ├── razorpay/
+│       │   ├── create-order/     # Create Razorpay order
+│       │   └── verify-payment/   # Verify & complete payment
+│       ├── promos/               # Promo bar content
+│       ├── admin/
+│       │   └── analytics/        # Dashboard analytics data
+│       └── seed-products/        # Dev seeding utility
+├── components/
+│   ├── auth/                     # AuthSessionProvider, session-provider
+│   ├── header/                   # Site header + nav
+│   ├── footer/                   # Site footer
+│   ├── ui/                       # shadcn/ui primitives
+│   ├── promo-bar/                # Scrolling promo banner
+│   ├── cart-sync/                # Cart hydration component
+│   └── gtm-scripts/              # GTM + pixel script injections
+├── lib/
+│   ├── db.ts                     # MongoDB connection utility
+│   ├── models/
+│   │   ├── user.ts               # User model
+│   │   ├── product.ts            # Product model
+│   │   ├── order.ts              # Order model
+│   │   └── ...                   # Other models
+│   ├── store/
+│   │   └── cart-store.ts         # Zustand cart store
+│   ├── email.tsx                 # Transactional email templates
+│   ├── EmailOtp.ts               # OTP email dispatcher
+│   ├── cors.ts                   # CORS helper (withCORS wrapper)
+│   └── cacheClient.ts            # Fetch caching utilities
+├── hooks/                        # Custom React hooks
+├── types/                        # TypeScript type definitions
+├── public/                       # Static assets
+├── styles/                       # Global style overrides
+├── middleware.ts                 # Route protection (auth + admin)
+├── next.config.mjs               # Next.js config
+├── Dockerfile                    # Docker build config
+├── vercel.json                   # Vercel deployment config
+└── tsconfig.json
 ```
 
 ---
 
-# Environment Configuration
+## 4. Environment Variables
 
-Create a `.env.local` at the repository root with the following keys:
+Create a `.env` file at the project root. **Never commit this file.**
 
-```bash
-# Database
-MONGODB_URI=""
+```env
+# ─── Database ────────────────────────────────────────────
+# Production (MongoDB Atlas)
+MONGODB_URI=mongodb+srv://<user>:<pass>@cluster0.xxx.mongodb.net/?appName=Cluster0
 
-# Authentication & Sessions
-NEXTAUTH_URL="http://localhost:3004"
-NEXTAUTH_SECRET=""
+# ─── Authentication ──────────────────────────────────────
+NEXTAUTH_SECRET=<generate with: openssl rand -base64 32>
+NEXTAUTH_URL=https://linknsmile.com        # localhost:3004 for dev
+NEXT_PUBLIC_SITE_URL=https://linknsmile.com # localhost:3004 for dev
+NODE_ENV=production                         # development for dev
 
-# Email (Gmail SMTP)
-GMAIL_EMAIL=""
-GMAIL_APP_PASSWORD=""
-EMAIL_FROM=""           # optional – defaults to GMAIL_EMAIL
+# ─── Email (Gmail SMTP) ──────────────────────────────────
+GMAIL_EMAIL=your@gmail.com
+GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx     # Gmail App Password (not account password)
+EMAIL_FROM=your@gmail.com
 
-# Razorpay
-RAZORPAY_KEY_ID=""
-RAZORPAY_KEY_SECRET=""
-NEXT_PUBLIC_RAZORPAY_KEY_ID=""  # exposed to client during checkout
+# ─── Payments (Razorpay) ─────────────────────────────────
+RAZORPAY_KEY_ID=rzp_live_xxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
 
-# Optional: Analytics & Tracking
-FACEBOOK_PIXEL_ID="997663834042843"        # already embedded in layout
-GOOGLE_TAG_MANAGER_ID="GTM-KTP32WN"
-GOOGLE_ADS_ID="AW-602275335"
+# ─── Cloudinary (Image Uploads) ──────────────────────────
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+
+# ─── Misc ────────────────────────────────────────────────
+MIGRATION_SECRET=some-secret-string
 ```
 
-> **Security Reminder:** Never commit `.env.local` or any secrets to version control. Use Vercel environment variables or a secure secret manager in production.
+> **Common mistake:** Setting `NEXTAUTH_URL` or `NEXT_PUBLIC_SITE_URL` to `localhost:3004` while deploying to production causes logout and auth redirects to break. Always update these for production.
 
 ---
 
-# Getting Started
+## 5. Getting Started
 
-1. **Install Node.js ≥ 18.18.0** and npm ≥ 9 (or use pnpm if preferred).
-2. **Clone the repository:**
-   ```bash
-   git clone https://github.com/<your-org>/Instapeels2.git
-   cd Instapeels2
-   ```
-3. **Install dependencies:**
-   ```bash
-   npm install
-   # or
-   pnpm install
-   ```
-4. **Configure environment:** duplicate `.env.local.example` if provided or create `.env.local` with the keys listed above.
-5. **Seed data (optional):** use the admin setup wizard under `/admin/setup` after running the dev server to bootstrap brands, categories, and products.
-6. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
-7. **Open** `http://localhost:3004` in your browser.
+### Prerequisites
 
----
+- Node.js ≥ 18.18.0
+- npm ≥ 9 or pnpm
+- MongoDB Atlas account (or local MongoDB)
 
-# Available Scripts
+### Installation
 
-- `npm run dev` – Launches Next.js in development mode on port 3004 with fast refresh.
-- `npm run build` – Creates a production build.
-- `npm run start` – Serves the production build on port 3004.
-- `npm run lint` – Runs the ESLint suite.
+```bash
+# 1. Clone the repo
+git clone https://github.com/AryanZapwms/LinknSmile.git
+cd LinknSmile
 
-> **Testing:** Formal automated tests are not yet included. Consider adding Playwright end-to-end flows (checkout, admin updates) and Jest unit tests for utilities (`lib/**`).
+# 2. Install dependencies
+npm install
 
----
+# 3. Set up environment
+cp .env.example .env       # fill in your values
 
-# Business Flows
+# 4. Start dev server
+npm run dev
+# App runs at http://localhost:3004
+```
 
-## Authentication Lifecycle
+### Available Scripts
 
-1. User registers via `/auth/register`, triggering OTP dispatch.
-2. OTP verification toggles `isVerified` and sends a welcome email (`getWelcomeEmail`).
-3. NextAuth credential provider issues JWT sessions (`app/api/auth/[...nextauth]/route.ts`).
-4. Middleware restricts protected routes based on session presence.
-5. Password resets follow a second OTP pipeline to ensure account ownership.
-
-## Checkout Journey
-
-1. Cart items persisted via `lib/store/cart-store.ts` (Zustand).
-2. Authenticated users access `/checkout` (guarded via middleware + `useSession`).
-3. Shipping form (`components/checkout-form.tsx`) captures address details.
-4. Payment selection triggers either:
-   - **COD:** `POST /api/orders` creates order, sends customer/admin emails, redirects to `/order-success/:id`.
-   - **Razorpay:** Client fetches `/api/razorpay/create-order`, confirms payment in widget, then `POST /api/razorpay/verify-payment` validates signature, updates inventory, sends emails, redirects to success page.
-5. Cart clears and analytics events (Pixel `trackInitiateCheckout`) fire accordingly.
+| Script          | Description                         |
+| --------------- | ----------------------------------- |
+| `npm run dev`   | Start dev server on port 3004       |
+| `npm run build` | Production build                    |
+| `npm run start` | Serve production build on port 3004 |
+| `npm run lint`  | Run ESLint                          |
 
 ---
 
-# Integrations & 3rd-Party Services
+## 6. Authentication Flow
 
-- **Razorpay**: Secure online payments with signature verification and stock adjustments.
-- **Gmail SMTP (Nodemailer)**: Transactional email pipeline for OTPs, confirmations, notifications.
-- **Facebook Pixel + Google Tag Manager + Google Ads**: Marketing attribution and conversion tracking.
-- **Vercel Analytics**: First-party page analytics (imported in `app/layout.tsx`).
-- **shadcn/ui + Radix UI**: Accessible, headless UI primitives.
+LinknSmile uses **NextAuth.js** with a credentials provider and JWT sessions.
 
----
+### Registration
 
-# Security & Compliance
+1. User submits name, email, password at `/auth/register`
+2. OTP is sent to their email via `lib/EmailOtp.ts`
+3. User verifies OTP → `isVerified = true` set in DB
+4. Welcome email dispatched via `lib/email.tsx`
 
-- **Authentication**: JWT sessions stored in secure cookies, OTP gating for critical flows.
-- **Password Safety**: Bcrypt hashing (10 rounds), minimum length enforcement, rate-limited OTP attempts.
-- **Order Protection**: Server-side signature validation for Razorpay callbacks to mitigate tampering.
-- **Email Safety**: Graceful failure handling – email issues never block primary transactional flows.
-- **Access Control**: Admin routes guarded at middleware and page level; server actions double-check user roles.
-- **Secrets Handling**: Relies on environment variables; ensure proper secret management in deployments.
+### Login
 
----
+1. User submits credentials at `/auth/login`
+2. NextAuth credentials provider validates against DB (bcrypt compare)
+3. JWT session issued, stored in HTTP-only cookie
+4. Session accessible via `useSession()` on client or `getServerSession()` on server
 
-# Performance & Observability
+### Password Reset
 
-- **Optimized Rendering**: Leverages Next.js App Router, server components, and incremental caching.
-- **Static Assets**: Served from `/public` with preloading for logo and fonts.
-- **Caching Utilities**: `fetchWithCache` reduces repeat API calls with stale-while-revalidate semantics.
-- **Logging**: API routes log operational errors (email send failures, payment issues) without exposing sensitive data.
-- **Analytics Hooks**: Pre-configured marketing pixels provide funnel visibility.
+1. `/auth/forgot-password` → user enters email → OTP sent
+2. `/auth/verify-reset-otp` → user enters OTP → verified
+3. `/auth/reset-password` → user sets new password → bcrypt hashed & saved
 
----
+### Route Protection
 
-# Deployment Guide
+`middleware.ts` intercepts requests to:
 
-1. **Choose Hosting**: Vercel is recommended for zero-config deployment of Next.js 15 applications.
-2. **Set Environment Variables**: Mirror `.env.local` values in your hosting provider (Vercel Project Settings → Environment Variables).
-3. **Configure Domains & DNS**: Ensure custom domain points to the deployment; update `NEXTAUTH_URL` and SEO metadata if domain changes.
-4. **Provision MongoDB**: Use MongoDB Atlas; whitelist Vercel IP ranges or use Atlas Serverless.
-5. **Razorpay Setup**: Generate live keys, enable relevant payment methods, configure webhook endpoints if used.
-6. **Email Configuration**: Use a dedicated Gmail or switch to a production SMTP provider (e.g., SendGrid) for higher throughput.
-7. **Build & Deploy**:
-   ```bash
-   npm run build
-   npm run start
-   ```
-   On Vercel, this is handled automatically during deployment.
-8. **Post-Deployment QA**: Validate checkout (test Razorpay sandbox & COD), email delivery, admin analytics, and marketing pixels.
+- `/checkout` → requires any valid session
+- `/admin/*` → requires session with `role: "admin"`
+- `/profile/*` → requires any valid session
+
+### Session Shape
+
+```ts
+session.user = {
+  id: string,
+  name: string,
+  email: string,
+  role: "user" | "admin",
+  image?: string
+}
+```
 
 ---
 
-# Maintenance & Ops
+## 7. API Reference
 
-- **Data Backups**: Implement scheduled MongoDB backups (Atlas automated snapshots recommended).
-- **Monitoring**: Pair Vercel Analytics with additional logging (e.g., Logtail, Datadog) if needed.
-- **Scaling**: Vertical scaling handled by serverless runtime; monitor DB throughput and storage.
-- **Dependency Updates**: Track Next.js, React, NextAuth, Razorpay SDK, and Tailwind releases for security patches.
-- **Content Updates**: Admin CMS supports ongoing blog & catalog changes; static informational pages live in `app/**/page.tsx`.
+### Auth
+
+| Method | Endpoint                  | Description                                |
+| ------ | ------------------------- | ------------------------------------------ |
+| POST   | `/api/auth/[...nextauth]` | NextAuth handler (login, session, signout) |
+
+### Users
+
+| Method | Endpoint             | Description                          | Auth  |
+| ------ | -------------------- | ------------------------------------ | ----- |
+| GET    | `/api/users`         | List all users                       | Admin |
+| PUT    | `/api/users/[id]`    | Update user role                     | Admin |
+| DELETE | `/api/users/[id]`    | Delete user                          | Admin |
+| GET    | `/api/users/profile` | Get current user profile             | User  |
+| PUT    | `/api/users/profile` | Update current user profile + avatar | User  |
+
+### Products
+
+| Method | Endpoint             | Description                   |
+| ------ | -------------------- | ----------------------------- |
+| GET    | `/api/products`      | List products (with filters)  |
+| POST   | `/api/products`      | Create product (admin/vendor) |
+| PUT    | `/api/products/[id]` | Update product                |
+| DELETE | `/api/products/[id]` | Delete product                |
+
+### Orders
+
+| Method | Endpoint           | Description         |
+| ------ | ------------------ | ------------------- |
+| GET    | `/api/orders`      | List orders         |
+| POST   | `/api/orders`      | Create order (COD)  |
+| PUT    | `/api/orders/[id]` | Update order status |
+
+### Payments
+
+| Method | Endpoint                       | Description                               |
+| ------ | ------------------------------ | ----------------------------------------- |
+| POST   | `/api/razorpay/create-order`   | Create Razorpay order, returns `order_id` |
+| POST   | `/api/razorpay/verify-payment` | Verify signature, confirm order           |
+
+### Categories & Promos
+
+| Method              | Endpoint               | Description                  |
+| ------------------- | ---------------------- | ---------------------------- |
+| GET                 | `/api/categories`      | List all categories          |
+| GET/POST/PUT/DELETE | `/api/categories/[id]` | Category CRUD                |
+| GET                 | `/api/promos`          | Get active promo bar content |
+
+### Admin Analytics
+
+| Method | Endpoint               | Description                                        |
+| ------ | ---------------------- | -------------------------------------------------- |
+| GET    | `/api/admin/analytics` | Dashboard stats (revenue, orders, users, products) |
 
 ---
 
-# Additional Documentation
+## 8. Database Models
 
-- [Authentication System Documentation](./AuthFlow.md)
-- [Checkout Flow Documentation](./CheckoutFlow.md)
-- Inspect individual API routes under `app/api/**` for implementation specifics (e.g., `/api/orders`, `/api/razorpay`, `/api/admin/analytics`).
+### User
+
+```ts
+{
+  name: String,
+  email: String (unique),
+  password: String (bcrypt hashed),
+  phone: String,
+  role: "user" | "admin" | "vendor",
+  isVerified: Boolean,
+  isActive: Boolean,
+  image: String,
+  address: {
+    street, city, state, zipCode, country
+  },
+  createdAt: Date
+}
+```
+
+### Product
+
+```ts
+{
+  name: String,
+  description: String,
+  price: Number,
+  discountedPrice: Number,
+  images: [String],           // Cloudinary URLs
+  category: ObjectId → Category,
+  company: ObjectId → Company,
+  vendor: ObjectId → User,
+  stock: Number,
+  isActive: Boolean,
+  isApproved: Boolean,
+  tags: [String],
+  createdAt: Date
+}
+```
+
+### Order
+
+```ts
+{
+  user: ObjectId → User,
+  items: [{
+    product: ObjectId,
+    name: String,
+    price: Number,
+    quantity: Number,
+    image: String
+  }],
+  shippingAddress: { street, city, state, zipCode },
+  paymentMethod: "razorpay" | "cod",
+  paymentStatus: "pending" | "paid" | "failed",
+  orderStatus: "pending" | "processing" | "shipped" | "delivered" | "cancelled",
+  totalAmount: Number,
+  razorpayOrderId: String,
+  razorpayPaymentId: String,
+  createdAt: Date
+}
+```
 
 ---
 
-# Contribution Guidelines
+## 9. Admin Panel
 
-1. **Fork & Branch**: Create feature branches from `main`.
-2. **Code Style**: Follow existing TypeScript + Tailwind patterns. Keep components modular and accessible.
-3. **Linting**: Run `npm run lint` before opening a pull request.
-4. **Testing**: Add tests when introducing critical logic or bug fixes (unit or E2E).
-5. **PR Checklist**:
-   - Clear description of change and impact.
-   - Screenshots or recordings for UI updates.
-   - Notes on migrations or environment variable changes.
+Access at `/admin` — requires `role: "admin"` session.
 
-For major features or architectural updates, please open a proposal issue first.
+### Dashboard (`/admin`)
+
+- Revenue overview chart (7D / 30D / 3M / 6M / 1Y)
+- KPI cards: Total Orders, Total Revenue, Total Products, Total Users
+- Top categories breakdown
+
+### Users (`/admin/users`)
+
+- View all registered customers
+- Search by name, email, or role
+- Edit user role (user ↔ admin)
+- Delete users
+- Paginated (8 per page)
+
+> **Note:** The `/api/users` route must return a plain array `[]`, not `{ users: [] }`, for the users page to work correctly.
+
+### Orders (`/admin/orders`)
+
+- Full order list with status, payment method, amount
+- Update order status (processing → shipped → delivered)
+
+### Products (`/admin/products`)
+
+- CRUD for product listings
+- Toggle active/inactive status
+
+### Product Approvals (`/admin/product-approvals`)
+
+- Review and approve/reject vendor-submitted products
+
+### Vendors (`/admin/vendors`)
+
+- View registered vendors
+- Manage vendor status
+
+### Promo Bar (`/admin/promo-bar`)
+
+- Edit the scrolling promotional banner text displayed site-wide
+
+### Finance & Payouts
+
+- Revenue tracking per vendor
+- Initiate vendor payouts
 
 ---
 
-# Acknowledgements
+## 10. Payment Integration
 
-- **Design & Engineering**: Inspired by modern D2C skincare experiences and optimized for omnichannel commerce.
-- **Special Thanks**: Contributors maintaining the Tailwind, shadcn/ui, NextAuth, and Razorpay ecosystems.
+### Razorpay Flow
+
+```
+Customer clicks "Pay Now"
+       ↓
+POST /api/razorpay/create-order
+  → Creates Razorpay order server-side
+  → Returns { order_id, amount, currency }
+       ↓
+Razorpay widget opens in browser
+  → Customer completes payment
+  → Razorpay calls success callback with { razorpay_payment_id, razorpay_order_id, razorpay_signature }
+       ↓
+POST /api/razorpay/verify-payment
+  → Server verifies HMAC signature
+  → Creates order in DB
+  → Reduces product stock
+  → Sends confirmation email to customer + admin
+  → Returns { orderId }
+       ↓
+Redirect to /order-success/[orderId]
+```
+
+### COD Flow
+
+```
+Customer selects "Cash on Delivery"
+       ↓
+POST /api/orders
+  → Creates order with paymentMethod: "cod", paymentStatus: "pending"
+  → Sends confirmation email
+  → Returns { orderId }
+       ↓
+Redirect to /order-success/[orderId]
+```
 
 ---
 
-**Crafted with ❤️ by [Varun Singh](https://github.com/VarunSingh19).**#   L i n k n S m i l e 
- 
- 
+## 11. Email System
+
+Emails are sent via **Nodemailer** using Gmail SMTP.
+
+### Setup
+
+```env
+GMAIL_EMAIL=your@gmail.com
+GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
+```
+
+Use a Gmail **App Password** (not your account password). Enable 2FA on Gmail first, then generate an App Password from Google Account → Security.
+
+### Email Types
+
+| Trigger                       | Template Location | Recipients       |
+| ----------------------------- | ----------------- | ---------------- |
+| Registration OTP              | `lib/EmailOtp.ts` | New user         |
+| Welcome                       | `lib/email.tsx`   | New user         |
+| Password reset OTP            | `lib/EmailOtp.ts` | User             |
+| Order confirmation (COD)      | `lib/email.tsx`   | Customer + Admin |
+| Order confirmation (Razorpay) | `lib/email.tsx`   | Customer + Admin |
+| Order status update           | `lib/email.tsx`   | Customer         |
+
+> Email failures are caught gracefully and never block the primary transaction from completing.
+
+---
+
+## 12. Deployment Guide
+
+### Via Docker
+
+```bash
+# Build image
+docker build -t linknsmile .
+
+# Run container
+docker run -p 3004:3004 --env-file .env linknsmile
+```
+
+### Manual / VPS
+
+```bash
+npm run build
+npm run start     # Serves on port 3004
+```
+
+Use **nginx** as a reverse proxy to forward port 80/443 to 3004.
+
+### Environment Variables Checklist Before Deploying
+
+- [ ] `NEXTAUTH_URL` = `https://linknsmile.com` (not localhost)
+- [ ] `NEXT_PUBLIC_SITE_URL` = `https://linknsmile.com` (not localhost)
+- [ ] `NODE_ENV` = `production`
+- [ ] `MONGODB_URI` = Atlas production connection string
+- [ ] `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` = live keys
+- [ ] `NEXTAUTH_SECRET` = strong random string
+
+---
+
+## 13. Known Issues & Fixes
+
+### Issue: Logout redirects to `localhost:3004`
+
+**Cause:** `NEXTAUTH_URL` or `NEXT_PUBLIC_SITE_URL` set to localhost in production env.  
+**Fix:** Set both to `https://linknsmile.com` in your hosting environment variables and redeploy.
+
+### Issue: `/admin/users` crashes with `TypeError: h.filter is not a function`
+
+**Cause:** `app/api/users/route.ts` was returning a profile object instead of a users array (wrong code pasted into the file).  
+**Fix:** Replace `app/api/users/route.ts` with:
+
+```ts
+export async function GET() {
+  await connectDB();
+  const users = await User.find({}).select("-password").sort({ createdAt: -1 });
+  return NextResponse.json(users); // plain array
+}
+```
+
+Also add a safety guard in the users page:
+
+```ts
+setUsers(Array.isArray(data) ? data : (data.users ?? []));
+```
+
+### Issue: Vercel Analytics 404 (`/_vercel/insights/script.js`)
+
+**Cause:** App is not deployed on Vercel — it's on a VPS, so the Vercel Analytics script path doesn't exist.  
+**Fix:** Either deploy to Vercel, or remove `@vercel/analytics` from `app/layout.tsx` if you don't need it.
+
+---
+
+## 14. Security Checklist
+
+- [ ] `.env` is in `.gitignore` and never committed
+- [ ] `NEXTAUTH_SECRET` is a strong random string (32+ chars)
+- [ ] Razorpay payment signature verified server-side before confirming any order
+- [ ] Passwords hashed with bcrypt (10 rounds)
+- [ ] Admin routes protected in both `middleware.ts` AND at the page/API level
+- [ ] MongoDB Atlas IP whitelist configured (not `0.0.0.0/0` in production)
+- [ ] Gmail App Password used (not account password)
+- [ ] Live Razorpay keys rotated if accidentally exposed
+- [ ] Cloudinary API secret rotated if accidentally exposed
+
+---
+
+_Documentation generated for LinknSmile v1.0 — June 2026_
