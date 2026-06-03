@@ -154,8 +154,8 @@ function MegaMenu({
                   onClick={onClose}
                   className="group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all hover:border-amber-200 hover:bg-amber-50"
                 >
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-green-500 text-xl shadow-sm">
-                    🇮🇳
+                  <div className="flex h-12 w-15 ">
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/250px-Flag_of_India.svg.png" alt="indian flag" />
                   </div>
                   <div>
                     <p className="font-bold text-stone-800 transition-colors group-hover:text-amber-700">
@@ -173,8 +173,8 @@ function MegaMenu({
                   onClick={onClose}
                   className="group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all hover:border-amber-200 hover:bg-amber-50"
                 >
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 text-xl shadow-sm">
-                    🌍
+                  <div className="flex h-12 w-15 ">
+                    <img src="https://www.jegroupllc.com/wp-content/uploads/2019/03/globe.png" alt="international" />
                   </div>
                   <div>
                     <p className="font-bold text-stone-800 transition-colors group-hover:text-amber-700">
@@ -192,9 +192,11 @@ function MegaMenu({
                   onClick={onClose}
                   className="group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all hover:border-amber-200 hover:bg-amber-50"
                 >
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-300 to-amber-500 text-xl shadow-sm">
-                    🛍️
+
+                  <div className="flex h-12 w-15 ">
+                    <img src="https://png.pngtree.com/png-clipart/20210606/original/pngtree-3d-beauty-cosmetics-product-design-png-image_6391024.jpg" alt="international" />
                   </div>
+
                   <div>
                     <p className="font-bold text-stone-800 transition-colors group-hover:text-amber-700">
                       All Products
