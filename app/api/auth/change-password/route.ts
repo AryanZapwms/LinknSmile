@@ -6,7 +6,7 @@ import { User } from "@/lib/models/user";
 import { compare } from "bcryptjs";
 import { hashPassword } from "@/lib/auth";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 export async function OPTIONS() {
   return withCORS(new NextResponse(null, { status: 204 }));
@@ -75,3 +75,4 @@ export async function POST(req: Request) {
     return withCORS(NextResponse.json({ error: "Something went wrong" }, { status: 500 }));
   }
 }
+

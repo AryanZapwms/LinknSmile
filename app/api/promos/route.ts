@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db";
 import { Promo } from "@/lib/models/promo";
 import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 export async function GET(request: NextRequest) {
   if (request.method === "OPTIONS") {
@@ -70,3 +70,4 @@ export async function POST(request: NextRequest) {
     return withCORS(NextResponse.json({ error: "Failed to create promo" }, { status: 500 }));
   }
 }
+

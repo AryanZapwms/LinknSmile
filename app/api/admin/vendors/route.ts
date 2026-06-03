@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db";
 import Shop from "@/lib/models/shop";
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 
 export const dynamic = "force-dynamic";
 
@@ -29,3 +29,4 @@ export async function GET(request: NextRequest) {
     return withCORS(NextResponse.json({ error: "Failed to fetch shops" }, { status: 500 }));
   }
 }
+

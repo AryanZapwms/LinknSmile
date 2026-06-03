@@ -2,7 +2,7 @@
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { LedgerService } from "@/lib/services/ledger-service";
 import { sendPushNotificationToVendor } from "@/lib/services/push-notification";
@@ -89,3 +89,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

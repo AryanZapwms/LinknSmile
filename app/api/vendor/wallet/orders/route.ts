@@ -2,7 +2,7 @@
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
 import Shop from "@/lib/models/shop";
@@ -139,3 +139,4 @@ export async function GET(req: NextRequest) {
     return withCORS(NextResponse.json({ error: "Internal server error" }, { status: 500 }));
   }
 }
+

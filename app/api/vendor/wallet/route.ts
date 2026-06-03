@@ -1,6 +1,6 @@
 // app/api/vendor/wallet/route.ts
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
@@ -78,3 +78,4 @@ export async function GET() {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

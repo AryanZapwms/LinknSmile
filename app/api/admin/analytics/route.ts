@@ -6,7 +6,7 @@ import { Product } from "@/lib/models/product";
 import { User } from "@/lib/models/user";
 import { Review } from "@/lib/models/review";
 import "@/lib/models/category";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -655,3 +655,4 @@ export async function GET(request: NextRequest) {
     return withCORS(NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 }));
   }
 }
+

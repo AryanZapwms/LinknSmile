@@ -1,6 +1,6 @@
 // app/vendor/wallet/page.tsx
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { redirect } from "next/navigation";
 import WalletDashboardClient from "./WalletDashboardClient";
 
@@ -11,3 +11,4 @@ export default async function VendorWalletPage() {
   }
   return <WalletDashboardClient />;
 }
+

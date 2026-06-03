@@ -2,7 +2,7 @@ import { withCORS } from "@/lib/cors";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
@@ -127,3 +127,4 @@ export async function PUT(req: NextRequest) {
     return withCORS(NextResponse.json({ error: "Failed to update profile" }, { status: 500 }));
   }
 }
+

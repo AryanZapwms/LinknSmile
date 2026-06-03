@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 
 // GET: Fetch all users (admin only)
@@ -21,3 +21,4 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }
+

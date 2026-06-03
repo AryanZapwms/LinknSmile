@@ -6,7 +6,7 @@ import { LedgerService } from "@/lib/services/ledger-service";
 import Shop from "@/lib/models/shop";
 import Payout from "@/lib/models/payout";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { sendPushNotificationToVendor } from "@/lib/services/push-notification";
 import crypto from "crypto";
@@ -164,3 +164,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

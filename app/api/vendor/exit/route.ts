@@ -7,7 +7,7 @@ import Shop from "@/lib/models/shop";
 import Payout from "@/lib/models/payout";
 import { User } from "@/lib/models/user";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 
@@ -176,3 +176,4 @@ export async function POST() {
     );
   }
 }
+

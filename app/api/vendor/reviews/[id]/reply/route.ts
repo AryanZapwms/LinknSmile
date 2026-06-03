@@ -2,7 +2,7 @@ import { withCORS } from "@/lib/cors";
 import mongoose from "mongoose";
 import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Review } from "@/lib/models/review";
 import { Product } from "@/lib/models/product";
