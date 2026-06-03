@@ -53,5 +53,7 @@ const userSchema = new mongoose.Schema(
 
 // ✅ ADD INDEX
 userSchema.index({ role: 1 });
+userSchema.index({ isVerified: 1 });
+userSchema.index({ email: 1, isVerified: 1 });
 
 export const User = mongoose.models.User || mongoose.model("User", userSchema);
