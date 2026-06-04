@@ -100,3 +100,6 @@ vite.config.ts.timestamp-*
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Sentry Config File
+.env.sentry-build-plugin
