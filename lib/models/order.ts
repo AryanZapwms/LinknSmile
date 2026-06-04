@@ -46,6 +46,7 @@ const orderSchema = new mongoose.Schema(
     cancellationReason: { type: String, default: null },
     razorpayOrderId: String,
     razorpayPaymentId: String,
+    idempotencyKey: { type: String, sparse: true, unique: true },
     vendorPayouts: [
       {
         shopId: { type: mongoose.Schema.Types.ObjectId, ref: "Shop" },

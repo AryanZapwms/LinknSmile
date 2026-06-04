@@ -153,10 +153,14 @@ export default function CheckoutPage() {
 
     try {
       if (paymentMethod === "cod") {
-        const res = await fetch("/api/orders", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+  const idempotencyKey = `cod-${session?.user?.id}-${Date.now()}`;
+  const res = await fetch("/api/orders", {
+    method: "POST",
+    headers: { 
+      "Content-Type": "application/json",
+      "X-Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify({
             items: items.map((i) => ({
               product: i.productId,
               quantity: i.quantity,

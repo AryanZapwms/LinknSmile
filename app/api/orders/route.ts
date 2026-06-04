@@ -34,6 +34,19 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
+    const idempotencyKey = req.headers.get("X-Idempotency-Key");
+if (idempotencyKey) {
+  const existingOrder = await Order.findOne({ idempotencyKey }).lean() as any;
+  if (existingOrder) {
+    return withCORS(NextResponse.json({
+      success: true,
+      orderId: existingOrder._id,
+      orderNumber: existingOrder.orderNumber,
+      message: "Order already exists",
+    }));
+  }
+}
+
     const body = await req.json();
     const {
       items,
@@ -149,6 +162,7 @@ export async function POST(req: NextRequest) {
 
     const order = await Order.create({
       orderNumber,
+       idempotencyKey: idempotencyKey || null,
       user: session.user.id,
       items: processedItems,
       totalAmount,
