@@ -54,16 +54,16 @@ async function checkImageUsage(images: ImageFile[]): Promise<ImageFile[]> {
   await connectDB();
 
   // Get all products
-  const products = await Product.find({}, "image images results").lean();
+  const products = await Product.find({}, "image images results").lean() as any;
 
   // Get all blogs
-  const blogs = await Blog.find({}, "image").lean();
+  const blogs = await Blog.find({}, "image").lean() as any;
 
   // Get all companies
   const companies = await Company.find(
     {},
     "logo banner carouselImages newArrivals shopByConcern"
-  ).lean();
+  ).lean() as any;
 
   // Create a map for quick lookup
   const imageMap = new Map<string, ImageFile>();

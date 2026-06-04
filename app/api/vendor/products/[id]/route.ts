@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const product = await Product.findById(id)
       .populate("category", "name")
       .populate("company", "name")
-      .lean();
+      .lean() as any;
 
     if (!product) {
       return withCORS(NextResponse.json({ message: "Product not found" }, { status: 404 }));
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!shopId) {
       const Shop = (await import("@/lib/models/shop")).default;
       const shop = await Shop.findOne({ ownerId: session.user.id });
-      if (shop) shopId = shop._id.toString();
+      if (shop) shopId = (shop._id as any).toString();
     }
 
     if (product.shopId?.toString() !== shopId) {
@@ -71,7 +71,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!shopId) {
       const Shop = (await import("@/lib/models/shop")).default;
       const shop = await Shop.findOne({ ownerId: session.user.id });
-      if (shop) shopId = shop._id.toString();
+      if (shop) shopId = (shop._id as any).toString();
     }
 
     if (product.shopId?.toString() !== shopId) {
@@ -152,7 +152,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!shopId) {
       const Shop = (await import("@/lib/models/shop")).default;
       const shop = await Shop.findOne({ ownerId: session.user.id });
-      if (shop) shopId = shop._id.toString();
+      if (shop) shopId = (shop._id as any).toString();
     }
 
     if (product.shopId?.toString() !== shopId) {

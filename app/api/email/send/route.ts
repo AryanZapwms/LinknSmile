@@ -36,10 +36,10 @@ export async function POST(request: NextRequest) {
       html,
     });
 
-    if (result.success) {
-      return withCORS(NextResponse.json({ success: true, messageId: result.messageId }));
+    if ((result as any).success) {
+      return withCORS(NextResponse.json({ success: true, messageId: (result as any).messageId }));
     } else {
-      return withCORS(NextResponse.json({ error: result.error }, { status: 500 }));
+      return withCORS(NextResponse.json({ error: (result as any).error }, { status: 500 }));
     }
   } catch (error) {
     console.error("[v0] Email API error:", error);

@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     // Filter each order to show only vendor's items
-    const vendorOrders = orders.map((order) => {
+    const vendorOrders = orders.map((order: any) => {
       // Filter items to only show vendor's products (using ObjectId equality)
       const vendorItems = order.items.filter(
         (item: any) => item.shopId && shopObjectId.equals(item.shopId)

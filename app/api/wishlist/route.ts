@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db"; // ✅ named export
 import Wishlist from "@/lib/models/wishlist";
-import Product from "@/lib/models/product";
+import { Product } from "@/lib/models/product";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth-options";

@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const order = await Order.findById(id)
       .populate("user", "name email phone")
       .populate("items.product", "name image price discountPrice")
-      .lean();
+      .lean() as any;
 
     if (!order) {
       return withCORS(NextResponse.json({ message: "Order not found" }, { status: 404 }));

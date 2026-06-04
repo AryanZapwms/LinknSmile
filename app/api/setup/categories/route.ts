@@ -5,9 +5,6 @@ import { Company } from "@/lib/models/company";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  if (request.method === "OPTIONS") {
-    return withCORS(new NextResponse(null));
-  }
 
   try {
     await connectDB();
@@ -217,7 +214,7 @@ export async function POST() {
         await category.save();
         createdCategories.push(category);
       } catch (error) {
-        errors.push(`Failed to create ${categoryData.name}: ${error.message}`);
+        errors.push(`Failed to create ${categoryData.name}: ${(error as any).message}`);
       }
     }
 

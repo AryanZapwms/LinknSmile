@@ -35,9 +35,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const productIds = pendingProducts.map((p) => p._id);
+    const productIds = pendingProducts.map((p: any) => p._id);
     const shopIds = Array.from(
-      new Set(pendingProducts.map((p) => p.shopId?.toString()).filter(Boolean))
+      new Set(pendingProducts.map((p: any) => p.shopId?.toString()).filter(Boolean))
     );
 
     // Update all pending products to approved

@@ -1,47 +1,55 @@
-import { withCORS } from "@/lib/cors";
-import { NextResponse, type NextRequest } from "next/server";
-import { connectDB } from "@/lib/db";
-import { Review } from "@/lib/models/review";
-import "@/lib/models/product";   // registers Product ref
-import "@/lib/models/company";   // registers Company ref
+// lib/models/review.ts
+import mongoose from "mongoose";
 
-export async function GET(request: NextRequest) {
-  if (request.method === "OPTIONS") {
-    return withCORS(new NextResponse(null));
-  }
+const reviewSchema = new mongoose.Schema(
+  {
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    userName: { type: String, default: "Anonymous" },
+    userEmail: { type: String, default: "" },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    comment: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "REJECTED"],
+      default: "PENDING",
+    },
+    isVerifiedBuyer: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false },
+    reply: {
+      message: String,
+      repliedAt: Date,
+      repliedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      repliedByName: String,
+    },
+    auditLog: [
+      {
+        action: String,
+        performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        performedAt: { type: Date, default: Date.now },
+        note: String,
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
-  try {
-    await connectDB();
+reviewSchema.index({ product: 1, status: 1 });
+reviewSchema.index({ product: 1, user: 1 });
+reviewSchema.index({ company: 1, status: 1 });
+reviewSchema.index({ status: 1, createdAt: -1 });
+reviewSchema.index({ isDeleted: 1 });
 
-    const reviews = await Review.find({ isDeleted: { $ne: true } })
-      .populate({ path: "product", select: "name image" })
-      .populate({ path: "company", select: "name" })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    const mappedReviews = reviews.map((review: any) => ({
-      id: review._id.toString(),
-      productId: review.product?._id?.toString() ?? "",
-      productName: review.product?.name ?? "Unknown Product",
-      productImage: review.product?.image ?? "/placeholder.jpg",
-      companyId: review.company?._id?.toString() ?? "",
-      company: review.company?.name ?? "Unknown Company",
-      customerName: review.userName ?? "Anonymous",
-      rating: review.rating ?? 5,
-      comment: review.comment ?? "",
-      createdAt: review.createdAt,
-    }));
-
-    return withCORS(NextResponse.json({
-      success: true,
-      reviews: mappedReviews,
-      count: mappedReviews.length,
-    }));
-  } catch (error) {
-    console.error("Error fetching all reviews:", error);
-    return withCORS(NextResponse.json(
-      { success: false, error: "Failed to fetch reviews", reviews: [] },
-      { status: 500 }
-    ));
-  }
-}
+export const Review =
+  mongoose.models.Review || mongoose.model("Review", reviewSchema);

@@ -168,7 +168,7 @@ function MegaMenu({
                 </Link>
 
                 {/* Foreign Made */}
-                <Link
+                {/* <Link
                   href="/products?origin=foreign-made"
                   onClick={onClose}
                   className="group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all hover:border-amber-200 hover:bg-amber-50"
@@ -184,7 +184,7 @@ function MegaMenu({
                       Imported &amp; foreign-made goods
                     </p>
                   </div>
-                </Link>
+                </Link> */}
 
                 {/* All Products */}
                 <Link
@@ -356,7 +356,7 @@ export function Header() {
             aria-label="Go to home"
           >
 
-            <div className="relative h-15 w-40 mt-4 px-2 overflow-hidden rounded-xl bg-white transition-all duration-200 group-hover:ring-amber-400">
+            <div className="relative h-15 w-35 mt-4 px-2 overflow-hidden rounded-xl bg-white transition-all duration-200 group-hover:ring-amber-400">
               <Image
                 src={LinkAndSmileLogo}
                 alt="LinkAndSmile"

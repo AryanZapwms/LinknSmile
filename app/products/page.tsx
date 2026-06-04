@@ -175,7 +175,7 @@ function ProductsContent() {
 
   const ORIGINS = [
     { value: "made-in-india", label: "Made in India", emoji: "🇮🇳" },
-    { value: "foreign-made", label: "International", emoji: "🌍" },
+    // { value: "foreign-made", label: "International", emoji: "🌍" },
     { value: "unspecified", label: "Other", emoji: "🏷️" },
   ];
 

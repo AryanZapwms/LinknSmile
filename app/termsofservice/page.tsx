@@ -83,8 +83,8 @@ Healthcare Medical Center, S-55, Whispering Palms Shopping Center, Akurli road,L
 export default function TermsOfService() {
   const [openSection, setOpenSection] = useState(1);
 
-  const toggleSection = (id) => {
-    setOpenSection(openSection === id ? null : id);
+  const toggleSection = (id: number | string) => {
+    setOpenSection(openSection === id ? null : id as any);
   };
 
   return (

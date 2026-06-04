@@ -51,18 +51,18 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     // Find all products for this shop to get their reviews
-    const products = await Product.find({ shopId }).select("_id").lean();
-    const productIds = products.map((p) => p._id);
+    const products = await Product.find({ shopId }).select("_id").lean() as any;
+    const productIds = products.map((p: any) => p._id);
 
     const reviews = await Review.find({ product: { $in: productIds }, isDeleted: false })
       .populate("product", "name image slug")
       .sort({ createdAt: -1 })
-      .lean();
+      .lean() as any;
 
     return withCORS(
       NextResponse.json({
         success: true,
-        reviews: reviews.map((review) => ({
+        reviews: reviews.map((review: any) => ({
           id: review._id.toString(),
           product: review.product
             ? {

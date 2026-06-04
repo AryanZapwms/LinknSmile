@@ -22,7 +22,7 @@ const emptySummary = {
 };
 
 function buildSummary(reviews: any[]) {
-  const approvedReviews = reviews.filter((r) => r.status === "APPROVED");
+  const approvedReviews = reviews.filter((r: any) => r.status === "APPROVED");
   if (!approvedReviews.length) {
     return emptySummary;
   }
@@ -80,12 +80,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Requirements: Never calculate ratings from unapproved reviews.
     // Fetch all reviews to build summary but only return approved ones for listing.
-    const allReviews = await Review.find({ product: productId, isDeleted: false }).lean();
+    const allReviews = await Review.find({ product: productId, isDeleted: false }).lean() as any;
     const summary = buildSummary(allReviews);
 
     const approvedReviews = allReviews
-      .filter((r) => r.status === "APPROVED")
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .filter((r: any) => r.status === "APPROVED")
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return withCORS(
       NextResponse.json({
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Security: Prevent vendor reviewing themselves
     if (product.shopId) {
       const shop = await Shop.findById(product.shopId);
-      if (shop && shop.owner?.toString() === session.user.id) {
+      if (shop && shop.ownerId?.toString() === session.user.id) {
         return withCORS(
           NextResponse.json({ error: "Vendors cannot review their own products" }, { status: 403 })
         );
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Build summary based on ALL approved reviews
-    const allReviews = await Review.find({ product: productId }).lean();
+    const allReviews = await Review.find({ product: productId }).lean() as any;
     const summary = buildSummary(allReviews);
 
     return withCORS(

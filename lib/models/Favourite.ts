@@ -17,7 +17,7 @@ const FavouriteSchema = new Schema<IFavourite>(
 );
 
 // Prevent duplicates
-FavouriteSchema.index({ userId: true, type: true, refId: true }, { unique: true });
+FavouriteSchema.index({ userId: 1, type: 1, refId: 1 }, { unique: true });
 
 export default mongoose.models.Favourite ||
   mongoose.model<IFavourite>("Favourite", FavouriteSchema);

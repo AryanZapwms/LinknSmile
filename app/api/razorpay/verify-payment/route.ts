@@ -28,13 +28,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const {
-      razorpayOrderId,
-      razorpayPaymentId,
-      razorpaySignature,
-      items,
-      shippingAddress,
-      totalAmount,
-    } = await request.json();
+  razorpayOrderId,
+  razorpayPaymentId,
+  razorpaySignature,
+  items,
+  shippingAddress,
+  totalAmount,
+} = await request.json();
 
     // Verify signature
     const body = razorpayOrderId + "|" + razorpayPaymentId;
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       user: user._id,
       paymentMethod: "razorpay",
       paymentStatus: "pending",
-      totalAmount,
+     totalAmount,
     }).sort({ createdAt: -1 });
 
     // ✅ NEW: Process items with vendor information
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     for (const item of items) {
       const product = await Product.findById(item.product)
         .populate("shopId", "shopName commissionRate")
-        .lean();
+        .lean() as any;
 
       if (!product) {
         console.error(`Product ${item.product} not found`);
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
         orderNumber,
         user: user._id,
         items: processedItems, // ✅ Use processed items with vendor info
-        totalAmount,
+        // totalAmount removed - not in recordSale type
         shippingAddress: {
           name: shippingAddress.name,
           phone: shippingAddress.phone,
@@ -268,10 +268,9 @@ export async function POST(request: NextRequest) {
 
       const { LedgerService } = await import("@/lib/services/ledger-service");
       await LedgerService.recordSale({
-        orderId: order._id.toString(),
-        totalAmount,
-        items: ledgerItems,
-      });
+  orderId: (order._id as any).toString(),
+  items: ledgerItems,
+});
     } catch (ledgerError) {
       console.error("Ledger recording failed, but payment succeeded:", ledgerError);
       // We log but don't fail here to avoid inconsistencies,
@@ -298,7 +297,7 @@ export async function POST(request: NextRequest) {
 
     // Send confirmation emails
     try {
-      const populatedOrder = await Order.findById(order._id).populate("items.product").lean();
+      const populatedOrder = await Order.findById(order._id).populate("items.product").lean() as any;
 
       if (populatedOrder) {
         const itemsData = populatedOrder.items.map((item: any) => ({
@@ -350,7 +349,7 @@ export async function POST(request: NextRequest) {
           if (shopId === "platform") continue; // Skip platform items
 
           // Get shop owner email
-          const shop = await Shop.findById(shopId).populate("ownerId", "email name").lean();
+          const shop = await Shop.findById(shopId).populate("ownerId", "email name").lean() as any;
           if (shop && shop.ownerId) {
             const vendorEmailHtml = `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

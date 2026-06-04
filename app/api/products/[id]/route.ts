@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       .populate("category", "name slug")
       .populate("shopId", "shopName commissionRate")
       .populate("company", "name slug logo")
-      .lean();
+      .lean() as any;
 
     if (!product) {
       console.warn("⚠️ Product not found:", id);

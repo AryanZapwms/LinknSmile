@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     }
 
     await sendPushNotificationToVendor(
-      shop._id.toString(),
+      (shop._id as any).toString(),
       "💰 Payout Request Submitted",
       `Your request for ₹${amount} has been submitted. It will be processed within 3-5 business days.`,
       { screen: "wallet" }
@@ -138,13 +138,13 @@ export async function POST(request: Request) {
 
     // Deduct from wallet via ledger (source of truth)
     await LedgerService.requestPayout({
-      shopId: shop._id.toString(),
+      shopId: (shop._id as any).toString(),
       amount,
-      payoutId: payout._id.toString(),
+      payoutId: (payout._id as any).toString(),
     });
 
     await sendPushNotificationToVendor(
-      shop._id.toString(),
+      (shop._id as any).toString(),
       "💰 Payout Request Submitted",
       `Your request for ₹${amount} has been submitted. It will be processed within 3-5 business days.`,
       { screen: "wallet" }

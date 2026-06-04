@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       .populate("company", "name slug")
       .populate("category", "name")
       .sort({ submittedAt: -1 })
-      .lean();
+      .lean() as any;
 
     return withCORS(
       NextResponse.json({

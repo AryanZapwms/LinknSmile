@@ -4,9 +4,6 @@ import { Company } from "@/lib/models/company";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  if (request.method === "OPTIONS") {
-    return withCORS(new NextResponse(null));
-  }
 
   try {
     await connectDB();
@@ -69,7 +66,7 @@ export async function POST() {
         await brand.save();
         createdBrands.push(brand);
       } catch (error) {
-        errors.push(`Failed to create ${brandData.name}: ${error.message}`);
+        errors.push(`Failed to create ${brandData.name}: ${(error as any).message}`);
       }
     }
 

@@ -11,7 +11,7 @@ import {
   useMotionTemplate,
   useScroll,
   useTransform,
-} from "motion/react";
+} from "framer-motion";
 
 // Utility function for className merging
 const cn = (...classes: (string | undefined | false)[]) => {

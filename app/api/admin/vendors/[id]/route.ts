@@ -132,7 +132,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     await connectDB();
 
-    const shop = await Shop.findById(id).populate("ownerId", "name email phone createdAt").lean();
+    const shop = await Shop.findById(id).populate("ownerId", "name email phone createdAt").lean() as any;
 
     if (!shop) {
       return withCORS(NextResponse.json({ message: "Shop not found" }, { status: 404 }));
@@ -140,10 +140,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const products = await Product.find({ shopId: id })
       .populate("shopId", "shopName ownerId")
-      .lean();
-    const orders = await Order.find({ vendorId: id }).lean();
+      .lean() as any;
+    const orders = await Order.find({ vendorId: id }).lean() as any;
 
-    const totalRevenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
 
     return withCORS(
       NextResponse.json({

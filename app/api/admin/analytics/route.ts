@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
       })
       .populate({ path: "user", select: "name email" })
       .sort({ createdAt: -1 })
-      .lean();
+      .lean() as any;
 
     const ordersPrevious = await Order.find({
       paymentStatus: "completed",
@@ -117,20 +117,20 @@ export async function GET(request: NextRequest) {
         path: "items.product",
         select: "name price",
       })
-      .lean();
+      .lean() as any;
 
     const ordersAllStatuses = await Order.find({
       createdAt: { $gte: startDate, $lte: endDate },
     })
       .select("paymentMethod paymentStatus totalAmount createdAt user")
-      .lean();
+      .lean() as any;
 
     const recentOrders = await Order.find()
       .sort({ createdAt: -1 })
       .limit(10)
       .populate("user", "name email")
       .populate("items.product", "name price")
-      .lean();
+      .lean() as any;
 
     const orderStatusBreakdown = await Order.aggregate([
       { $group: { _id: "$orderStatus", count: { $sum: 1 } } },
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
       createdAt: { $gte: new Date(endDate.getFullYear(), endDate.getMonth() - 5, 1) },
     })
       .select("totalAmount createdAt")
-      .lean();
+      .lean() as any;
 
     const revenueByMonthMap = new Map<string, { revenue: number; orders: number }>();
     for (const order of revenueByMonthRaw) {
@@ -363,13 +363,13 @@ export async function GET(request: NextRequest) {
           reviewCount: reviewData?.reviewCount ?? 0,
         };
       })
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         if (b.unitsSold === a.unitsSold) return b.revenue - a.revenue;
         return b.unitsSold - a.unitsSold;
       });
 
     const categoryPerformance = Array.from(categoryStats.values())
-      .sort((a, b) => b.revenue - a.revenue)
+      .sort((a: any, b: any) => b.revenue - a.revenue)
       .slice(0, 10);
 
     const customerAggregates = await Order.aggregate([
@@ -403,7 +403,7 @@ export async function GET(request: NextRequest) {
       .sort({ createdAt: -1 })
       .limit(5)
       .populate("product", "name")
-      .lean();
+      .lean() as any;
 
     const paymentMethodStats = new Map<
       string,
@@ -441,13 +441,13 @@ export async function GET(request: NextRequest) {
       state: state.state,
       orders: state.orders,
       revenue: state.revenue,
-      cities: Array.from(state.cities.values()).sort((a, b) => b.revenue - a.revenue),
+      cities: Array.from(state.cities.values()).sort((a: any, b: any) => b.revenue - a.revenue),
     }));
-    geographyStates.sort((a, b) => b.revenue - a.revenue);
+    geographyStates.sort((a: any, b: any) => b.revenue - a.revenue);
 
     const topCities = geographyStates
       .flatMap((state) => state.cities.map((city) => ({ ...city, state: state.state })))
-      .sort((a, b) => b.revenue - a.revenue)
+      .sort((a: any, b: any) => b.revenue - a.revenue)
       .slice(0, 10);
 
     const previousAverageOrderValue =
@@ -491,7 +491,7 @@ export async function GET(request: NextRequest) {
 
     const inventoryProducts = await Product.find()
       .select("name stock price image slug isActive")
-      .lean();
+      .lean() as any;
 
     let inStock = 0;
     let lowStock = 0;
@@ -617,7 +617,7 @@ export async function GET(request: NextRequest) {
             overStockValue,
           },
           attention: lowStockProducts
-            .sort((a, b) => (a.stock ?? 0) - (b.stock ?? 0))
+            .sort((a: any, b: any) => (a.stock ?? 0) - (b.stock ?? 0))
             .slice(0, 10)
             .map((product) => ({
               id: product._id.toString(),

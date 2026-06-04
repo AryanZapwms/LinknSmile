@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
       await LedgerService.requestPayout({
         shopId: shopId.toString(),
         amount,
-        payoutId: payout._id.toString(),
+        payoutId: (payout._id as any).toString(),
       });
     } catch (ledgerError: any) {
       // Rollback: mark payout as CANCELLED so it doesn't sit as a ghost record
@@ -241,7 +241,7 @@ export async function POST(req: NextRequest) {
         html: getPayoutRequestedEmail({
           shopName: shop.shopName,
           amount,
-          requestId: payout._id.toString(),
+          requestId: (payout._id as any).toString(),
         }),
       });
     } catch (emailError) {

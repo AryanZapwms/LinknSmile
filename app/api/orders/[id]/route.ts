@@ -39,7 +39,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         select: "name image slug",
         populate: { path: "company", select: "name slug" },
       })
-      .lean();
+      .lean() as any;
 
     if (!order) {
       return withCORS(NextResponse.json({ error: "Order not found" }, { status: 404 }));
@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       return withCORS(NextResponse.json({ error: "Order not found" }, { status: 404 }));
     }
 
-    // Send status update email
+// Send status update email
     try {
       if (order.user) {
         const userData = order.user as any;
@@ -118,16 +118,20 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       console.error("Failed to send order status update email:", emailError);
     }
 
-    // ✅ Send push notification to vendors AFTER successful update
+    // Send push notification to vendors AFTER successful update
     const shopIds = [
-      ...new Set(order.items.map((item: any) => item.shopId?.toString()).filter(Boolean)),
-    ];
+  ...new Set(
+    (order.items as any[])
+      .map((item) => item.shopId?.toString())
+      .filter(Boolean)
+  ),
+] as string[];
     if (shopIds.length > 0) {
       await sendPushNotificationToMultipleVendors(
         shopIds,
         "📦 Order Status Updated by Admin",
         `Order #${order.orderNumber} status changed to ${order.orderStatus}.`,
-        { screen: "orders", orderId: order._id.toString() }
+        { screen: "orders", orderId: (order._id as any).toString() }
       );
     }
 

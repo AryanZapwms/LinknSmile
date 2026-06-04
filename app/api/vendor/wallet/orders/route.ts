@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
       Order.countDocuments({ "items.shopId": shopId }),
     ]);
 
-    const orderBreakdowns = orders.map((order) => {
+    const orderBreakdowns = orders.map((order: any) => {
       // Only vendor's items from this order
       const vendorItems = order.items.filter(
         (item: any) => item.shopId?.toString() === shopId.toString()
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
       const commissionRate = vendorItems[0]?.commissionRate ?? shop.commissionRate ?? 10;
 
       return {
-        orderId: order._id.toString(),
+        orderId: (order._id as any).toString(),
         orderNumber: order.orderNumber,
         orderDate: order.createdAt,
         orderStatus: order.orderStatus,

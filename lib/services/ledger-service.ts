@@ -418,7 +418,7 @@ export class LedgerService {
             action: "WALLET_AUTO_FROZEN_NEGATIVE_BALANCE",
             performedBy: "SYSTEM",
             targetEntity: "Wallet",
-            targetId: wallet._id.toString(),
+            targetId: (wallet._id as any).toString(),
             shopId: wallet.shopId,
             reason: `Post-payout refund caused negative balance. Amount: ₹${item.refundAmount}`,
           });
@@ -470,7 +470,7 @@ export class LedgerService {
       action: "WALLET_FROZEN",
       performedBy: adminId,
       targetEntity: "Wallet",
-      targetId: wallet._id.toString(),
+      targetId: (wallet._id as any).toString(),
       shopId: wallet.shopId,
       before,
       after: { status: "FROZEN" },
@@ -492,7 +492,7 @@ export class LedgerService {
       action: "WALLET_UNFROZEN",
       performedBy: adminId,
       targetEntity: "Wallet",
-      targetId: wallet._id.toString(),
+      targetId: (wallet._id as any).toString(),
       shopId: wallet.shopId,
       before,
       after: { status: "ACTIVE" },
@@ -540,7 +540,7 @@ export class LedgerService {
 
         await session.commitTransaction();
         await sendPushNotificationToVendor(
-          entry.shopId.toString(), // ensure shopId is stored on LedgerEntry (it should be)
+          entry.shopId!.toString(), // ensure shopId is stored on LedgerEntry (it should be)
           "💰 Funds Cleared",
           `₹${entry.amount} from your order earnings is now available for withdrawal.`,
           { screen: "wallet" }

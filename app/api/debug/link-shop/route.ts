@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
           role: user.role,
           shopId: shop._id,
           shopName: shop.shopName,
-          isNewShop: !shop.wasNew, // wasNew isn't a mongoose thing but you get the idea
+          isNewShop: !(shop as any).wasNew, // wasNew isn't a mongoose thing but you get the idea
         },
       })
     );

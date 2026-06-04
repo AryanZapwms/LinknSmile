@@ -80,14 +80,14 @@ export async function GET(req: NextRequest) {
     // Get orders containing vendor's products
     const orders = await Order.find({
       "items.shopId": shopId,
-    }).lean();
+    }).lean() as any;
 
     // Calculate earnings
     let totalOrders = 0;
     let totalEarnings = 0;
     let pendingPayouts = 0;
 
-    orders.forEach((order) => {
+    orders.forEach((order: any) => {
       const vendorItems = order.items.filter((item: any) => item.shopId?.toString() === shopId);
 
       if (vendorItems.length > 0) {
@@ -112,10 +112,10 @@ export async function GET(req: NextRequest) {
 
     // Recent orders (last 5)
     const recentOrders = orders
-      .filter((order) => order.items.some((item: any) => item.shopId?.toString() === shopId))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .filter((order: any) => order.items.some((item: any) => item.shopId?.toString() === shopId))
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5)
-      .map((order) => ({
+      .map((order: any) => ({
         id: order._id,
         orderNumber: order.orderNumber,
         totalAmount: order.totalAmount,

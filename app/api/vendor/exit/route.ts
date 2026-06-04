@@ -12,9 +12,6 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 
 export async function POST() {
-  if (request.method === "OPTIONS") {
-    return withCORS(new NextResponse(null));
-  }
 
   try {
     const session = await getServerSession(authOptions);
@@ -40,7 +37,7 @@ export async function POST() {
         action: "VENDOR_EXIT_NO_WALLET",
         performedBy: user._id.toString(),
         targetEntity: "Shop",
-        targetId: shop._id.toString(),
+        targetId: (shop._id as any).toString(),
         shopId: shop._id,
         reason: "Vendor exit with no wallet found",
       });
@@ -150,7 +147,7 @@ export async function POST() {
       action: "VENDOR_EXIT_COMPLETED",
       performedBy: user._id.toString(),
       targetEntity: "Shop",
-      targetId: shop._id.toString(),
+      targetId: (shop._id as any).toString(),
       shopId: shop._id,
       metadata: {
         settledAmount: settleableAmount,

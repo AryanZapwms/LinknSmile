@@ -15,7 +15,7 @@ async function getShopIdForUser(userId: string, sessionShopId?: string) {
   const Shop = (await import("@/lib/models/shop")).default;
   if (sessionShopId) return sessionShopId;
   const shop = await Shop.findOne({ ownerId: userId });
-  return shop?._id.toString();
+  return (shop?._id as any)?.toString();
 }
 
 export async function GET(req: NextRequest) {

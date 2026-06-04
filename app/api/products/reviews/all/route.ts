@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         select: "name",
       })
       .sort({ createdAt: -1 })
-      .lean();
+      .lean() as any;
 
     // Map reviews to the expected format
     const mappedReviews = reviews.map((review: any) => ({

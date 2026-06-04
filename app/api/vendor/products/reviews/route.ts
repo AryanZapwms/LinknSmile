@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       .populate("user", "name avatar")
       .populate("product", "name image")
       .sort({ createdAt: -1 })
-      .lean();
+      .lean() as any;
 
     return withCORS(NextResponse.json({ success: true, reviews }));
   } catch (error) {

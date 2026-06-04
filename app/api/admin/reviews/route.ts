@@ -65,11 +65,11 @@ export async function GET(request: NextRequest) {
       const reviews = await Review.find({ company: companyId })
         .populate("product", "name image slug")
         .sort({ createdAt: -1 })
-        .lean();
+        .lean() as any;
 
       return withCORS(
         NextResponse.json({
-          reviews: reviews.map((review) => ({
+          reviews: reviews.map((review: any) => ({
             id: (review._id as any).toString(),
             product: review.product
               ? {

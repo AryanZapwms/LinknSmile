@@ -17,9 +17,6 @@ const NEW_CATEGORIES = [
 ];
 
 export async function GET() {
-  if (request.method === "OPTIONS") {
-    return withCORS(new NextResponse(null));
-  }
 
   try {
     await connectDB();

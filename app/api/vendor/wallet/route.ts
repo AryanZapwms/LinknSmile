@@ -46,10 +46,10 @@ export async function GET() {
 
     for (const order of orders) {
       const vendorPayout = order.vendorPayouts?.find(
-        (p: any) => p.shopId?.toString() === shop._id.toString()
+        (p: any) => p.shopId?.toString() === (shop._id as any).toString()
       );
       const vendorEarnings = order.items
-        .filter((item: any) => item.shopId?.toString() === shop._id.toString())
+        .filter((item: any) => item.shopId?.toString() === (shop._id as any).toString())
         .reduce((sum: number, item: any) => sum + (item.vendorEarnings || 0), 0);
 
       if (vendorPayout?.status === "released") withdrawable += vendorEarnings;

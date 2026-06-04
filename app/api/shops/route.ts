@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      query._id = { $in: idList };
+      (query as any)._id = { $in: idList };
     }
 
     const [shops, total] = await Promise.all([

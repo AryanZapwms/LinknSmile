@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       // Fetch product to get latest stock and info
       const product = await Product.findById(item.product)
         .populate("shopId", "shopName commissionRate")
-        .lean();
+        .lean() as any;
 
       if (!product) {
         return withCORS(
@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
       try {
         const { LedgerService } = await import("@/lib/services/ledger-service");
         await LedgerService.recordSale({
-          orderId: order._id.toString(),
+          orderId: (order._id as any).toString(),
           items: processedItems.map((item: any) => ({
             shopId: item.shopId.toString(),
             vendorEarnings: item.vendorEarnings,
@@ -315,7 +315,7 @@ export async function POST(req: NextRequest) {
           vendorShopIds,
           "🛍️ New Order Received!",
           `You have a new order #${orderNumber}. Total earnings across all vendors: ₹${totalVendorEarnings.toFixed(2)}`,
-          { screen: "orders", orderId: order._id.toString() }
+          { screen: "orders", orderId: (order._id as any).toString() }
         );
       }
 
@@ -324,7 +324,7 @@ export async function POST(req: NextRequest) {
         if (shopId === "platform") continue; // Skip platform items
 
         // Get shop owner email
-        const shop = await Shop.findById(shopId).populate("ownerId", "email name").lean();
+        const shop = await Shop.findById(shopId).populate("ownerId", "email name").lean() as any;
         if (shop && shop.ownerId) {
           await sendEmail({
             to: (shop.ownerId as any).email,
@@ -443,7 +443,7 @@ export async function GET(req: NextRequest) {
     const orders = await Order.find({ user: session.user.id })
       .populate("items.product", "name image slug")
       .sort({ createdAt: -1 })
-      .lean();
+      .lean() as any;
 
     // The /profile/orders page expects a plain array
     const { searchParams } = new URL(req.url);
