@@ -10,6 +10,7 @@ import { Cart } from "@/lib/models/cart";
 import Shop from "@/lib/models/shop";
 import { sendEmail } from "@/lib/email";
 import { sendPushNotificationToMultipleVendors } from "@/lib/services/push-notification";
+import { reserveStock } from "@/lib/stock-reservation";
 
 // Helper function to generate order number
 function generateOrderNumber(): string {
@@ -34,18 +35,21 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
+    // Idempotency check for COD orders
     const idempotencyKey = req.headers.get("X-Idempotency-Key");
-if (idempotencyKey) {
-  const existingOrder = await Order.findOne({ idempotencyKey }).lean() as any;
-  if (existingOrder) {
-    return withCORS(NextResponse.json({
-      success: true,
-      orderId: existingOrder._id,
-      orderNumber: existingOrder.orderNumber,
-      message: "Order already exists",
-    }));
-  }
-}
+    if (idempotencyKey) {
+      const existingOrder = (await Order.findOne({ idempotencyKey }).lean()) as any;
+      if (existingOrder) {
+        return withCORS(
+          NextResponse.json({
+            success: true,
+            orderId: existingOrder._id,
+            orderNumber: existingOrder.orderNumber,
+            message: "Order already exists",
+          })
+        );
+      }
+    }
 
     const body = await req.json();
     const {
@@ -69,7 +73,27 @@ if (idempotencyKey) {
       );
     }
 
-    // ✅ NEW: Process each item with vendor information
+    // ✅ Atomically reserve stock for all items upfront (prevents overselling)
+    const reservation = await reserveStock(
+      items.map((item: any) => ({
+        productId: item.product,
+        quantity: item.quantity,
+        selectedSize: item.selectedSize ?? null,
+      }))
+    );
+
+    if (!reservation.success) {
+      return withCORS(
+        NextResponse.json(
+          {
+            error: `Insufficient stock for "${reservation.failedProduct}". Please update your cart.`,
+          },
+          { status: 400 }
+        )
+      );
+    }
+
+    // Process each item with vendor information
     const processedItems = [];
     const vendorPayouts: Record<
       string,
@@ -81,7 +105,6 @@ if (idempotencyKey) {
     > = {};
 
     for (const item of items) {
-      // Fetch product to get latest stock and info
       const product = await Product.findById(item.product)
         .populate("shopId", "shopName commissionRate")
         .lean() as any;
@@ -92,21 +115,6 @@ if (idempotencyKey) {
         );
       }
 
-      // Check stock availability
-      const stockToCheck = item.selectedSize
-        ? product.sizes?.find(
-            (s: any) =>
-              s.size === item.selectedSize.size && s.quantity === item.selectedSize.quantity
-          )?.stock || 0
-        : product.stock;
-
-      if (stockToCheck < item.quantity) {
-        return withCORS(
-          NextResponse.json({ error: `Insufficient stock for ${product.name}` }, { status: 400 })
-        );
-      }
-
-      // ✅ Calculate commission and vendor earnings - STRICT VALIDATION
       const dbShopId = product.shopId?._id || product.shopId;
 
       if (!dbShopId) {
@@ -126,24 +134,21 @@ if (idempotencyKey) {
       const platformCommission = (itemTotal * commissionRate) / 100;
       const vendorEarnings = itemTotal - platformCommission;
 
-      // Add to processed items
       processedItems.push({
         product: item.product,
         quantity: item.quantity,
         price: item.price,
         selectedSize: item.selectedSize,
-        // ✅ Vendor tracking fields
-        shopId: dbShopId, // Keep as ObjectId if possible or let Mongoose handle string-to-oid
+        shopId: dbShopId,
         shopName: shopName,
         platformCommission: platformCommission,
         vendorEarnings: vendorEarnings,
         commissionRate: commissionRate,
       });
 
-      // ✅ Group by vendor for payout tracking - Ensure shopId is handled correctly
       if (!vendorPayouts[shopId]) {
         vendorPayouts[shopId] = {
-          shopId: dbShopId, // Use the ObjectId/original value
+          shopId: dbShopId,
           amount: 0,
           items: [],
         };
@@ -157,12 +162,12 @@ if (idempotencyKey) {
       });
     }
 
-    // Create order with vendor payout information
+    // Create order
     const orderNumber = generateOrderNumber();
 
     const order = await Order.create({
       orderNumber,
-       idempotencyKey: idempotencyKey || null,
+      idempotencyKey: idempotencyKey || null,
       user: session.user.id,
       items: processedItems,
       totalAmount,
@@ -179,8 +184,7 @@ if (idempotencyKey) {
       })),
     });
 
-    // ✅ Credit vendor wallets via ledger (only for Razorpay-paid orders)
-    // COD orders are credited when order is marked as delivered
+    // Credit vendor wallets via ledger (only for prepaid orders)
     if (paymentStatus === "completed") {
       try {
         const { LedgerService } = await import("@/lib/services/ledger-service");
@@ -194,40 +198,14 @@ if (idempotencyKey) {
           performedBy: "SYSTEM",
         });
       } catch (ledgerError) {
-        // Don't fail the order if ledger write fails — flag for reconciliation
         console.error("[Orders] Ledger recordSale failed for order", order._id, ledgerError);
       }
     }
 
-    // ✅ Update inventory for each item
-    for (const item of items) {
-      if (item.selectedSize) {
-        // Update size-specific stock
-        await Product.findByIdAndUpdate(
-          item.product,
-          {
-            $inc: {
-              [`sizes.$[elem].stock`]: -item.quantity,
-            },
-          },
-          {
-            arrayFilters: [
-              {
-                "elem.size": item.selectedSize.size,
-                "elem.quantity": item.selectedSize.quantity,
-              },
-            ],
-          }
-        );
-      } else {
-        // Update general stock
-        await Product.findByIdAndUpdate(item.product, {
-          $inc: { stock: -item.quantity },
-        });
-      }
-    }
+    // NOTE: Stock was already decremented atomically by reserveStock() above.
+    // No separate stock update loop needed here.
 
-    // ✅ Update shop stats for each vendor
+    // Update shop stats for each vendor
     for (const [shopId, payoutInfo] of Object.entries(vendorPayouts)) {
       if (shopId !== "699942a5a2b407e83b6d9ea8") {
         await Shop.findByIdAndUpdate(shopId, {
@@ -239,7 +217,7 @@ if (idempotencyKey) {
       }
     }
 
-    // ✅ Clear the user's cart in DB
+    // Clear the user's cart in DB
     try {
       await Cart.findOneAndUpdate(
         { userId: session.user.id },
@@ -250,9 +228,8 @@ if (idempotencyKey) {
       console.error("[Orders] Failed to clear cart:", cartError);
     }
 
-    // ✅ Send emails
+    // Send emails
     try {
-      // 1. Send confirmation to customer
       await sendEmail({
         to: session.user.email || shippingAddress.email,
         subject: `Order Confirmation - ${orderNumber}`,
@@ -260,7 +237,6 @@ if (idempotencyKey) {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #333;">Order Confirmed!</h1>
             <p>Thank you for your order. Your order number is: <strong>${orderNumber}</strong></p>
-            
             <h2 style="color: #555; margin-top: 30px;">Order Details:</h2>
             <table style="width: 100%; border-collapse: collapse;">
               <thead>
@@ -295,7 +271,6 @@ if (idempotencyKey) {
                 </tr>
               </tfoot>
             </table>
-
             <h2 style="color: #555; margin-top: 30px;">Shipping Address:</h2>
             <p>
               ${shippingAddress.name}<br/>
@@ -304,23 +279,16 @@ if (idempotencyKey) {
               ${shippingAddress.country}<br/>
               Phone: ${shippingAddress.phone}
             </p>
-
             <p style="margin-top: 30px; color: #666;">
               Payment Method: <strong>${paymentMethod.toUpperCase()}</strong><br/>
               Payment Status: <strong>${paymentStatus || "Pending"}</strong>
-            </p>
-
-            <p style="margin-top: 30px; color: #888; font-size: 12px;">
-              You will receive updates about your order via email. Track your order status in your account dashboard.
             </p>
           </div>
         `,
       });
 
-      // After the email sending loop for vendors, collect unique shopIds
       const vendorShopIds = Object.keys(vendorPayouts).filter((id) => id !== "platform");
       if (vendorShopIds.length > 0) {
-        // ✅ Calculate total earnings across all vendors
         const totalVendorEarnings = Object.values(vendorPayouts).reduce(
           (sum, v) => sum + v.amount,
           0
@@ -328,17 +296,16 @@ if (idempotencyKey) {
         await sendPushNotificationToMultipleVendors(
           vendorShopIds,
           "🛍️ New Order Received!",
-          `You have a new order #${orderNumber}. Total earnings across all vendors: ₹${totalVendorEarnings.toFixed(2)}`,
+          `You have a new order #${orderNumber}. Total earnings: ₹${totalVendorEarnings.toFixed(2)}`,
           { screen: "orders", orderId: (order._id as any).toString() }
         );
       }
 
-      // 2. Send notification to each vendor
       for (const [shopId, payoutInfo] of Object.entries(vendorPayouts)) {
-        if (shopId === "platform") continue; // Skip platform items
-
-        // Get shop owner email
-        const shop = await Shop.findById(shopId).populate("ownerId", "email name").lean() as any;
+        if (shopId === "platform") continue;
+        const shop = (await Shop.findById(shopId)
+          .populate("ownerId", "email name")
+          .lean()) as any;
         if (shop && shop.ownerId) {
           await sendEmail({
             to: (shop.ownerId as any).email,
@@ -346,54 +313,11 @@ if (idempotencyKey) {
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #333;">New Order Received!</h1>
-                <p>You have a new order for your shop: <strong>${shop.shopName}</strong></p>
-                
-                <h2 style="color: #555; margin-top: 30px;">Order Details:</h2>
+                <p>You have a new order for: <strong>${shop.shopName}</strong></p>
                 <p><strong>Order Number:</strong> ${orderNumber}</p>
-                
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                  <thead>
-                    <tr style="background: #f5f5f5;">
-                      <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Product</th>
-                      <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Qty</th>
-                      <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Your Earnings</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${payoutInfo.items
-                      .map(
-                        (item) => `
-                      <tr>
-                        <td style="padding: 10px; border: 1px solid #ddd;">${item.productName}</td>
-                        <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">${item.quantity}</td>
-                        <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">₹${item.earnings.toFixed(2)}</td>
-                      </tr>
-                    `
-                      )
-                      .join("")}
-                  </tbody>
-                  <tfoot>
-                    <tr style="background: #f0f8ff;">
-                      <td colspan="2" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Total Earnings:</strong></td>
-                      <td style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>₹${payoutInfo.amount.toFixed(2)}</strong></td>
-                    </tr>
-                  </tfoot>
-                </table>
-
-                <h2 style="color: #555; margin-top: 30px;">Shipping Address:</h2>
-                <p>
-                  ${shippingAddress.name}<br/>
-                  ${shippingAddress.street}<br/>
-                  ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.zipCode}<br/>
-                  Phone: ${shippingAddress.phone}
-                </p>
-
-                <p style="margin-top: 30px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
-                  <strong>Action Required:</strong> Please prepare the items for shipping. You can manage this order from your vendor dashboard.
-                </p>
-
-                <p style="margin-top: 20px; color: #888; font-size: 12px;">
-                  Payment will be released to your account after successful delivery of the order.
+                <p><strong>Your Earnings:</strong> ₹${payoutInfo.amount.toFixed(2)}</p>
+                <p style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
+                  <strong>Action Required:</strong> Please prepare the items for shipping.
                 </p>
               </div>
             `,
@@ -401,7 +325,6 @@ if (idempotencyKey) {
         }
       }
 
-      // 3. Send notification to admin (optional)
       if (process.env.ADMIN_EMAIL) {
         await sendEmail({
           to: process.env.ADMIN_EMAIL,
@@ -411,8 +334,6 @@ if (idempotencyKey) {
               <h2>New Order Received</h2>
               <p><strong>Order Number:</strong> ${orderNumber}</p>
               <p><strong>Total Amount:</strong> ₹${totalAmount.toFixed(2)}</p>
-              <p><strong>Items:</strong> ${processedItems.length}</p>
-              <p><strong>Vendors:</strong> ${Object.keys(vendorPayouts).length}</p>
               <p><strong>Payment Method:</strong> ${paymentMethod}</p>
               <p><strong>Payment Status:</strong> ${paymentStatus || "Pending"}</p>
             </div>
@@ -421,7 +342,6 @@ if (idempotencyKey) {
       }
     } catch (emailError) {
       console.error("Email sending failed:", emailError);
-      // Don't fail the order if email fails
     }
 
     return withCORS(
@@ -454,12 +374,11 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
 
-    const orders = await Order.find({ user: session.user.id })
+    const orders = (await Order.find({ user: session.user.id })
       .populate("items.product", "name image slug")
       .sort({ createdAt: -1 })
-      .lean() as any;
+      .lean()) as any;
 
-    // The /profile/orders page expects a plain array
     const { searchParams } = new URL(req.url);
     if (searchParams.get("userOrders") === "true") {
       return withCORS(NextResponse.json(orders));
@@ -471,4 +390,3 @@ export async function GET(req: NextRequest) {
     return withCORS(NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 }));
   }
 }
-
