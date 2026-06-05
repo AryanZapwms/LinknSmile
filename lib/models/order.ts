@@ -65,7 +65,6 @@ orderSchema.index({ "vendorPayouts.shopId": 1, "vendorPayouts.status": 1 });
 orderSchema.index({ orderStatus: 1, "vendorPayouts.status": 1 });
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ razorpayPaymentId: 1 }, { sparse: true });
-orderSchema.index({ orderNumber: 1 });
 
 // ✅ FIXED: pre-save hook without `next` (async function)
 orderSchema.pre("save", function () {
