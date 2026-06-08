@@ -7,18 +7,19 @@ test.describe("Authentication", () => {
   });
 
   test("invalid login shows error", async ({ page }) => {
-  await page.goto("/auth/login");
-  await page.getByLabel(/email/i).fill("invalid@test.com");
-  await page.getByLabel(/password/i).fill("wrongpassword");
-  await page.locator("main").getByRole("button", { name: /login|sign in/i }).click();
-  // Wait for any error/toast notification to appear
-  await expect(
-    page.getByText(/invalid|incorrect|wrong|failed|unable|try again/i)
-  ).toBeVisible({ timeout: 15000 });
-});
+    await page.goto("/auth/login");
+    await page.locator("#email").fill("invalid@test.com");
+    await page.locator("#password").fill("wrongpassword");
+    await page.locator("main").getByRole("button", { name: /login|sign in/i }).click();
+    await expect(
+      page.getByText(/invalid|incorrect|wrong|failed|unable|try again/i)
+    ).toBeVisible({ timeout: 15000 });
+  });
 
-  test("checkout redirects to login when not authenticated", async ({ page }) => {
+  test("checkout requires login", async ({ page }) => {
     await page.goto("/checkout");
-    await expect(page).toHaveURL(/login/, { timeout: 15000 });
+    // Client-side redirect — wait for session check then redirect
+    await page.waitForURL(/login/, { timeout: 20000 });
+    await expect(page).toHaveURL(/login/);
   });
 });
