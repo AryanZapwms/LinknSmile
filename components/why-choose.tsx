@@ -36,7 +36,7 @@ function Feature({ title, desc, image, accent }: FeatureProps) {
             width={28}
             height={28}
             className="object-contain"
-            onLoadingComplete={() => setLoaded(true)}
+            onLoad={() => setLoaded(true)}
           />
         </div>
         {!loaded && <div className="h-6 w-6 animate-pulse rounded bg-white/60" />}
@@ -61,7 +61,7 @@ function PaymentLogo({ img, index }: { img: StaticImageData; index: number }) {
         width={64}
         height={24}
         className={`max-h-5 object-contain transition-opacity duration-300 ${loaded ? "opacity-100" : "absolute opacity-0"}`}
-        onLoadingComplete={() => setLoaded(true)}
+        onLoad={() => setLoaded(true)}
       />
     </div>
   );
