@@ -74,7 +74,7 @@ We collect device information, order information, and customer support informati
     icon: Scale,
     content: `These Terms of Service shall be governed by and construed in accordance with the laws of India. This website originates from Mumbai, Maharashtra. Any disputes shall be subject to the jurisdiction of courts located in Mumbai.
 
-Questions about the Terms of Service should be sent to us at care@instapeels.com
+Questions about the Terms of Service should be sent to us at suppoprt@linknsmile.com
 
 Healthcare Medical Center, S-55, Whispering Palms Shopping Center, Akurli road,Lokhandwala Township, Kandivali (E), Mumbai, Maharashtra, 400101`,
   },

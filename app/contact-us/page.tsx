@@ -6,21 +6,21 @@ import Link from "next/link";
 import { Mail, Phone, MapPin, Clock, Shield, Truck, Store, ChevronRight } from "lucide-react";
 
 const contactCards = [
-  {
-    icon: MapPin,
-    title: "Visit Our Office",
-    content: (
-      <address className="text-sm leading-relaxed text-stone-600 not-italic">
-        Healthcare Medical Center, S-55,
-        <br />
-        Whispering Palms Shopping Center,
-        <br />
-        Akurli road, Lokhandwala Township,
-        <br />
-        Kandivali (E), Mumbai — 400101
-      </address>
-    ),
-  },
+  // {
+  //   icon: MapPin,
+  //   title: "Visit Our Office",
+  //   content: (
+  //     <address className="text-sm leading-relaxed text-stone-600 not-italic">
+  //       Healthcare Medical Center, S-55,
+  //       <br />
+  //       Whispering Palms Shopping Center,
+  //       <br />
+  //       Akurli road, Lokhandwala Township,
+  //       <br />
+  //       Kandivali (E), Mumbai — 400101
+  //     </address>
+  //   ),
+  // },
   {
     icon: Phone,
     title: "Call Us",
@@ -31,10 +31,10 @@ const contactCards = [
             Customer Support
           </p>
           <a
-            href="tel:+919819079079"
+            href="tel:+918393991099"
             className="text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
           >
-            +91 9819079079
+            +91 8393991099
           </a>
         </div>
         <div>
@@ -42,10 +42,10 @@ const contactCards = [
             Seller Support
           </p>
           <a
-            href="tel:+919321179079"
+            href="tel:+918393991099"
             className="text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
           >
-            +91 9321179079
+            +91 8393991099
           </a>
         </div>
       </div>
@@ -172,7 +172,7 @@ export default function ContactUs() {
 
           {/* Map + CTA */}
           <div className="space-y-5 lg:sticky lg:top-8">
-            <div className="overflow-hidden rounded-2xl border border-stone-100 bg-white shadow-sm">
+            {/* <div className="overflow-hidden rounded-2xl border border-stone-100 bg-white shadow-sm">
               <div className="flex items-center gap-2 border-b border-stone-100 px-5 py-4">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
                   <MapPin className="h-3.5 w-3.5 text-amber-600" />
@@ -190,7 +190,7 @@ export default function ContactUs() {
                 className="h-[340px] w-full border-0"
                 allowFullScreen
               />
-            </div>
+            </div> */}
 
             {/* CTA card */}
             <div className="rounded-2xl border border-stone-100 bg-stone-50 p-6">

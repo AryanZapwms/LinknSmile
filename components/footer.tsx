@@ -226,7 +226,7 @@ export default function Footer() {
                 </div>
 
                 <div className="flex items-start gap-2">
-                  <svg
+                  {/* <svg
                     className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
                     fill="none"
                     stroke="currentColor"
@@ -244,12 +244,12 @@ export default function Footer() {
                       strokeWidth="1.8"
                       d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                     />
-                  </svg>
-                  <address className="text-sm leading-relaxed text-stone-500 not-italic">
+                  </svg> */}
+                  {/* <address className="text-sm leading-relaxed text-stone-500 not-italic">
                     S-55, Whispering Palms,
                     <br />
                     Kandivali (E), Mumbai — 400101
-                  </address>
+                  </address> */}
                 </div>
               </div>
             </div>
