@@ -8,8 +8,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    // REMOVED: unoptimized: true — this disabled all Next.js image optimization (WebP, lazy loading, sizing).
-    // Cloudinary images will now be optimized automatically.
+  qualities: [75, 90],
     remotePatterns: [
       {
         protocol: "https",

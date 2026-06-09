@@ -159,7 +159,7 @@ export function ProductCard({
               fill
               className={`object-contain object-center transition-all duration-500 group-hover:scale-[1.04] ${imgLoaded ? "opacity-100" : "opacity-0"}`}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              onLoadingComplete={() => setImgLoaded(true)}
+              onLoad={() => setImgLoaded(true)}
               onError={() => {
                 setImgError(true);
                 setImgLoaded(true);

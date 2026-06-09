@@ -158,7 +158,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
                   alt={p.name}
                   fill
                   className={`object-contain transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-                  onLoadingComplete={() => setImgLoaded(true)}
+                  onLoad={() => setImgLoaded(true)}
                 />
               )}
               {(!p.image || !imgLoaded) && (
