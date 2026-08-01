@@ -11,6 +11,12 @@ import Shop from "@/lib/models/shop";
 import { sendEmail } from "@/lib/email";
 import { sendPushNotificationToMultipleVendors } from "@/lib/services/push-notification";
 import { reserveStock } from "@/lib/stock-reservation";
+import { computeOrderPricing, PricingError } from "@/lib/pricing";
+import { PLATFORM_SHOP_ID } from "@/lib/constants";
+
+
+    // Process each item with vendor information
+    const { processedItems, vendorPayouts, totalAmount: computedTotal } = await computeOrderPricing(items);
 
 // Helper function to generate order number
 function generateOrderNumber(): string {
@@ -93,74 +99,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Process each item with vendor information
-    const processedItems = [];
-    const vendorPayouts: Record<
-      string,
-      {
-        shopId: string;
-        amount: number;
-        items: any[];
-      }
-    > = {};
 
-    for (const item of items) {
-      const product = await Product.findById(item.product)
-        .populate("shopId", "shopName commissionRate")
-        .lean() as any;
 
-      if (!product) {
-        return withCORS(
-          NextResponse.json({ error: `Product ${item.product} not found` }, { status: 404 })
-        );
-      }
 
-      const dbShopId = product.shopId?._id || product.shopId;
-
-      if (!dbShopId) {
-        return withCORS(
-          NextResponse.json(
-            { error: `Product ${product.name} is missing a valid vendor assignment.` },
-            { status: 400 }
-          )
-        );
-      }
-
-      const shopId = dbShopId.toString();
-      const shopName = product.shopId?.shopName || "LinkAndSmile Platform";
-      const commissionRate = product.shopId?.commissionRate ?? 10;
-
-      const itemTotal = item.price * item.quantity;
-      const platformCommission = (itemTotal * commissionRate) / 100;
-      const vendorEarnings = itemTotal - platformCommission;
-
-      processedItems.push({
-        product: item.product,
-        quantity: item.quantity,
-        price: item.price,
-        selectedSize: item.selectedSize,
-        shopId: dbShopId,
-        shopName: shopName,
-        platformCommission: platformCommission,
-        vendorEarnings: vendorEarnings,
-        commissionRate: commissionRate,
-      });
-
-      if (!vendorPayouts[shopId]) {
-        vendorPayouts[shopId] = {
-          shopId: dbShopId,
-          amount: 0,
-          items: [],
-        };
-      }
-      vendorPayouts[shopId].amount += vendorEarnings;
-      vendorPayouts[shopId].items.push({
-        productId: item.product,
-        productName: product.name,
-        quantity: item.quantity,
-        earnings: vendorEarnings,
-      });
-    }
 
     // Create order
     const orderNumber = generateOrderNumber();
@@ -170,7 +111,7 @@ export async function POST(req: NextRequest) {
       idempotencyKey: idempotencyKey || null,
       user: session.user.id,
       items: processedItems,
-      totalAmount,
+      totalAmount: computedTotal,
       shippingAddress,
       paymentMethod,
       paymentStatus: paymentStatus || "pending",
@@ -207,7 +148,7 @@ export async function POST(req: NextRequest) {
 
     // Update shop stats for each vendor
     for (const [shopId, payoutInfo] of Object.entries(vendorPayouts)) {
-      if (shopId !== "699942a5a2b407e83b6d9ea8") {
+      if (shopId !== PLATFORM_SHOP_ID) {
         await Shop.findByIdAndUpdate(shopId, {
           $inc: {
             "stats.totalOrders": 1,
@@ -302,7 +243,7 @@ export async function POST(req: NextRequest) {
       }
 
       for (const [shopId, payoutInfo] of Object.entries(vendorPayouts)) {
-        if (shopId === "platform") continue;
+        if (shopId === PLATFORM_SHOP_ID) continue;
         const shop = (await Shop.findById(shopId)
           .populate("ownerId", "email name")
           .lean()) as any;
@@ -353,10 +294,11 @@ export async function POST(req: NextRequest) {
       })
     );
   } catch (error: any) {
+    if (error instanceof PricingError) {
+      return withCORS(NextResponse.json({ error: error.message }, { status: error.status }));
+    }
     console.error("Order creation error:", error);
-    return withCORS(
-      NextResponse.json({ error: error.message || "Failed to create order" }, { status: 500 })
-    );
+    return withCORS(NextResponse.json({ error: error.message || "Failed to create order" }, { status: 500 }));
   }
 }
 

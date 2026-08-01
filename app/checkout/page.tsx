@@ -115,7 +115,7 @@ export default function CheckoutPage() {
     const init = async () => {
       try {
         const [settingsRes, profileRes] = await Promise.all([
-          fetch("/api/admin/payment-settings"),
+          fetch("/api/payment-settings/public"),
           fetch("/api/users/profile"),
         ]);
         setPaymentSettings(
@@ -186,10 +186,18 @@ export default function CheckoutPage() {
 
       if (paymentMethod === "razorpay") {
         const rpRes = await fetch("/api/razorpay/create-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: totalPrice }),
-        });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    items: items.map((i) => ({
+      product: i.productId,
+      quantity: i.quantity,
+      selectedSize: i.selectedSize
+        ? { size: i.selectedSize.size, quantity: i.selectedSize.quantity }
+        : undefined,
+    })),
+  }),
+});
         const rpOrder = await rpRes.json();
         if (!rpRes.ok) throw new Error(rpOrder.error || "Failed to create order");
 
