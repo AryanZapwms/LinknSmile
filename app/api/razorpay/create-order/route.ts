@@ -31,10 +31,10 @@ export async function POST(request: NextRequest) {
       return withCORS(NextResponse.json({ error: "Invalid order total" }, { status: 400 }));
     }
 
-    const razorpayOrder = await razorpay.orders.create({
+   const razorpayOrder = await razorpay.orders.create({
       amount: Math.round(totalAmount * 100), // paise, computed server-side — not client-supplied
       currency: "INR",
-      payment_capture: 1,
+      payment_capture: true,
     });
 
     return withCORS(

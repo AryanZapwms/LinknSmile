@@ -15,8 +15,7 @@ import { computeOrderPricing, PricingError } from "@/lib/pricing";
 import { PLATFORM_SHOP_ID } from "@/lib/constants";
 
 
-    // Process each item with vendor information
-    const { processedItems, vendorPayouts, totalAmount: computedTotal } = await computeOrderPricing(items);
+   
 
 // Helper function to generate order number
 function generateOrderNumber(): string {
@@ -78,6 +77,10 @@ export async function POST(req: NextRequest) {
         NextResponse.json({ error: "Shipping address is required" }, { status: 400 })
       );
     }
+
+    // Compute authoritative pricing from the database (ignores client-sent prices)
+    const { processedItems, vendorPayouts, totalAmount: computedTotal } =
+      await computeOrderPricing(items);
 
     // ✅ Atomically reserve stock for all items upfront (prevents overselling)
     const reservation = await reserveStock(
