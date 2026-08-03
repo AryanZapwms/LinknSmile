@@ -71,6 +71,12 @@ export async function POST(request: NextRequest) {
     // Recompute pricing from the database — never trust client-sent prices/totals
     const { processedItems, vendorPayouts, totalAmount } = await computeOrderPricing(items);
 
+      console.log("[DEBUG] computeOrderPricing result:", {
+      totalAmount,
+      totalAmountType: typeof totalAmount,
+      itemCount: processedItems.length,
+    });
+    
     const orderNumber = `ORD-${Date.now()}`;
     const order = await Order.create({
       orderNumber,
