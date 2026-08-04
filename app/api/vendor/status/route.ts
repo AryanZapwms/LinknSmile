@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import Shop from "@/lib/models/shop";
+import { VendorSubscription } from "@/lib/models/vendor-subscription";
+import { getSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 
 export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -49,11 +51,21 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    const subscription = await VendorSubscription.findOne({ shopId }).lean();
+    const access = getSubscriptionAccessState(subscription);
+
     return withCORS(
       NextResponse.json({
         success: true,
         isApproved: shop.isApproved,
         isActive: shop.isActive,
+        subscription: {
+          status: access.status,
+          expiryDate: subscription?.expiryDate ?? null,
+          daysUntilExpiry: access.daysUntilExpiry,
+          isInGracePeriod: access.isInGracePeriod,
+          isBlocked: access.isBlocked,
+        },
       })
     );
   } catch (error: any) {

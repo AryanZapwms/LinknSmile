@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
+import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -77,6 +78,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (product.shopId?.toString() !== shopId) {
       return withCORS(
         NextResponse.json({ message: "Unauthorized - Not your product" }, { status: 403 })
+      );
+    }
+
+    const access = await getShopSubscriptionAccessState(shopId as string);
+    if (access.isBlocked) {
+      return withCORS(
+        NextResponse.json(
+          { message: "Your subscription has expired. Renew it to edit products." },
+          { status: 403 }
+        )
       );
     }
 

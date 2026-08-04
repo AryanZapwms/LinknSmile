@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/clear-pending-funds",
       "schedule": "30 20 * * *"
+    },
+    {
+      "path": "/api/cron/vendor-subscription-sweep",
+      "schedule": "0 3 * * *"
     }
   ]
 }

@@ -1,227 +1,208 @@
-# 🚀 CyberPanel VPS Deployment Guide
-### Next.js App (LinkNSmile) — linknsmile.com
+# Deployment (CI/CD)
 
----
+> This replaces the old manual ZIP-upload process. That process deployed
+> files directly into `/home/linknsmile.com`, which now needs to be a
+> `current` **symlink**, not a real folder — don't follow any older
+> instructions you may have for this app, they will break the new setup.
 
-## 📦 STEP 1 — Prepare ZIP on Local Machine
+Automated, zero-downtime deploys to the production VPS via GitHub
+Actions, using a releases + symlink pattern.
 
-### Files to INCLUDE in ZIP
-```
-app/
-components/
-hooks/
-lib/
-public/
-styles/
-types/
-package.json
-package-lock.json
-next.config.mjs
-tsconfig.json
-postcss.config.mjs
-components.json
-```
-
-### Files to EXCLUDE from ZIP
-```
-❌ node_modules/       → reinstalled on server
-❌ .next/              → rebuilt on server
-❌ .env.local          → already on server (has secrets!)
-❌ *.txt / *.md / *.docx  → docs only
-❌ tsconfig.tsbuildinfo   → auto-generated
-❌ .expo/              → wrong framework
-❌ Dockerfile          → not needed for CyberPanel
-❌ *.zip               → never zip inside zip
-```
-
----
-
-## 🔑 STEP 2 — Keep .env.local Safe on Server
-
-> ⚠️ NEVER delete `.env.local` from the server.
-> It contains your DB, API keys, NextAuth secret, Razorpay, Cloudinary, etc.
-
-If you ever need to update it, edit it directly via SSH:
-```bash
-nano /home/linknsmile.com/.env.local
-```
-Press `Ctrl+X` → `Y` → `Enter` to save.
-
----
-
-## 🗑️ STEP 3 — Clean Old Files on Server (via PuTTY)
-
-```bash
-# Navigate to site folder
-cd /home/linknsmile.com
-
-# Delete old build, modules, logs
-rm -rf .next node_modules logs
-
-# Verify only public_html and .env.local remain
-ls -la
-```
-
----
-
-## 📤 STEP 4 — Upload & Extract ZIP
-
-1. Open CyberPanel → **File Manager** → navigate to `/home/linknsmile.com/`
-2. Click **Upload** → select your ZIP
-3. Once uploaded, select the ZIP → click **Extract**
-4. Verify files are there:
-```bash
-ls -la /home/linknsmile.com
-```
-You should see: `app/`, `components/`, `lib/`, `package.json`, `.env.local`, etc.
-
----
-
-## ⚙️ STEP 5 — Install, Build & Start (via PuTTY)
-
-```bash
-cd /home/linknsmile.com
-
-# Install dependencies (takes 1-3 mins)
-npm install
-
-# Build the app (takes 3-5 mins)
-npm run build
-
-# Kill anything using port 3004 (just in case)
-fuser -k 3004/tcp
-
-# Delete old PM2 instance and start fresh
-pm2 delete linknsmile
-pm2 start npm --name "linknsmile" -- start
-
-# Save PM2 so it auto-restarts on server reboot
-pm2 save
-pm2 startup
-```
-
----
-
-## ✅ STEP 6 — Verify It's Running
-
-```bash
-# Check PM2 status (should show "online")
-pm2 status
-
-# Check live logs (should show "✓ Ready in Xms")
-pm2 logs linknsmile --lines 30
-
-# Confirm port 3004 is in use
-lsof -i :3004
-```
-
-**Expected output in logs:**
-```
-✓ Starting...
-✓ Ready in ~1000ms
-```
-
----
-
-## 🔧 USEFUL COMMANDS (Day-to-Day)
-
-### PM2 Commands
-```bash
-pm2 status                          # Check all running apps
-pm2 logs linknsmile --lines 30      # View recent logs
-pm2 restart linknsmile              # Restart the app
-pm2 stop linknsmile                 # Stop the app
-pm2 delete linknsmile               # Remove from PM2
-pm2 monit                           # Live CPU/RAM monitor
-```
-
-### Port Commands
-```bash
-lsof -i :3004                       # Check what's using port 3004
-fuser -k 3004/tcp                   # Force kill port 3004
-```
-
-### File & Folder Commands
-```bash
-ls -la                              # List all files with details
-rm -rf folder_name                  # Delete a folder
-cd /home/linknsmile.com             # Navigate to site folder
-nano .env.local                     # Edit env file
-cat .env.local                      # View env file
-```
-
-### Disk & Server Health
-```bash
-df -h                               # Disk usage
-free -m                             # RAM usage
-top                                 # Live CPU/RAM (press Q to exit)
-```
-
----
-
-## 🔁 QUICK RE-DEPLOY CHECKLIST
-
-Every time you update code, just do this:
-
-```bash
-# 1. Delete old node_modules and build
-cd /home/linknsmile.com
-rm -rf .next node_modules
-
-# 2. Upload new ZIP via CyberPanel File Manager & Extract
-
-# 3. Reinstall and rebuild
-npm install
-npm run build
-
-# 4. Kill port and restart app
-fuser -k 3004/tcp
-pm2 restart linknsmile
-
-# 5. Check logs
-pm2 logs linknsmile --lines 20
-```
-
----
-
-## ❗ COMMON ERRORS & FIXES
-
-| Error | Fix |
-|---|---|
-| `EADDRINUSE: port 3004 already in use` | Run `fuser -k 3004/tcp` then restart PM2 |
-| `PM2 out-of-date` warning | Run `pm2 update` |
-| App shows `online` but site not loading | Run `pm2 logs linknsmile` to check actual error |
-| `File ecosystem.config.js not found` | Don't use `pm2 start` alone, use full command |
-| Build fails with import errors | Check the error file path and fix the import locally, re-zip, re-deploy |
-| Site loads but API broken | Check `.env.local` has correct `NEXTAUTH_URL` and DB URI |
-
----
-
-## 📁 SERVER FOLDER STRUCTURE (Expected)
+## How it works
 
 ```
 /home/linknsmile.com/
-├── .env.local          ← 🔑 NEVER DELETE
-├── .next/              ← auto-generated after build
-├── app/
-├── components/
-├── hooks/
-├── lib/
-├── node_modules/       ← auto-generated after npm install
-├── public/
-├── public_html/        ← CyberPanel default (keep it)
-├── styles/
-├── types/
-├── next.config.mjs
-├── package.json
-├── package-lock.json
-├── postcss.config.mjs
-├── tsconfig.json
-└── components.json
+├── current -> releases/20260804153000/     (symlink; this is what PM2 actually runs)
+├── releases/
+│   ├── 20260804120000/                     (kept for rollback)
+│   ├── 20260804153000/                     (live)
+│   └── ...                                  (last 5 kept, older ones pruned automatically)
+└── shared/
+    ├── .env                                 (persists across every release, never wiped)
+    └── logs/                                 (PM2 logs + health-check logs, persists across releases)
 ```
+
+1. Push to `main`.
+2. The existing **CI** workflow (`.github/workflows/ci.yml`) runs lint/typecheck/build.
+3. Only if CI succeeds, **Deploy** (`.github/workflows/deploy.yml`) SSHes into
+   the VPS and runs `scripts/deploy/deploy.sh`, which:
+   - clones the exact commit CI just validated into a new
+     `releases/<timestamp>/` folder (the live release is never touched
+     during this)
+   - symlinks `shared/.env` and `shared/logs` into it
+   - runs `npm ci && npm run build` inside that new folder
+   - boots the new build on a temporary port (3999) and polls
+     `/api/health` until it returns 200 — **if this fails, the deploy
+     stops here and `current` is never touched**
+   - only then atomically repoints `current` to the new release
+   - runs `pm2 startOrReload ecosystem.config.js` — PM2 is configured in
+     **cluster mode with 2 instances**, so `reload` restarts workers one
+     at a time and there's always at least one serving traffic
+   - re-checks `/api/health` on the real port to confirm the live process
+     came back up correctly
+   - deletes releases beyond the last 5
+
+Deploys are serialized twice over: GitHub Actions won't run `Deploy` and
+`Rollback` concurrently (same `concurrency` group in both workflow files),
+and `scripts/deploy/deploy.sh` / `rollback.sh` additionally take a `flock`
+on `/home/linknsmile.com/.deploy.lock` on the server itself.
+
+## Rolling back
+
+Actions tab → **Rollback** → **Run workflow**. Leave `target_release`
+blank to go back to the release immediately before whatever's live, or
+enter a specific `releases/` timestamp to jump to that one.
+
+This does **not** check out any code or run a build — it re-validates the
+target release's *existing* build with the same health check, then flips
+the symlink and reloads PM2. Takes seconds.
+
+## Checking what's currently live
+
+```bash
+ssh -p 55005 root@103.191.132.47
+readlink -f /home/linknsmile.com/current
+```
+
+The output is the release timestamp currently serving traffic. Compare
+against that release's own git history to see exactly which commit it is:
+
+```bash
+git -C /home/linknsmile.com/current log -1
+```
+
+## Reading health-check logs after a failed deploy
+
+Every health check (deploy or rollback) writes its temporary instance's
+full stdout/stderr to `shared/logs/`, and `deploy.sh`/`rollback.sh` also
+print the last 50 lines directly in the GitHub Actions run log:
+
+```bash
+ls -lt /home/linknsmile.com/shared/logs/health-check-*.log | head
+cat /home/linknsmile.com/shared/logs/health-check-<release>.log
+```
+
+Live PM2 logs (once a release is actually running) are at
+`shared/logs/out.log` and `shared/logs/error.log`, or via
+`pm2 logs linknsmile`.
+
+If a deploy fails at the health-check step, **the live site is
+unaffected** — `current` was never touched. If it somehow fails *after*
+the symlink switch (the final "confirming the live process" step in
+`deploy.sh`), run the Rollback workflow immediately.
 
 ---
 
-> 💡 **Tip:** Always check `pm2 logs` first when something goes wrong — it tells you exactly what the error is.
+## One-time initial server setup
 
-> 💡 **Tip:** Never include `node_modules` or `.next` in your ZIP — they are large, slow to upload, and always rebuilt fresh on the server anyway.
+Run this once before the first automated deploy. Everything after this
+is handled by the `Deploy` workflow.
+
+```bash
+ssh -p 55005 root@103.191.132.47
+
+# 1. Folder structure
+mkdir -p /home/linknsmile.com/releases
+mkdir -p /home/linknsmile.com/shared/logs
+
+# 2. Persistent production env file — this is the ONLY place production
+#    secrets live outside GitHub Secrets. It is never touched by any
+#    deploy or rollback; each release just symlinks to it as .env.local.
+nano /home/linknsmile.com/shared/.env
+```
+
+Populate `shared/.env` with the same keys currently in the app's
+`.env.local` (see `.env.example` for the full list), with production
+values — at minimum:
+
+```
+MONGODB_URI=...
+NEXTAUTH_SECRET=...
+NEXTAUTH_URL=https://linknsmile.com
+NEXT_PUBLIC_SITE_URL=https://linknsmile.com
+NODE_ENV=production
+GMAIL_EMAIL=...
+GMAIL_APP_PASSWORD=...
+RAZORPAY_KEY_ID=...
+RAZORPAY_KEY_SECRET=...
+NEXT_PUBLIC_RAZORPAY_KEY_ID=...
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+CLOUDINARY_URL=...
+MIGRATION_SECRET=...
+CRON_SECRET=...
+```
+
+> Use **live** Razorpay keys here if this deploy is meant to take real
+> payments — the `.env.local` used for local dev has test keys. This is
+> also a good moment to set `CRON_SECRET` if it isn't set anywhere yet:
+> without it, the `/api/cron/*` routes currently run with no auth check
+> at all.
+
+```bash
+# 3. A dedicated SSH keypair for GitHub Actions (don't reuse your own).
+ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/gh_actions_deploy -N ""
+cat ~/.ssh/gh_actions_deploy.pub >> ~/.ssh/authorized_keys
+
+# Print the private key — you'll paste this into a GitHub Secret below,
+# then you can clear it from your terminal history.
+cat ~/.ssh/gh_actions_deploy
+```
+
+That's it — no manual `pm2 start`, no manual first build. The first push
+to `main` (once the GitHub Secrets below are set) will clone, build,
+health-check, and start PM2 for the first time automatically via
+`pm2 startOrReload`.
+
+## GitHub Secrets to add
+
+Repo → Settings → Secrets and variables → Actions → New repository secret:
+
+| Name | Value |
+|---|---|
+| `SSH_HOST` | `103.191.132.47` |
+| `SSH_USERNAME` | `root` |
+| `SSH_PORT` | `55005` |
+| `SSH_PRIVATE_KEY` | the private key printed by `cat ~/.ssh/gh_actions_deploy` above (the whole thing, including the `-----BEGIN...-----` / `-----END...-----` lines) |
+
+These four are the **only** secrets the CI/CD pipeline itself needs —
+they grant GitHub Actions SSH access to run the deploy/rollback scripts.
+The application's own secrets (`MONGODB_URI`, Razorpay keys, etc.) live
+only in `shared/.env` on the server and are never seen by GitHub Actions
+during a deploy.
+
+Separately, the existing `.github/workflows/ci.yml` already expects its
+own copies of `MONGODB_URI`, `NEXTAUTH_SECRET`, etc. as GitHub Secrets —
+those are unrelated to deploy, used only so the CI build step can compile
+successfully in the ephemeral GitHub runner. Leave those as they are.
+
+The server path (`/home/linknsmile.com`), Node bin path
+(`/root/.nvm/versions/node/v20.20.2/bin`), and port (`3004`) are not
+secrets — they're hardcoded in `.github/workflows/deploy.yml` and
+`rollback.yml`. Change them there (via a normal PR) if the server layout
+or Node version ever changes.
+
+## Known tradeoffs / things to revisit later
+
+- **Node version is hardcoded** to the nvm path for v20.20.2 in both
+  workflow files. If you upgrade Node on the server, update
+  `NODE_BIN_DIR` in both `deploy.yml` and `rollback.yml` in the same PR.
+- **PM2 cluster mode, 2 instances**, chosen for genuine zero-downtime
+  `reload` (a rolling restart with no dropped requests) rather than fork
+  mode's brief restart gap. The VPS has 6 cores; 2 instances leaves
+  headroom for anything else running on the box via CyberPanel. Bump
+  `instances` in `ecosystem.config.js` if this app gets dedicated
+  capacity later.
+- Two small in-memory stores in the app code (`lib/rate-limit.ts`'s
+  rate limiter, and the 2-minute product-list cache in
+  `app/api/products/route.ts`) become per-worker instead of global under
+  cluster mode. Not a correctness issue — worst case a rate limit or
+  cache is very slightly less effective — but worth knowing if you ever
+  see rate-limit behavior that seems looser than the configured limit.
+- The repo is public, so the server clones over plain HTTPS with no
+  credentials. If the repo ever goes private, the server will need its
+  own deploy key (`ssh-keygen` on the VPS, add the public half as a
+  read-only Deploy Key in GitHub repo settings, switch the clone URL in
+  `deploy.yml` to the `git@github.com:...` SSH form) — that key lives
+  only on the server, never as a GitHub secret.

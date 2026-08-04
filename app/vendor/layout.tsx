@@ -1,4 +1,4 @@
-// app/vendor/wallet/WalletDashboardClient.tsx
+// app/vendor/layout.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  DollarSign,
   Star,
   Settings,
   Menu,
@@ -18,6 +17,8 @@ import {
   Bell,
   Wallet,
   CreditCard,
+  AlertTriangle,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -31,6 +32,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+interface SubscriptionState {
+  status: "no_subscription" | "active" | "grace_period" | "blocked";
+  expiryDate: string | null;
+  daysUntilExpiry: number | null;
+  isInGracePeriod: boolean;
+  isBlocked: boolean;
+}
+
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -38,21 +53,27 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   // 1️⃣ Hooks always declared first
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
+  const [renewing, setRenewing] = useState(false);
 
-  // 2️⃣ Fetch shop approval status
-  useEffect(() => {
-    const checkStatus = async () => {
-      if (!session) return;
-
-      try {
-        const res = await fetch("/api/vendor/status");
-        const data = await res.json();
-        if (data.success) setIsApproved(data.isApproved);
-      } catch (error) {
-        console.error("Failed to check shop status:", error);
+  const checkStatus = async () => {
+    if (!session) return;
+    try {
+      const res = await fetch("/api/vendor/status");
+      const data = await res.json();
+      if (data.success) {
+        setIsApproved(data.isApproved);
+        setSubscription(data.subscription);
       }
-    };
+    } catch (error) {
+      console.error("Failed to check shop status:", error);
+    }
+  };
+
+  // 2️⃣ Fetch shop approval + subscription status
+  useEffect(() => {
     checkStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   // 3️⃣ Handle redirect safely after hooks
@@ -62,11 +83,115 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
     }
   }, [status, session, router]);
 
-  // 4️⃣ Render loading state
+  // 4️⃣ Load Razorpay checkout script for the renew flow
+  useEffect(() => {
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.async = true;
+    document.body.appendChild(s);
+    return () => {
+      try {
+        document.body.removeChild(s);
+      } catch {}
+    };
+  }, []);
+
+  const handleRenew = async () => {
+    setRenewing(true);
+    try {
+      const orderRes = await fetch("/api/vendor/subscription/create-order", { method: "POST" });
+      const order = await orderRes.json();
+      if (!orderRes.ok) throw new Error(order.error || "Failed to start renewal");
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        order_id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        name: "LinkAndSmile",
+        description: "Vendor Annual Subscription",
+        handler: async (response: any) => {
+          try {
+            const vRes = await fetch("/api/vendor/subscription/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
+            const vData = await vRes.json();
+            if (vRes.ok && vData.success) {
+              await checkStatus();
+            } else {
+              alert("Payment verification failed. Please contact support@linknsmile.com.");
+            }
+          } catch {
+            alert("Payment verification failed. Please try again.");
+          } finally {
+            setRenewing(false);
+          }
+        },
+        modal: {
+          ondismiss: () => setRenewing(false),
+        },
+        prefill: { email: session?.user?.email, name: session?.user?.name },
+      };
+      new window.Razorpay(options).open();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to start renewal. Please try again.");
+      setRenewing(false);
+    }
+  };
+
+  // 5️⃣ Render loading state
   if (status === "loading" || !session) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
+      </div>
+    );
+  }
+
+  // Hard block — more than 7 days past expiry (or cancelled, or never subscribed).
+  // No sidebar, no nav, nothing else reachable except renewal.
+  if (subscription?.isBlocked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-stone-50 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+            <Lock className="h-7 w-7 text-red-500" />
+          </div>
+          <h1 className="text-xl font-bold text-stone-900">Vendor Access Suspended</h1>
+          <p className="mt-2 text-sm text-stone-500">
+            {subscription.status === "no_subscription"
+              ? "You need an active annual subscription to use the vendor dashboard."
+              : `Your subscription expired on ${
+                  subscription.expiryDate
+                    ? new Date(subscription.expiryDate).toLocaleDateString("en-IN", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : ""
+                } and the grace period has ended.`}
+          </p>
+          <p className="mt-1 text-xs text-stone-400">
+            Your products remain in our system and will reappear automatically once you renew.
+          </p>
+          <Button className="mt-6 w-full" onClick={handleRenew} disabled={renewing}>
+            {renewing ? "Processing…" : "Renew Subscription"}
+          </Button>
+          <Button
+            variant="ghost"
+            className="mt-2 w-full"
+            onClick={() => signOut({ callbackUrl: "/" })}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
+        </div>
       </div>
     );
   }
@@ -199,6 +324,31 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
             </DropdownMenu>
           </div>
         </header>
+
+        {/* Grace-period banner */}
+        {subscription?.isInGracePeriod && (
+          <div className="flex flex-col items-start justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm sm:flex-row sm:items-center lg:px-6">
+            <div className="flex items-center gap-2 text-amber-800">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>
+                Your subscription expired on{" "}
+                {subscription.expiryDate
+                  ? new Date(subscription.expiryDate).toLocaleDateString("en-IN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : ""}
+                . Renew within{" "}
+                {subscription.daysUntilExpiry !== null ? 7 + subscription.daysUntilExpiry : 7} day(s)
+                to avoid losing access.
+              </span>
+            </div>
+            <Button size="sm" onClick={handleRenew} disabled={renewing} className="shrink-0">
+              {renewing ? "Processing…" : "Renew Now"}
+            </Button>
+          </div>
+        )}
 
         {/* Main Content */}
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">{children}</main>

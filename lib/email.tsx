@@ -1394,3 +1394,181 @@ export function getPayoutStatusEmail({
     </html>
   `;
 }
+
+// ── Vendor annual subscription emails ──────────────────────────────────
+
+const SUBSCRIPTION_SUPPORT_NOTE = `
+  <p style="font-size:13px;color:#888;border-top:1px solid #eee;padding-top:12px;margin-top:20px;">
+    This subscription fee is non-refundable. For billing queries, contact
+    <a href="mailto:support@linknsmile.com">support@linknsmile.com</a>.
+  </p>
+`;
+
+export function getVendorSubscriptionPaymentEmail({
+  vendorName,
+  shopName,
+  amount,
+  expiryDate,
+}: {
+  vendorName: string;
+  shopName: string;
+  amount: number;
+  expiryDate: Date;
+}) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#16a34a;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>Subscription Confirmed</h1></div>
+          <div class="content">
+            <p>Hello ${vendorName},</p>
+            <p>Your annual subscription for <strong>${shopName}</strong> is now active.</p>
+            <div style="background:#f9f9f9;padding:15px;border-radius:5px;margin:15px 0;">
+              <p><strong>Amount paid:</strong> ₹${amount.toLocaleString()}</p>
+              <p><strong>Valid until:</strong> ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
+            </div>
+            <p>Your vendor dashboard and storefront listings are fully active.</p>
+            ${SUBSCRIPTION_SUPPORT_NOTE}
+          </div>
+          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+export function getAdminVendorSubscriptionPaidEmail({
+  shopName,
+  ownerName,
+  ownerEmail,
+  amount,
+  expiryDate,
+}: {
+  shopName: string;
+  ownerName: string;
+  ownerEmail: string;
+  amount: number;
+  expiryDate: Date;
+}) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#7c3aed;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>Vendor Subscription Paid</h1></div>
+          <div class="content">
+            <p>Admin,</p>
+            <p><strong>${shopName}</strong> (${ownerName}, ${ownerEmail}) just paid their annual subscription.</p>
+            <div style="background:#f9f9f9;padding:15px;border-radius:5px;margin:15px 0;">
+              <p><strong>Amount:</strong> ₹${amount.toLocaleString()}</p>
+              <p><strong>Valid until:</strong> ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
+            </div>
+            <div style="text-align:center;"><a href="https://linknsmile.com/admin/vendors/subscriptions" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Subscriptions</a></div>
+          </div>
+          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+export function getVendorSubscriptionExpiryReminderEmail({
+  vendorName,
+  shopName,
+  expiryDate,
+  daysRemaining,
+}: {
+  vendorName: string;
+  shopName: string;
+  expiryDate: Date;
+  daysRemaining: number;
+}) {
+  const inGrace = daysRemaining <= 0;
+  const title = inGrace ? "Your subscription has expired" : "Your subscription is expiring soon";
+  const bodyLine = inGrace
+    ? `Your subscription expired on ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}. You have ${7 + daysRemaining} day(s) left of dashboard access before it is blocked.`
+    : `Your subscription for <strong>${shopName}</strong> expires in ${daysRemaining} day(s), on ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}.`;
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#f59e0b;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>${title}</h1></div>
+          <div class="content">
+            <p>Hello ${vendorName},</p>
+            <p>${bodyLine}</p>
+            <p>Renew now to avoid losing access to your vendor dashboard.</p>
+            <div style="text-align:center;"><a href="https://linknsmile.com/vendor/settings" style="background:#f59e0b;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Subscription</a></div>
+            ${SUBSCRIPTION_SUPPORT_NOTE}
+          </div>
+          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+export function getVendorSubscriptionCancelledEmail({
+  vendorName,
+  shopName,
+  cancellationReason,
+}: {
+  vendorName: string;
+  shopName: string;
+  cancellationReason?: string;
+}) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#e74c3c;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>Subscription Cancelled</h1></div>
+          <div class="content">
+            <p>Hello ${vendorName},</p>
+            <p>Your subscription for <strong>${shopName}</strong> has been cancelled by LinkAndSmile admin, and your vendor dashboard access has ended immediately.</p>
+            ${cancellationReason ? `<p><strong>Reason given:</strong> ${cancellationReason}</p>` : ""}
+            <p>Your product listings will remain visible on the storefront for 30 days from your original expiry date, after which they will be hidden (your data is kept, not deleted).</p>
+            ${SUBSCRIPTION_SUPPORT_NOTE}
+          </div>
+          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+export function getVendorSubscriptionStorefrontWarningEmail({
+  vendorName,
+  shopName,
+  hideDate,
+}: {
+  vendorName: string;
+  shopName: string;
+  hideDate: Date;
+}) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#e74c3c;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>Final Warning: Products Coming Down</h1></div>
+          <div class="content">
+            <p>Hello ${vendorName},</p>
+            <p>Your <strong>${shopName}</strong> products will be removed from the LinkAndSmile storefront on ${hideDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })} because your subscription has not been renewed.</p>
+            <p>Your product data will be kept and will automatically reappear as soon as you renew — even after this date.</p>
+            <div style="text-align:center;"><a href="https://linknsmile.com/vendor/settings" style="background:#e74c3c;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Now</a></div>
+            ${SUBSCRIPTION_SUPPORT_NOTE}
+          </div>
+          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+        </div>
+      </body>
+    </html>
+  `;
+}
