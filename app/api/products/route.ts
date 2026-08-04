@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
 
     const query: any = {
       isActive: true,
+      hiddenBySubscription: { $ne: true },
       $or: [
         { approvalStatus: "approved" },
         { approvalStatus: { $exists: false } },

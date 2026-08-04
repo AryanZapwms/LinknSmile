@@ -7,6 +7,7 @@ import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
 import { Company } from "@/lib/models/company";
 import { Category } from "@/lib/models/category";
+import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 
 const VALID_ORIGINS = ["made-in-india", "foreign-made", "unspecified"] as const;
 
@@ -119,6 +120,16 @@ export async function POST(req: NextRequest) {
             message:
               "Your shop is pending approval. You can only add products after your shop is approved.",
           },
+          { status: 403 }
+        )
+      );
+    }
+
+    const access = await getShopSubscriptionAccessState(shopId);
+    if (access.isBlocked) {
+      return withCORS(
+        NextResponse.json(
+          { message: "Your subscription has expired. Renew it to add or edit products." },
           { status: 403 }
         )
       );

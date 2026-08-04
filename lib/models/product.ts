@@ -64,6 +64,11 @@ const productSchema = new mongoose.Schema(
       },
     ],
     isActive: { type: Boolean, default: true },
+    // Set by the vendor-subscription sweep cron when a shop has been
+    // hard-blocked for over a month; independent of the vendor's own
+    // isActive toggle so a renewal can safely flip this back without
+    // touching products the vendor deliberately deactivated.
+    hiddenBySubscription: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -75,6 +80,7 @@ productSchema.index({ category: 1 });
 productSchema.index({ isActive: 1, createdAt: -1 });
 productSchema.index({ shopId: 1, approvalStatus: 1 });
 productSchema.index({ approvalStatus: 1 });
+productSchema.index({ shopId: 1, hiddenBySubscription: 1 });
 // New index for origin filtering
 productSchema.index({ origin: 1, isActive: 1 });
 

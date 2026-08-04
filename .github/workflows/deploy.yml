@@ -1,0 +1,67 @@
+name: Deploy
+
+# Gated on the existing CI workflow (lint/typecheck/build) succeeding on
+# main — we never want to even attempt a deploy of a commit that's known
+# to fail typecheck/build. The remote deploy script (scripts/deploy/deploy.sh)
+# then runs its own independent build + health check on the server as a
+# second, authoritative gate before anything goes live.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    # Serializes with the Rollback workflow too (same group name) so a
+    # deploy and a rollback can never run concurrently against the same
+    # server. scripts/deploy/*.sh additionally take a flock on the server
+    # itself as a second, independent guard.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Show what's being deployed
+        run: |
+          echo "Commit: ${{ github.event.workflow_run.head_sha }}"
+          echo "Triggered by CI run: ${{ github.event.workflow_run.html_url }}"
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 15m
+          envs: COMMIT_SHA
+          script: |
+            set -euo pipefail
+
+            # ── Fixed, non-sensitive server config ──────────────────────
+            # Not secrets — change these here (via a PR) if the server
+            # layout, port, or Node install path ever changes.
+            export APP_ROOT=/home/linknsmile.com
+            export NODE_BIN_DIR=/root/.nvm/versions/node/v20.20.2/bin
+            export PORT=3004
+            export HEALTH_CHECK_PORT=3999
+            export RELEASES_TO_KEEP=5
+
+            RELEASE_NAME="$(date +%Y%m%d%H%M%S)"
+            RELEASE_DIR="$APP_ROOT/releases/$RELEASE_NAME"
+
+            echo "→ Cloning $COMMIT_SHA into $RELEASE_DIR"
+            git clone --branch main --single-branch \
+              https://github.com/AryanZapwms/LinknSmile.git "$RELEASE_DIR"
+            cd "$RELEASE_DIR"
+            git checkout "$COMMIT_SHA"
+
+            # Everything from here on is a versioned script that was just
+            # checked out as part of this exact commit — see
+            # scripts/deploy/deploy.sh for the actual build/health-check/
+            # activate/prune logic.
+            bash scripts/deploy/deploy.sh
+        env:
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}

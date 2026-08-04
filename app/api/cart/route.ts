@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
     const validatedItems = await Promise.all(
       items.map(async (item: any) => {
         const product = await Product.findById(item.productId).populate("shopId");
-        if (!product) return null;
+        if (!product || product.hiddenBySubscription) return null;
 
         // Validate size if applicable
         let selectedSize = null;

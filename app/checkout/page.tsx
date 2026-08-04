@@ -102,6 +102,12 @@ export default function CheckoutPage() {
   }, [status, router]);
 
   useEffect(() => {
+    if (status === "authenticated" && !isLoading && items.length === 0) {
+      router.replace("/cart");
+    }
+  }, [status, isLoading, items.length, router]);
+
+  useEffect(() => {
     if (items.length > 0) {
       trackInitiateCheckout(
         totalPrice,
@@ -180,7 +186,7 @@ export default function CheckoutPage() {
         if (!res.ok) throw new Error(data.error);
         clearCart();
         await clearServerCart();
-        router.push(`/order-success/${data.orderId}`);
+        router.replace(`/order-success/${data.orderId}`);
         return;
       }
 
@@ -234,7 +240,7 @@ export default function CheckoutPage() {
               if (vRes.ok && vData.orderId) {
                 clearCart();
                 await clearServerCart();
-                router.push(`/order-success/${vData.orderId}`);
+                router.replace(`/order-success/${vData.orderId}`);
               } else {
                 alert("Payment verification failed. Please contact support.");
               }
@@ -276,6 +282,7 @@ export default function CheckoutPage() {
     );
   }
   if (status === "unauthenticated") return null;
+  if (items.length === 0) return null;
 
   return (
     <main className="min-h-screen bg-stone-50">

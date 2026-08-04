@@ -33,6 +33,13 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       return withCORS(NextResponse.json({ error: "Product not found" }, { status: 404 }));
     }
 
+    // Hidden by the subscription sweep (vendor blocked >30 days) — treat as
+    // not found on the public detail endpoint so a saved link can't be used
+    // to view/buy around the storefront hide. Data itself is untouched.
+    if (product.hiddenBySubscription) {
+      return withCORS(NextResponse.json({ error: "Product not found" }, { status: 404 }));
+    }
+
     const productObj = product;
     const populatedProduct = {
       ...productObj,

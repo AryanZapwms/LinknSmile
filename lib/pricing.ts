@@ -62,6 +62,13 @@ export async function computeOrderPricing(items: CartItemInput[]): Promise<Prici
       throw new PricingError(`Product not found`, 404);
     }
 
+    // Hidden by the vendor-subscription sweep — treat as unpurchasable,
+    // same as "not found", so a stale cart/link can't be used to buy
+    // around the storefront hide.
+    if (product.hiddenBySubscription) {
+      throw new PricingError(`"${product.name}" is no longer available`, 404);
+    }
+
     const dbShopId = product.shopId?._id || product.shopId;
     if (!dbShopId) {
       throw new PricingError(`Product "${product.name}" is missing a valid vendor assignment.`, 400);
