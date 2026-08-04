@@ -190,6 +190,7 @@ export default function CheckoutPage() {
         return;
       }
 
+      
       if (paymentMethod === "razorpay") {
         const rpRes = await fetch("/api/razorpay/create-order", {
   method: "POST",
