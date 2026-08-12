@@ -348,11 +348,11 @@ export function Header() {
       <div className="h-0.5 w-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex h-17  items-center justify-between gap-4">
+        <div className="flex h-20  items-center justify-between gap-4">
           {/* Logo */}
           <button
             onClick={() => router.push("/")}
-            className="group flex shrink-0 items-center gap-2.5 focus:outline-none"
+            className="group flex shrink-0 items-center h-17 gap-2.5 focus:outline-none bg-white px-3 rounded-xl pb-2"
             aria-label="Go to home"
           >
 

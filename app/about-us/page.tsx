@@ -404,13 +404,13 @@ export default function AboutUs() {
                   label: "support@linknsmile.com",
                   href: "mailto:support@linknsmile.com",
                 },
-                { icon: Phone, label: "+91 9819079079", href: "tel:+919819079079" },
-                { icon: Phone, label: "+91 9321179079", href: "tel:+919321179079" },
-                {
-                  icon: MapPin,
-                  label: "S-55, Whispering Palms, Kandivali (E), Mumbai — 400101",
-                  href: undefined,
-                },
+                { icon: Phone, label: "+91 8369991099", href: "tel:+918369991099" },
+                { icon: Phone, label: "+91 8369991099", href: "tel:+918369991099" },
+                // {
+                //   icon: MapPin,
+                //   label: "S-55, Whispering Palms, Kandivali (E), Mumbai — 400101",
+                //   href: undefined,
+                // },
               ].map(({ icon: Icon, label, href }) => (
                 <div
                   key={label}
