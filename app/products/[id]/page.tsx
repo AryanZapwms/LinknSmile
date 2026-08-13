@@ -944,7 +944,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
             You've reached the 5-item cart limit. Contact us for bulk orders.
           </p>
           <div className="mb-4 space-y-2">
-            {["+91 9820623835", "+91 9819079079"].map((n) => (
+            {["+91 9820623835", "+91 8355991099"].map((n) => (
               <a
                 key={n}
                 href={`tel:${n.replace(/\s/g, "")}`}

@@ -5,6 +5,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import LinkAndSmileLogo from "@/public/LinkAndSmile2.png";
+import { Divide } from "lucide-react";
 
 const categories = [
   { href: "/categories/organic-products", label: "Organic Products" },
@@ -175,8 +176,10 @@ export default function Footer() {
                 Get in Touch
               </h4>
               <div className="space-y-3">
-                <a
-                  href="mailto:support@linknsmile.com"
+                <div>
+                  <strong className="text-md">Customer Support</strong>
+                  <a
+                  href="mailto:care@linknsmile.com"
                   className="flex items-start gap-2 text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
                 >
                   <svg
@@ -192,8 +195,36 @@ export default function Footer() {
                       d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                     />
                   </svg>
-                  support@linknsmile.com
+                 
+                  care@linknsmile.com 
                 </a>
+                </div>
+                
+
+            <div>
+              <strong className="text-md">Vendor Support</strong>
+             <a
+                  href="mailto:care@linknsmile.com"
+                  className="flex items-start gap-2 text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
+                >
+                  <svg
+                    className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.8"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  
+                  support@linknsmile.com 
+                </a>
+            </div>
+               
 
                 <div className="flex items-start gap-2">
                   <svg
@@ -211,21 +242,16 @@ export default function Footer() {
                   </svg>
                   <div className="space-y-1">
                     <a
-                      href="tel:+919321179079"
+                      href="tel:+918355991099"
                       className="block text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
                     >
-                      +91 9321179079
+                      +91 8355991099
                     </a>
-                    <a
-                      href="tel:+919819079079"
-                      className="block text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
-                    >
-                      +91 9819079079
-                    </a>
+                  
                   </div>
                 </div>
 
-                <div className="flex items-start gap-2">
+                {/* <div className="flex items-start gap-2">
                   <svg
                     className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
                     fill="none"
@@ -250,7 +276,7 @@ export default function Footer() {
                     <br />
                     Kandivali (E), Mumbai — 400101
                   </address>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
