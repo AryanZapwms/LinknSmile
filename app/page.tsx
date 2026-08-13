@@ -235,8 +235,8 @@ export default function Home() {
     };
   }, []);
 
-  const PRIMARY_WA = "9321179079";
-  const SECONDARY_WA = "9819079079";
+  const PRIMARY_WA = "8355991099";
+  const SECONDARY_WA = "8355991099";
   const buildWaLink = (n: string) => `https://wa.me/${n}`;
   const openWaFor = (n: string) => {
     window.open(buildWaLink(n), "_blank", "noopener,noreferrer");

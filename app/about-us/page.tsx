@@ -404,8 +404,8 @@ export default function AboutUs() {
                   label: "support@linknsmile.com",
                   href: "mailto:support@linknsmile.com",
                 },
-                { icon: Phone, label: "+91 9819079079", href: "tel:+919819079079" },
-                { icon: Phone, label: "+91 9321179079", href: "tel:+919321179079" },
+                { icon: Phone, label: "+91 8355991099", href: "tel:+918355991099" },
+                { icon: Phone, label: "+91 8355991099", href: "tel:+918355991099" },
                 {
                   icon: MapPin,
                   label: "S-55, Whispering Palms, Kandivali (E), Mumbai — 400101",

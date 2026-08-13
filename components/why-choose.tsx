@@ -166,7 +166,7 @@ export default function WhyChoose() {
             <p className="text-xs text-stone-500">Our team is here to help you</p>
           </div>
           <a
-            href="tel:9819079079"
+            href="tel:8355991099"
             className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-white px-5 py-2 text-sm font-semibold text-amber-700 shadow-sm transition-all duration-150 hover:border-amber-300 hover:bg-amber-50"
           >
             Contact Us

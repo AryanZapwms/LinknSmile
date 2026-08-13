@@ -250,7 +250,7 @@ export default function CartPage() {
             You've reached the 5-item cart limit. For bulk orders, contact us directly.
           </p>
           <div className="mb-4 space-y-2">
-            {["+91 9820623835", "+91 9819079079"].map((num) => (
+            {["+91 8355991099", "+91 8355991099"].map((num) => (
               <a
                 key={num}
                 href={`tel:${num.replace(/\s/g, "")}`}

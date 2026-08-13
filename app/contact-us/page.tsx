@@ -31,10 +31,10 @@ const contactCards = [
             Customer Support
           </p>
           <a
-            href="tel:+919819079079"
+            href="tel:+918355991099"
             className="text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
           >
-            +91 9819079079
+            +91 8355991099
           </a>
         </div>
         <div>
@@ -42,10 +42,10 @@ const contactCards = [
             Seller Support
           </p>
           <a
-            href="tel:+919321179079"
+            href="tel:+918355991099"
             className="text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
           >
-            +91 9321179079
+            +91 8355991099
           </a>
         </div>
       </div>
@@ -201,7 +201,7 @@ export default function ContactUs() {
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <a
-                  href="tel:+919819079079"
+                  href="tel:+918355991099"
                   className="flex items-center justify-center gap-2 rounded-xl bg-stone-900 py-3 text-sm font-bold text-white transition-colors duration-200 hover:bg-amber-500"
                 >
                   <Phone className="h-4 w-4" />
