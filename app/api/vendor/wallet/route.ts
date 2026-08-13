@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { Order } from "@/lib/models/order";
 import Shop from "@/lib/models/shop";
 import { Wallet } from "@/lib/models/wallet";
 
@@ -38,35 +37,13 @@ export async function GET() {
       });
     }
 
-    // Recalculate balances from orders
-    const orders = await Order.find({ "items.shopId": shop._id });
-    let withdrawable = 0,
-      pending = 0,
-      frozen = 0;
-
-    for (const order of orders) {
-      const vendorPayout = order.vendorPayouts?.find(
-        (p: any) => p.shopId?.toString() === (shop._id as any).toString()
-      );
-      const vendorEarnings = order.items
-        .filter((item: any) => item.shopId?.toString() === (shop._id as any).toString())
-        .reduce((sum: number, item: any) => sum + (item.vendorEarnings || 0), 0);
-
-      if (vendorPayout?.status === "released") withdrawable += vendorEarnings;
-      else if (vendorPayout?.status === "held") frozen += vendorEarnings;
-      else pending += vendorEarnings;
-    }
-
-    wallet.withdrawableBalance = withdrawable;
-    wallet.pendingBalance = pending;
-    wallet.frozenBalance = frozen;
-    await wallet.save();
-
+    // Wallet balances are a cache maintained exclusively by LedgerService
+    // (see lib/services/ledger-service.ts) — this route only reads them.
     return NextResponse.json({
-      totalBalance: withdrawable + pending + frozen,
-      pendingBalance: pending,
-      withdrawableBalance: withdrawable,
-      frozenBalance: frozen,
+      totalBalance: wallet.withdrawableBalance + wallet.pendingBalance + wallet.frozenBalance,
+      pendingBalance: wallet.pendingBalance,
+      withdrawableBalance: wallet.withdrawableBalance,
+      frozenBalance: wallet.frozenBalance,
       minimumWithdrawalThreshold: wallet.minimumThreshold,
       isFrozen: wallet.status === "FROZEN",
       isClosed: wallet.status === "CLOSED",
