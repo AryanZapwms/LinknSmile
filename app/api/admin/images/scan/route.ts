@@ -2,6 +2,8 @@ import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
 import { Blog } from "@/lib/models/blog";
@@ -169,6 +171,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "admin") {
+      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
+    }
+
     // Get all image files
     const images = getAllImageFiles();
 
