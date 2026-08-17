@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, User, Phone, MapPin } from "lucide-react";
+import { Mail, User, Phone, MapPin, Store, ArrowRight } from "lucide-react";
 
 interface UserProfile {
   name: string;
@@ -19,6 +19,8 @@ interface UserProfile {
   city?: string;
   state?: string;
   pincode?: string;
+  role?: string;
+  pendingVendorApplication?: boolean;
 }
 
 export default function ProfilePage() {
@@ -64,6 +66,8 @@ export default function ProfilePage() {
               city: data.city || "",
               state: data.state || "",
               pincode: data.pincode || "",
+              role: data.role || "",
+              pendingVendorApplication: data.pendingVendorApplication || false,
             }));
           }
         })
@@ -127,6 +131,32 @@ export default function ProfilePage() {
           Update your personal information and contact details
         </p>
       </div>
+      {profile.role === "user" && profile.pendingVendorApplication && (
+        <Card className="mb-6 border-amber-200 bg-amber-50">
+          <CardContent className="flex flex-col items-start justify-between gap-3 py-4 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                <Store className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-amber-900">
+                  Finish setting up your vendor account
+                </p>
+                <p className="text-xs text-amber-700">
+                  You started a vendor application but haven't submitted your shop details yet.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="shrink-0 bg-amber-600 hover:bg-amber-700"
+              onClick={() => router.push("/vendor-apply")}
+            >
+              Continue application <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Personal Information</CardTitle>
