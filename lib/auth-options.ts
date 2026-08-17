@@ -1,11 +1,20 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { verifyPassword } from "@/lib/auth";
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -48,7 +57,25 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, account, trigger, session }) {
+      if (account?.provider === "google" && user?.email) {
+        await connectDB();
+        const email = user.email.toLowerCase();
+        let dbUser = await User.findOne({ email });
+        if (!dbUser) {
+          dbUser = await User.create({
+            email,
+            name: user.name || "User",
+            role: "user",
+            isVerified: true,
+            isActive: true,
+          });
+        }
+        token.id = dbUser._id.toString();
+        token.role = dbUser.role || "user";
+        token.shopId = dbUser.shopId?.toString() || null;
+        return token;
+      }
       if (user) {
         token.id = user.id;
         token.role = user.role;
