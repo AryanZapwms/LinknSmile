@@ -23,8 +23,15 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
     console.log("Folder:", folder);
     console.log("File path:", filePath);
 
-    const fullPath = path.join(process.cwd(), "public", folder, filePath);
+    const PUBLIC_DIR = path.resolve(process.cwd(), "public");
+    const fullPath = path.resolve(PUBLIC_DIR, folder, filePath);
     console.log("Full path:", fullPath);
+
+    if (!fullPath.startsWith(PUBLIC_DIR + path.sep)) {
+      console.log("❌ Path escapes public directory, rejecting");
+      console.log("========================================");
+      return withCORS(new NextResponse("File not found", { status: 404 }));
+    }
 
     if (!existsSync(fullPath)) {
       console.log("❌ File not found");

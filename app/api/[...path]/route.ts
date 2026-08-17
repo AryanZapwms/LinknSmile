@@ -55,22 +55,27 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
     console.log("Decoded file path:", filePath);
     console.log("Params received:", params.path);
 
+    const PUBLIC_DIR = path.resolve(process.cwd(), "public");
+
     // Try to find the file in different public folders
     const possiblePaths = [
-      path.join(process.cwd(), "public", "uploads", filePath),
-      path.join(process.cwd(), "public", "arrivals", filePath),
-      path.join(process.cwd(), "public", "blogs", filePath),
-      path.join(process.cwd(), "public", "carousel", filePath),
-      path.join(process.cwd(), "public", "fonts", filePath),
-      path.join(process.cwd(), "public", "shop-by-concern", filePath),
-      path.join(process.cwd(), "public", filePath), // Root public folder
+      path.resolve(PUBLIC_DIR, "uploads", filePath),
+      path.resolve(PUBLIC_DIR, "arrivals", filePath),
+      path.resolve(PUBLIC_DIR, "blogs", filePath),
+      path.resolve(PUBLIC_DIR, "carousel", filePath),
+      path.resolve(PUBLIC_DIR, "fonts", filePath),
+      path.resolve(PUBLIC_DIR, "shop-by-concern", filePath),
+      path.resolve(PUBLIC_DIR, filePath), // Root public folder
     ];
 
     let fullPath = "";
     let foundPath = false;
 
-    // Check which path exists
+    // Check which path exists (only consider candidates that stay inside public/)
     for (const possiblePath of possiblePaths) {
+      if (!possiblePath.startsWith(PUBLIC_DIR + path.sep)) {
+        continue;
+      }
       if (existsSync(possiblePath)) {
         fullPath = possiblePath;
         foundPath = true;

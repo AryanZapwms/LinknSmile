@@ -1,5 +1,7 @@
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import Shop from "@/lib/models/shop";
@@ -11,6 +13,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "admin") {
+      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
+    }
+
     await connectDB();
     console.log("Debug Link-Shop: DB Connected");
 
@@ -90,10 +97,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error("Debug Link-Shop Error:", error);
     return withCORS(
-      NextResponse.json(
-        { success: false, error: error.message, stack: error.stack },
-        { status: 500 }
-      )
+      NextResponse.json({ success: false, error: error.message }, { status: 500 })
     );
   }
 }

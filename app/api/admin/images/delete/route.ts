@@ -2,6 +2,8 @@ import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
 import { Blog } from "@/lib/models/blog";
@@ -15,6 +17,11 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "admin") {
+      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
+    }
+
     const { path: imagePath } = await request.json();
 
     if (!imagePath) {
@@ -33,7 +40,15 @@ export async function DELETE(request: NextRequest) {
     // Check if image is still being used
     await connectDB();
 
-    const fullImagePath = `${PUBLIC_DIR}${imagePath}`;
+    const fullImagePath = path.join(PUBLIC_DIR, imagePath);
+    const resolvedPath = path.resolve(fullImagePath);
+    const resolvedPublicDir = path.resolve(PUBLIC_DIR);
+
+    if (!resolvedPath.startsWith(resolvedPublicDir + path.sep)) {
+      return withCORS(
+        NextResponse.json({ success: false, error: "Invalid image path" }, { status: 400 })
+      );
+    }
 
     // Verify file exists
     if (!fs.existsSync(fullImagePath)) {
