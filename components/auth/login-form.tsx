@@ -26,12 +26,13 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const isSubmitting = isLoading || isRedirecting;
+  const isSubmitting = isLoading || isGoogleLoading || isRedirecting;
   const router = useRouter();
   const { data: session, update } = useSession();
 
@@ -90,6 +91,17 @@ export function LoginForm() {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function onGoogleSignIn() {
+    setError("");
+    setIsGoogleLoading(true);
+    try {
+      await signIn("google");
+    } catch {
+      setError("Unable to sign in with Google. Please try again.");
+      setIsGoogleLoading(false);
     }
   }
 
@@ -286,6 +298,43 @@ export function LoginForm() {
                     )}
                   </button>
                 </form>
+
+                {/* Google sign-in */}
+                <div className="my-5 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-stone-100" />
+                  <span className="text-xs font-medium text-stone-400">or</span>
+                  <div className="h-px flex-1 bg-stone-100" />
+                </div>
+                <button
+                  type="button"
+                  onClick={onGoogleSignIn}
+                  disabled={isSubmitting}
+                  className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border-2 border-stone-200 text-sm font-semibold text-stone-700 transition-all duration-200 hover:border-stone-300 hover:bg-stone-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isGoogleLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <svg className="h-4 w-4" viewBox="0 0 24 24">
+                      <path
+                        fill="#4285F4"
+                        d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47c-.28 1.5-1.13 2.78-2.4 3.63v3.02h3.88c2.27-2.09 3.57-5.17 3.57-8.84z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 24c3.24 0 5.95-1.07 7.93-2.9l-3.88-3.02c-1.07.72-2.45 1.15-4.05 1.15-3.11 0-5.75-2.1-6.69-4.92H1.3v3.11C3.27 21.3 7.31 24 12 24z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.31 14.31a7.2 7.2 0 0 1 0-4.62V6.58H1.3a12 12 0 0 0 0 10.84l4.01-3.11z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.94 1.19 15.24 0 12 0 7.31 0 3.27 2.7 1.3 6.58l4.01 3.11C6.25 6.85 8.89 4.75 12 4.75z"
+                      />
+                    </svg>
+                  )}
+                  {isGoogleLoading ? "Redirecting…" : "Continue with Google"}
+                </button>
 
                 {/* Divider */}
                 <div className="my-5 flex items-center gap-3">
