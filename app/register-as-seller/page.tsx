@@ -11,7 +11,7 @@ export default function RegisterAsSellerPage() {
             🇮🇳 Made in India · Sell to India
           </span>
           <h1 className="mb-6 text-5xl leading-tight font-extrabold text-white">
-            Grow Your Business with <span className="text-[#f5a623]">LinkAndSmile</span>
+            Grow Your Business with <span className="text-[#f5a623]">linknsmile</span>
           </h1>
           <p className="mb-10 text-lg leading-relaxed text-gray-400">
             Join thousands of verified local sellers reaching buyers across India. List your
@@ -155,7 +155,7 @@ export default function RegisterAsSellerPage() {
         <div className="relative overflow-hidden rounded-3xl bg-[#f5a623] p-12 text-center">
           <h2 className="mb-4 text-3xl font-bold text-[#1a1508]">Ready to grow your business?</h2>
           <p className="mb-8 text-[#1a1508]/70">
-            Join the LinkAndSmile seller community today — it&apos;s free.
+            Join the linknsmile seller community today — it&apos;s free.
           </p>
           <Link
             href="/auth/register-vendor"

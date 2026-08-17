@@ -108,7 +108,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
         order_id: order.id,
         amount: order.amount,
         currency: order.currency,
-        name: "LinkAndSmile",
+        name: "Linknsmile",
         description: "Vendor Annual Subscription",
         handler: async (response: any) => {
           try {

@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2, Loader2, ShieldCheck, Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import LinkAndSmileLogo from "@/public/LinkAndSmileLogo.png";
+import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 
 function VerifyOtpContent() {
   const searchParams = useSearchParams();
@@ -76,7 +76,7 @@ function VerifyOtpContent() {
           <CardHeader className="bg-gradient-primary-soft/70 dark:bg-primary-500/5 border-primary-500/10 space-y-4 border-b pb-8 text-center">
             <div className="mb-4 flex justify-center">
               <div className="relative h-16 w-40">
-                <Image src={LinkAndSmileLogo} alt="LinkAndSmile" fill className="object-contain" />
+                <Image src={LinkAndSmileLogo} alt="linknsmile" fill className="object-contain" />
               </div>
             </div>
             <CardTitle className="text-gradient text-3xl font-bold">Verify Your Identity</CardTitle>

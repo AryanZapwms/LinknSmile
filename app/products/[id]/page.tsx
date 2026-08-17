@@ -308,7 +308,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
       stock: stockCheck,
       selectedSize: selectedSize || undefined,
       shopId: typeof p.shopId === "object" ? p.shopId?._id : p.shopId,
-      shopName: typeof p.shopId === "object" ? p.shopId?.shopName : "LinkAndSmile",
+      shopName: typeof p.shopId === "object" ? p.shopId?.shopName : "linknsmile",
       commissionRate: (typeof p.shopId === "object" ? p.shopId?.commissionRate : 10) || 10,
     });
     trackAddToCart(

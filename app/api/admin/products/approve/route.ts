@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
             subject: "Product Approved!",
             html: `
               <h1>Product Approved</h1>
-              <p>Your product "${product.name}" has been approved and is now live on LinkAndSmile.</p>
+              <p>Your product "${product.name}" has been approved and is now live on linknSmile.</p>
               <p>Customers can now view and purchase this product.</p>
             `,
           });

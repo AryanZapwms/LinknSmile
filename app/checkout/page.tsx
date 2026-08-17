@@ -216,7 +216,7 @@ export default function CheckoutPage() {
           order_id: rpOrder.id,
           amount: rpOrder.amount,
           currency: rpOrder.currency,
-          name: "LinkAndSmile",
+          name: "linknsmile",
           description: "India's Marketplace",
           handler: async (response: any) => {
             try {
@@ -340,7 +340,7 @@ export default function CheckoutPage() {
                               <Store className="h-3.5 w-3.5 text-stone-400" />
                             </div>
                             <span className="text-sm font-semibold text-stone-800">
-                              {vendorItems[0]?.shopName || "LinkAndSmile"}
+                              {vendorItems[0]?.shopName || "linknsmile"}
                             </span>
                           </div>
                           <span className="rounded-full border border-stone-100 bg-white px-2.5 py-1 text-xs text-stone-400">

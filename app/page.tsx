@@ -330,7 +330,7 @@ export default function Home() {
               Grow Your Business
             </p>
             <h3 className="text-xl font-bold text-white md:text-2xl">
-              Become a Seller on LinkAndSmile
+              Become a Seller on LinknSmile
             </h3>
             <p className="mt-1 text-sm text-amber-100">Reach thousands of buyers across India</p>
           </div>
@@ -444,7 +444,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-xs font-medium">Chat with LinkAndSmile</p>
+                  <p className="text-xs font-medium">Chat with LinknSmile</p>
                   <p className="text-xs text-stone-400">{PRIMARY_WA}</p>
                 </div>
               </button>

@@ -26,7 +26,7 @@ export async function sendOTP(email: string) {
 
   await sendEmail({
     to: email,
-    subject: "Your LinkAndSmile Verification Code",
+    subject: "Your Linknsmile Verification Code",
     html: `
       <div style="font-family: sans-serif; padding: 20px; text-align: center;">
         <h2>Verify Your Email</h2>

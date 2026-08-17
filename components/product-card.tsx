@@ -117,7 +117,7 @@ export function ProductCard({
         stock: selectedSize.stock,
         selectedSize,
         shopId: (shopId || "default") as string,
-        shopName: shopName || "LinkAndSmile",
+        shopName: shopName || "Linknsmile",
         commissionRate: commissionRate || 10,
       });
       toast({ title: "Added to cart", description: `${name} (${selectedSize.size}) added.` });
@@ -133,7 +133,7 @@ export function ProductCard({
         slug,
         stock,
         shopId: shopId || "default",
-        shopName: shopName || "LinkAndSmile",
+        shopName: shopName || "Linknsmile",
         commissionRate: commissionRate || 10,
       });
       toast({ title: "Added to cart", description: `${name} added to your cart.` });

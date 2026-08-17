@@ -52,9 +52,9 @@ export async function GET(req: NextRequest) {
       console.log("Debug Link-Shop: Creating a new default shop...");
       shop = await Shop.create({
         ownerId: user._id,
-        shopName: "LinkAndSmile Official Shop",
-        slug: "linkandsmile-" + Date.now(),
-        description: "Official LinkAndSmile Vendor Shop",
+        shopName: "linknsmile Official Shop",
+        slug: "linknsmile-" + Date.now(),
+        description: "Official linknsmile Vendor Shop",
         address: {
           street: "Main St",
           city: "Mumbai",

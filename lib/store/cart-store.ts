@@ -213,7 +213,7 @@ export const useCartStore = create<CartStore>()(
 
           byVendor.push({
             shopId,
-            shopName: vendorItems[0]?.shopName || "LinkAndSmile Platform",
+            shopName: vendorItems[0]?.shopName || "Linknsmile Platform",
             subtotal: vendorSubtotal,
             commission,
             earnings,

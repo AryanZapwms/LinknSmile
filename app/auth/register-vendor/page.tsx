@@ -28,7 +28,7 @@ import {
   FileText,
 } from "lucide-react";
 import Image from "next/image";
-import LinkAndSmileLogo from "@/public/LinkAndSmileLogo.png";
+import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 
 export default function RegisterVendorPage() {
   const [step, setStep] = useState(1);
@@ -178,7 +178,7 @@ export default function RegisterVendorPage() {
                 <h1 className="text-gradient text-5xl leading-tight font-bold">
                   Grow Your Business
                 </h1>
-                <h2 className="text-foreground text-3xl font-bold">As a LinkAndSmile Vendor</h2>
+                <h2 className="text-foreground text-3xl font-bold">As a linknsmile Vendor</h2>
                 <p className="text-muted-foreground text-lg leading-relaxed">
                   Join our premium marketplace and connect with thousands of customers looking for
                   professional skincare solutions.
@@ -370,7 +370,7 @@ export default function RegisterVendorPage() {
                           <Input
                             id="shopName"
                             name="shopName"
-                            placeholder="LinkAndSmile Exclusive"
+                            placeholder="linknsmile Exclusive"
                             value={formData.shopName}
                             onChange={handleChange}
                             required

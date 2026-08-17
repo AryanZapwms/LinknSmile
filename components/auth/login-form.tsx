@@ -19,7 +19,7 @@ import {
   Store,
   ArrowRight,
 } from "lucide-react";
-import LinkAndSmileLogo from "@/public/LinkAndSmileLogo.png";
+import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -339,7 +339,7 @@ export function LoginForm() {
                 {/* Divider */}
                 <div className="my-5 flex items-center gap-3">
                   <div className="h-px flex-1 bg-stone-100" />
-                  <span className="text-xs font-medium text-stone-400">New to LinkAndSmile?</span>
+                  <span className="text-xs font-medium text-stone-400">New to Linknsmile?</span>
                   <div className="h-px flex-1 bg-stone-100" />
                 </div>
 

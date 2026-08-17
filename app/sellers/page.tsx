@@ -16,8 +16,8 @@ async function getShops() {
 }
 
 export const metadata = {
-  title: "All Sellers | LinkAndSmile",
-  description: "Discover verified sellers on LinkAndSmile — India's marketplace",
+  title: "All Sellers | linknsmile",
+  description: "Discover verified sellers on linknsmile — India's marketplace",
 };
 
 export default async function SellersPage() {
@@ -30,7 +30,7 @@ export default async function SellersPage() {
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14">
           <div className="mb-1 flex items-center gap-2">
             <span className="text-xs font-bold tracking-widest text-amber-500 uppercase">
-              LinkAndSmile Marketplace
+              Linknsmile Marketplace
             </span>
           </div>
           <h1 className="mb-2 text-3xl font-bold tracking-tight text-stone-900 md:text-4xl">
@@ -60,7 +60,7 @@ export default async function SellersPage() {
             <p className="text-sm text-stone-400">
               Be the first to{" "}
               <Link href="/register-as-seller" className="text-amber-600 hover:underline">
-                sell on LinkAndSmile
+                sell on linknsmile
               </Link>
             </p>
           </div>
@@ -149,7 +149,7 @@ export default async function SellersPage() {
         {/* Bottom CTA */}
         <div className="mt-12 text-center">
           <div className="inline-flex flex-col items-center gap-3 rounded-2xl border border-stone-100 bg-white px-8 py-6">
-            <p className="font-medium text-stone-600">Want to sell on LinkAndSmile?</p>
+            <p className="font-medium text-stone-600">Want to sell on linknsmile?</p>
             <Link
               href="/register-as-seller"
               className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-600"
