@@ -35,6 +35,8 @@ export async function GET(request: Request) {
         city: user.address?.city || "",
         state: user.address?.state || "",
         pincode: user.address?.zipCode || "",
+        role: user.role,
+        pendingVendorApplication: user.pendingVendorApplication || false,
       })
     );
   } catch (error) {

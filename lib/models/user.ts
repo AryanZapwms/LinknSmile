@@ -48,6 +48,9 @@ const userSchema = new mongoose.Schema(
       ref: "Shop",
     },
     pushTokens: { type: [String], default: [] },
+
+    // Set when a user starts (but hasn't finished) the vendor application flow.
+    pendingVendorApplication: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
