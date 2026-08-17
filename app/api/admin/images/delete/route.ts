@@ -40,7 +40,15 @@ export async function DELETE(request: NextRequest) {
     // Check if image is still being used
     await connectDB();
 
-    const fullImagePath = `${PUBLIC_DIR}${imagePath}`;
+    const fullImagePath = path.join(PUBLIC_DIR, imagePath);
+    const resolvedPath = path.resolve(fullImagePath);
+    const resolvedPublicDir = path.resolve(PUBLIC_DIR);
+
+    if (!resolvedPath.startsWith(resolvedPublicDir + path.sep)) {
+      return withCORS(
+        NextResponse.json({ success: false, error: "Invalid image path" }, { status: 400 })
+      );
+    }
 
     // Verify file exists
     if (!fs.existsSync(fullImagePath)) {
