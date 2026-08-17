@@ -214,10 +214,10 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
             <div className="rounded-2xl bg-gradient-to-br from-amber-400 to-amber-500 p-5 text-white shadow-lg shadow-amber-100">
               <div className="mb-2 flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5" />
-                <h4 className="text-sm font-bold">LinkAndSmile Trusted</h4>
+                <h4 className="text-sm font-bold">Linknsmile Trusted</h4>
               </div>
               <p className="text-xs leading-relaxed text-white/85">
-                This seller is verified and approved by LinkAndSmile. Shop with confidence.
+                This seller is verified and approved by linknsmile. Shop with confidence.
               </p>
             </div>
 

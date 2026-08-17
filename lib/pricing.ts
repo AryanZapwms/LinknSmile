@@ -102,7 +102,7 @@ export async function computeOrderPricing(items: CartItemInput[]): Promise<Prici
 
     const quantity = Math.floor(item.quantity);
     const shopId = dbShopId.toString();
-    const shopName = product.shopId?.shopName || "LinkAndSmile Platform";
+    const shopName = product.shopId?.shopName || "Linknsmile Platform";
     const commissionRate = product.shopId?.commissionRate ?? 10;
 
     const itemTotal = price * quantity;

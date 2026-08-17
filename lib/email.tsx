@@ -1342,9 +1342,9 @@ export function getPayoutRequestedEmail({
               <p><strong>Request ID:</strong> ${requestId}</p>
             </div>
             <p>Please review and process this request in the admin panel.</p>
-            <div style="text-align:center;"><a href="https://linkandsmile.com/admin/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Request</a></div>
+            <div style="text-align:center;"><a href="https://linknsmile.com/admin/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Request</a></div>
           </div>
-          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
       </body>
     </html>
@@ -1386,9 +1386,9 @@ export function getPayoutStatusEmail({
             ${failureReason ? `<p style="color:#e74c3c"><strong>Reason:</strong> ${failureReason}</p>` : ""}
             
             <p>You can track all your payouts in your dashboard.</p>
-            <div style="text-align:center;"><a href="https://linkandsmile.com/vendor/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Check Dashboard</a></div>
+            <div style="text-align:center;"><a href="https://linknsmile.com/vendor/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Check Dashboard</a></div>
           </div>
-          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
       </body>
     </html>
@@ -1432,7 +1432,7 @@ export function getVendorSubscriptionPaymentEmail({
             <p>Your vendor dashboard and storefront listings are fully active.</p>
             ${SUBSCRIPTION_SUPPORT_NOTE}
           </div>
-          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
       </body>
     </html>
@@ -1468,7 +1468,7 @@ export function getAdminVendorSubscriptionPaidEmail({
             </div>
             <div style="text-align:center;"><a href="https://linknsmile.com/admin/vendors/subscriptions" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Subscriptions</a></div>
           </div>
-          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
       </body>
     </html>
@@ -1506,7 +1506,7 @@ export function getVendorSubscriptionExpiryReminderEmail({
             <div style="text-align:center;"><a href="https://linknsmile.com/vendor/settings" style="background:#f59e0b;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Subscription</a></div>
             ${SUBSCRIPTION_SUPPORT_NOTE}
           </div>
-          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
       </body>
     </html>
@@ -1531,12 +1531,12 @@ export function getVendorSubscriptionCancelledEmail({
           <div class="header"><h1>Subscription Cancelled</h1></div>
           <div class="content">
             <p>Hello ${vendorName},</p>
-            <p>Your subscription for <strong>${shopName}</strong> has been cancelled by LinkAndSmile admin, and your vendor dashboard access has ended immediately.</p>
+            <p>Your subscription for <strong>${shopName}</strong> has been cancelled by Linknsmile admin, and your vendor dashboard access has ended immediately.</p>
             ${cancellationReason ? `<p><strong>Reason given:</strong> ${cancellationReason}</p>` : ""}
             <p>Your product listings will remain visible on the storefront for 30 days from your original expiry date, after which they will be hidden (your data is kept, not deleted).</p>
             ${SUBSCRIPTION_SUPPORT_NOTE}
           </div>
-          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
       </body>
     </html>
@@ -1561,12 +1561,12 @@ export function getVendorSubscriptionStorefrontWarningEmail({
           <div class="header"><h1>Final Warning: Products Coming Down</h1></div>
           <div class="content">
             <p>Hello ${vendorName},</p>
-            <p>Your <strong>${shopName}</strong> products will be removed from the LinkAndSmile storefront on ${hideDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })} because your subscription has not been renewed.</p>
+            <p>Your <strong>${shopName}</strong> products will be removed from the Linknsmile storefront on ${hideDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })} because your subscription has not been renewed.</p>
             <p>Your product data will be kept and will automatically reappear as soon as you renew — even after this date.</p>
             <div style="text-align:center;"><a href="https://linknsmile.com/vendor/settings" style="background:#e74c3c;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Now</a></div>
             ${SUBSCRIPTION_SUPPORT_NOTE}
           </div>
-          <div class="footer"><p>&copy; 2026 LinkAndSmile</p></div>
+          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
       </body>
     </html>

@@ -96,7 +96,7 @@ export default function CartPage() {
                       {item.name}
                     </h3>
                   </Link>
-                  <p className="mt-0.5 text-xs text-stone-400">{item.shopName || "LinkAndSmile"}</p>
+                  <p className="mt-0.5 text-xs text-stone-400">{item.shopName || "linknsmile"}</p>
                   {item.selectedSize && (
                     <p className="mt-1 text-xs text-stone-500">
                       <span className="font-medium">Size:</span> {item.selectedSize.size} ·{" "}

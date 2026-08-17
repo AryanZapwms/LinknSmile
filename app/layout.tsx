@@ -24,9 +24,9 @@ const getBaseUrl = () => {
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
-  title: "LinkAndSmile",
+  title: "LinknSmile",
   description:
-    "Discover premium skincare solutions from LinkAndSmile. Professional-grade products for your skin.",
+    "Discover premium skincare solutions from LinknSmile. Professional-grade products for your skin.",
   alternates: { canonical: "https://linknsmile.com" },
 };
 
@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="LinkAndSmileLogo.png" />
+        <link rel="icon" href="../public/linknsmile_newOne.png" />
       </head>
 
       <body className="font-sans antialiased">

@@ -27,7 +27,7 @@ import {
   Globe2,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import LinkAndSmileLogo from "@/public/LinkAndSmileLogo.png";
+import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 
 /* ─── Types ─────────────────────────────────────────────── */
 interface Category {
@@ -202,7 +202,7 @@ function MegaMenu({
                       All Products
                     </p>
                     <p className="mt-0.5 text-xs text-stone-400">
-                      Browse everything on LinkAndSmile
+                      Browse everything on Linknsmile
                     </p>
                   </div>
                 </Link>
@@ -347,8 +347,8 @@ export function Header() {
     >
       <div className="h-0.5 w-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300" />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex h-17  items-center justify-between gap-4">
+      <div className="mx-auto max-w-7xl px-4 h-20 sm:px-6">
+        <div className="flex h-18  items-center justify-between gap-4">
           {/* Logo */}
           <button
             onClick={() => router.push("/")}
@@ -356,7 +356,7 @@ export function Header() {
             aria-label="Go to home"
           >
 
-            <div className="relative h-15 w-35 mt-4 px-2 overflow-hidden rounded-xl bg-white transition-all duration-200 group-hover:ring-amber-400">
+            <div className="relative h-22 w-35 mt-4 px-2 overflow-hidden rounded-[50%] bg-white transition-all duration-200 group-hover:ring-amber-400">
               <Image
                 src={LinkAndSmileLogo}
                 alt="LinkAndSmile"

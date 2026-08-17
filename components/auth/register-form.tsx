@@ -22,7 +22,7 @@ import {
   User,
 } from "lucide-react";
 import OtpForm from "./otp-form";
-import LinkAndSmileLogo from "@/public/LinkAndSmileLogo.png";
+import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 
 export function RegisterForm() {
   const [name, setName] = useState("");

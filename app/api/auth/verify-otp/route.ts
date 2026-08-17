@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     await sendEmail({
       to: normalizedEmail,
-      subject: "Welcome to LinkAndSmile",
+      subject: "Welcome to linknsmile",
       html: getWelcomeEmail(user.name),
     });
 

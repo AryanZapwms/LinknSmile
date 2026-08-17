@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import logo from "@/public/LinkAndSmileLogo.png";
+import logo from "@/public/linknsmile_newOne.png";
 
 export default function NotFound() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function NotFound() {
             <div className="flex items-center gap-3">
               <Image
                 src={logo}
-                alt="LinkAndSmile"
+                alt="LinknSmile"
                 width={150}
                 height={48}
                 className="h-12 w-auto rounded-md object-contain shadow-sm"
@@ -110,7 +110,7 @@ export default function NotFound() {
               </Link>
 
               <a
-                href="mailto:info@linkandsmile.com?subject=Broken%20link%20on%20site%20404"
+                href="mailto:info@linknsmile.com?subject=Broken%20link%20on%20site%20404"
                 className="inline-block rounded-lg px-4 py-2 text-sm text-neutral-600 hover:underline"
               >
                 Report this page

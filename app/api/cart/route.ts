@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
 
         const platformShopId = "699942a5a2b407e83b6d9ea8";
         const shopId = product.shopId?._id || product.shopId || platformShopId;
-        const shopName = product.shopId?.shopName || "LinkAndSmile Platform";
+        const shopName = product.shopId?.shopName || "linknsmile Platform";
         const commissionRate = product.shopId?.commissionRate || 10;
 
         if (!product.shopId) {

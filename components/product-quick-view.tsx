@@ -138,7 +138,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
       stock: selectedSize ? selectedSize.stock : product.stock || 0,
       selectedSize: selectedSize || undefined,
       shopId: product.shopId || "default",
-      shopName: product.shopName || "LinkAndSmile",
+      shopName: product.shopName || "Linknsmile",
       commissionRate: product.commissionRate || 10,
     });
     toast({ title: "Added to cart", description: `${product.name} has been added to your cart.` });
@@ -187,7 +187,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
           <div className="flex h-full max-h-[85vh] flex-col overflow-y-auto p-6 md:p-7">
             {/* Seller */}
             <p className="mb-1.5 text-[10px] font-semibold tracking-widest text-stone-400 uppercase">
-              {p.shopName || "LinkAndSmile"}
+              {p.shopName || "Linknsmile"}
             </p>
 
             {/* Title */}
