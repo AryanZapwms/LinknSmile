@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface SubscriptionRow {
   shopId: string;
@@ -42,6 +44,81 @@ function StatusBadge({ row }: { row: SubscriptionRow }) {
     return <Badge variant="destructive">Cancelled</Badge>;
   }
   return <Badge variant="destructive">Blocked</Badge>;
+}
+
+function FeeSettingsCard() {
+  const [annualFeeAmount, setAnnualFeeAmount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/vendor-subscription-settings")
+      .then((res) => res.json())
+      .then((data) => setAnnualFeeAmount(data.annualFeeAmount))
+      .catch((error) => console.error("Error fetching subscription settings:", error))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage("");
+    try {
+      const res = await fetch("/api/admin/vendor-subscription-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ annualFeeAmount }),
+      });
+      setMessage(res.ok ? "Saved successfully!" : "Error saving fee amount");
+      if (res.ok) setTimeout(() => setMessage(""), 3000);
+    } catch (error) {
+      console.error("Error saving subscription settings:", error);
+      setMessage("Error saving fee amount");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>Annual Fee Settings</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        ) : (
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <Label htmlFor="annualFeeAmount">Annual Fee (₹)</Label>
+              <Input
+                id="annualFeeAmount"
+                type="number"
+                min="1"
+                value={annualFeeAmount}
+                onChange={(e) => setAnnualFeeAmount(Number(e.target.value))}
+                className="mt-2 w-40"
+              />
+            </div>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Save"}
+            </Button>
+            {message && (
+              <p
+                className={`text-sm ${message.includes("successfully") ? "text-green-600" : "text-red-600"}`}
+              >
+                {message}
+              </p>
+            )}
+          </div>
+        )}
+        <p className="text-muted-foreground mt-3 text-xs">
+          Applies to new subscription payments only — existing pending/active subscriptions keep
+          the amount they were created with.
+        </p>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function VendorSubscriptionsPage() {
@@ -83,6 +160,8 @@ export default function VendorSubscriptionsPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Vendor Subscriptions</h1>
       </div>
+
+      <FeeSettingsCard />
 
       <Card>
         <CardHeader>

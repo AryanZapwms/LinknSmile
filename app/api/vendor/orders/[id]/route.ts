@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
+import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,6 +22,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const shopId = session.user.shopId;
     if (!shopId) {
       return withCORS(NextResponse.json({ message: "Shop not found" }, { status: 404 }));
+    }
+
+    const access = await getShopSubscriptionAccessState(shopId);
+    if (access.isBlocked) {
+      return withCORS(
+        NextResponse.json(
+          { message: "Your subscription has expired. Renew it to access your orders." },
+          { status: 403 }
+        )
+      );
     }
 
     let shopObjectId: mongoose.Types.ObjectId;
@@ -111,6 +122,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     await connectDB();
     const shopId = session.user.shopId;
+    if (!shopId) {
+      return withCORS(NextResponse.json({ message: "Shop not found" }, { status: 404 }));
+    }
+
+    const access = await getShopSubscriptionAccessState(shopId);
+    if (access.isBlocked) {
+      return withCORS(
+        NextResponse.json(
+          { message: "Your subscription has expired. Renew it to update orders." },
+          { status: 403 }
+        )
+      );
+    }
+
     const body = await req.json();
     const { orderStatus, cancellationReason } = body;
 

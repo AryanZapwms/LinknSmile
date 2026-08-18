@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Review } from "@/lib/models/review";
 import { Product } from "@/lib/models/product";
+import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 
 function buildSummary(reviews: any[]) {
   if (!reviews.length) {
@@ -46,6 +47,16 @@ export async function GET(request: NextRequest) {
     const shopId = session.user.shopId;
     if (!shopId) {
       return withCORS(NextResponse.json({ error: "Shop not found in session" }, { status: 404 }));
+    }
+
+    const access = await getShopSubscriptionAccessState(shopId);
+    if (access.isBlocked) {
+      return withCORS(
+        NextResponse.json(
+          { error: "Your subscription has expired. Renew it to access your reviews." },
+          { status: 403 }
+        )
+      );
     }
 
     await connectDB();

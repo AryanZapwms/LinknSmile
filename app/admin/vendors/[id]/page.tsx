@@ -587,7 +587,7 @@ export default function VendorDetailsPage() {
                                 <td className="py-2 font-mono text-xs">
                                   {p.razorpayPaymentId || "—"}
                                 </td>
-                                <td className="py-2">
+                                <td className="py-2 border text-black">
                                   <Badge variant={p.status === "success" ? "default" : "destructive"}>
                                     {p.status}
                                   </Badge>
