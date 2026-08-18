@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import Shop from "@/lib/models/shop";
+import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 
 /** GET /api/vendor/bank-details – returns the vendor's bank details (masked account number) */
 export async function GET(req: NextRequest) {
@@ -22,6 +23,16 @@ export async function GET(req: NextRequest) {
     const shopId = session.user.shopId;
     if (!shopId) {
       return withCORS(NextResponse.json({ message: "Shop not found" }, { status: 404 }));
+    }
+
+    const access = await getShopSubscriptionAccessState(shopId);
+    if (access.isBlocked) {
+      return withCORS(
+        NextResponse.json(
+          { message: "Your subscription has expired. Renew it to access bank details." },
+          { status: 403 }
+        )
+      );
     }
 
     const shop = await Shop.findById(shopId).select("bankDetails shopName");
@@ -69,6 +80,16 @@ export async function PUT(req: NextRequest) {
     const shopId = session.user.shopId;
     if (!shopId) {
       return withCORS(NextResponse.json({ message: "Shop not found" }, { status: 404 }));
+    }
+
+    const access = await getShopSubscriptionAccessState(shopId);
+    if (access.isBlocked) {
+      return withCORS(
+        NextResponse.json(
+          { message: "Your subscription has expired. Renew it to update bank details." },
+          { status: 403 }
+        )
+      );
     }
 
     const body = await req.json();

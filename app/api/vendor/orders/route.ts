@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
+import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 
 export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -25,6 +26,16 @@ export async function GET(req: NextRequest) {
 
     if (!shopId) {
       return withCORS(NextResponse.json({ message: "Shop not found" }, { status: 404 }));
+    }
+
+    const access = await getShopSubscriptionAccessState(shopId);
+    if (access.isBlocked) {
+      return withCORS(
+        NextResponse.json(
+          { message: "Your subscription has expired. Renew it to access your orders." },
+          { status: 403 }
+        )
+      );
     }
 
     // Convert shopId string to ObjectId for proper MongoDB query
