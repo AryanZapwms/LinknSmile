@@ -10,6 +10,7 @@ import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatCurrency, getCurrencySymbol, LOCALE } from "@/lib/currency";
 
 interface SubscriptionRow {
   shopId: string;
@@ -90,7 +91,7 @@ function FeeSettingsCard() {
         ) : (
           <div className="flex flex-wrap items-end gap-4">
             <div>
-              <Label htmlFor="annualFeeAmount">Annual Fee (₹)</Label>
+              <Label htmlFor="annualFeeAmount">{`Annual Fee (${getCurrencySymbol()})`}</Label>
               <Input
                 id="annualFeeAmount"
                 type="number"
@@ -194,7 +195,7 @@ export default function VendorSubscriptionsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {row.expiryDate
-                        ? new Date(row.expiryDate).toLocaleDateString("en-IN", {
+                        ? new Date(row.expiryDate).toLocaleDateString(LOCALE, {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -209,7 +210,7 @@ export default function VendorSubscriptionsPage() {
                           : `${Math.abs(row.daysUntilExpiry)} days overdue`}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {row.lastPaymentAmount ? `₹${row.lastPaymentAmount.toLocaleString()}` : "—"}
+                      {row.lastPaymentAmount ? formatCurrency(row.lastPaymentAmount) : "—"}
                     </td>
                     <td className="px-4 py-3">
                       <Link href={`/admin/vendors/${row.shopId}`}>

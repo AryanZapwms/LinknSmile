@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreditCard } from "lucide-react";
+import { getCurrencySymbol } from "@/lib/currency";
 
 interface PaymentSettings {
   _id?: string;
@@ -161,7 +162,7 @@ export default function SettingsPage() {
                 <h3 className="font-semibold">COD Order Limits</h3>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
-                    <Label htmlFor="minCOD">Minimum Order Amount (₹)</Label>
+                    <Label htmlFor="minCOD">{`Minimum Order Amount (${getCurrencySymbol()})`}</Label>
                     <Input
                       id="minCOD"
                       type="number"
@@ -175,7 +176,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   <div>
-                    <Label htmlFor="maxCOD">Maximum Order Amount (₹)</Label>
+                    <Label htmlFor="maxCOD">{`Maximum Order Amount (${getCurrencySymbol()})`}</Label>
                     <Input
                       id="maxCOD"
                       type="number"

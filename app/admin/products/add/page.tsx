@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, X, Upload } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
 interface Category {
   _id: string;
@@ -371,7 +372,7 @@ export default function AddProductPage() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
                   <label className="text-foreground mb-2 block text-sm font-medium">
-                    Price (₹) *
+                    {`Price (${getCurrencySymbol()}) *`}
                   </label>
                   <Input
                     type="number"
@@ -385,7 +386,7 @@ export default function AddProductPage() {
                 </div>
                 <div>
                   <label className="text-foreground mb-2 block text-sm font-medium">
-                    Discount Price (₹)
+                    {`Discount Price (${getCurrencySymbol()})`}
                   </label>
                   <Input
                     type="number"
@@ -574,7 +575,7 @@ export default function AddProductPage() {
                       </div>
                       <div>
                         <label className="text-foreground mb-2 block text-sm font-medium">
-                          Price (₹) *
+                          {`Price (${getCurrencySymbol()}) *`}
                         </label>
                         <Input
                           type="number"
@@ -591,7 +592,7 @@ export default function AddProductPage() {
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
                         <label className="text-foreground mb-2 block text-sm font-medium">
-                          Discount Price (₹)
+                          {`Discount Price (${getCurrencySymbol()})`}
                         </label>
                         <Input
                           type="number"
@@ -663,8 +664,8 @@ export default function AddProductPage() {
                                 {size.unit})
                               </p>
                               <p className="text-muted-foreground text-xs">
-                                Price: ₹{size.price}
-                                {size.discountPrice ? ` → ₹${size.discountPrice}` : ""} | Stock:{" "}
+                                Price: {formatCurrency(size.price)}
+                                {size.discountPrice ? ` → ${formatCurrency(size.discountPrice)}` : ""} | Stock:{" "}
                                 {size.stock}
                               </p>
                             </div>

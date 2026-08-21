@@ -13,6 +13,7 @@ import { sendPushNotificationToMultipleVendors } from "@/lib/services/push-notif
 import { reserveStock } from "@/lib/stock-reservation";
 import { computeOrderPricing, PricingError } from "@/lib/pricing";
 import { PLATFORM_SHOP_ID } from "@/lib/constants";
+import { formatCurrency } from "@/lib/currency";
 
 
    
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
       paymentStatus,
       razorpayOrderId,
       razorpayPaymentId,
+      couponCode,
     } = body;
 
     // Validate required fields
@@ -79,8 +81,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Compute authoritative pricing from the database (ignores client-sent prices)
-    const { processedItems, vendorPayouts, totalAmount: computedTotal } =
-      await computeOrderPricing(items);
+    const {
+      processedItems,
+      vendorPayouts,
+      totalAmount: computedTotal,
+      appliedCoupon,
+      taxRatePercent,
+      taxAmount,
+    } = await computeOrderPricing(items, {
+      couponCode: couponCode || undefined,
+      userId: session.user.id,
+    });
 
     // ✅ Atomically reserve stock for all items upfront (prevents overselling)
     const reservation = await reserveStock(
@@ -115,6 +126,15 @@ export async function POST(req: NextRequest) {
       user: session.user.id,
       items: processedItems,
       totalAmount: computedTotal,
+      taxRatePercent,
+      taxAmount,
+      appliedCoupon: appliedCoupon
+        ? {
+            code: appliedCoupon.code,
+            shopId: appliedCoupon.shopId,
+            discountAmount: appliedCoupon.discountAmount,
+          }
+        : undefined,
       shippingAddress,
       paymentMethod,
       paymentStatus: paymentStatus || "pending",
@@ -127,6 +147,19 @@ export async function POST(req: NextRequest) {
         status: paymentStatus === "completed" ? "pending" : "held",
       })),
     });
+
+    // Redeem the coupon now that the order is actually committed — COD
+    // orders count as "completed" here regardless of paymentStatus, since
+    // stock was already hard-reserved above and the order is real, not a
+    // preview. Best-effort, matching the ledger-recording pattern below.
+    if (appliedCoupon) {
+      try {
+        const { redeemCoupon } = await import("@/lib/coupon-pricing");
+        await redeemCoupon(appliedCoupon.shopId, appliedCoupon.code);
+      } catch (couponError) {
+        console.error("[Orders] Coupon redemption failed for order", order._id, couponError);
+      }
+    }
 
     // Credit vendor wallets via ledger (only for prepaid orders)
     if (paymentStatus === "completed") {
@@ -202,7 +235,7 @@ export async function POST(req: NextRequest) {
                         <br/><small style="color: #888;">by ${item.shopName}</small>
                       </td>
                       <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">${item.quantity}</td>
-                      <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">₹${(item.price * item.quantity).toFixed(2)}</td>
+                      <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">${formatCurrency(item.price * item.quantity)}</td>
                     </tr>
                   `;
                   })
@@ -211,7 +244,7 @@ export async function POST(req: NextRequest) {
               <tfoot>
                 <tr>
                   <td colspan="2" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Total:</strong></td>
-                  <td style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>₹${totalAmount.toFixed(2)}</strong></td>
+                  <td style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>${formatCurrency(totalAmount)}</strong></td>
                 </tr>
               </tfoot>
             </table>
@@ -240,7 +273,7 @@ export async function POST(req: NextRequest) {
         await sendPushNotificationToMultipleVendors(
           vendorShopIds,
           "🛍️ New Order Received!",
-          `You have a new order #${orderNumber}. Total earnings: ₹${totalVendorEarnings.toFixed(2)}`,
+          `You have a new order #${orderNumber}. Total earnings: ${formatCurrency(totalVendorEarnings)}`,
           { screen: "orders", orderId: (order._id as any).toString() }
         );
       }
@@ -259,7 +292,7 @@ export async function POST(req: NextRequest) {
                 <h1 style="color: #333;">New Order Received!</h1>
                 <p>You have a new order for: <strong>${shop.shopName}</strong></p>
                 <p><strong>Order Number:</strong> ${orderNumber}</p>
-                <p><strong>Your Earnings:</strong> ₹${payoutInfo.amount.toFixed(2)}</p>
+                <p><strong>Your Earnings:</strong> ${formatCurrency(payoutInfo.amount)}</p>
                 <p style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
                   <strong>Action Required:</strong> Please prepare the items for shipping.
                 </p>
@@ -277,7 +310,7 @@ export async function POST(req: NextRequest) {
             <div style="font-family: Arial, sans-serif;">
               <h2>New Order Received</h2>
               <p><strong>Order Number:</strong> ${orderNumber}</p>
-              <p><strong>Total Amount:</strong> ₹${totalAmount.toFixed(2)}</p>
+              <p><strong>Total Amount:</strong> ${formatCurrency(totalAmount)}</p>
               <p><strong>Payment Method:</strong> ${paymentMethod}</p>
               <p><strong>Payment Status:</strong> ${paymentStatus || "Pending"}</p>
             </div>

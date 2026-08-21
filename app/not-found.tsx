@@ -45,7 +45,7 @@ export default function NotFound() {
             <div className="flex items-center gap-3">
               <Image
                 src={logo}
-                alt="LinknSmile"
+                alt="Linknsmile"
                 width={150}
                 height={48}
                 className="h-12 w-auto rounded-md object-contain shadow-sm"

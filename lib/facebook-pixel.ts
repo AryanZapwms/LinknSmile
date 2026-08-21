@@ -1,9 +1,11 @@
 /**
  * Facebook Pixel Tracking Utility
- * Pixel ID: 997663834042843
- * Currency: INR
+ * Pixel ID: configurable via NEXT_PUBLIC_FB_PIXEL_ID, see lib/site-config.ts
  * Production Ready
  */
+import { CURRENCY_CODE } from "@/lib/currency";
+import { FB_PIXEL_ID } from "@/lib/site-config";
+
 export interface FacebookPixelEventData {
   [key: string]: any;
 }
@@ -41,7 +43,7 @@ export function initializeFacebookPixel() {
     undefined,
     undefined
   );
-  (window as any).fbq("init", "997663834042843");
+  (window as any).fbq("init", FB_PIXEL_ID);
   (window as any).fbq("track", "PageView");
 }
 
@@ -68,7 +70,7 @@ export function trackViewContent(productId: string, productName: string, price: 
     content_ids: [productId],
     content_type: "product",
     value: price.toFixed(2),
-    currency: "INR",
+    currency: CURRENCY_CODE,
   };
 
   (window as any).fbq("track", "ViewContent", data);
@@ -95,7 +97,7 @@ export function trackAddToCart(
     content_ids: [productId],
     content_type: "product",
     value: (price * quantity).toFixed(2),
-    currency: "INR",
+    currency: CURRENCY_CODE,
     quantity: quantity,
   };
 
@@ -130,7 +132,7 @@ export function trackInitiateCheckout(cartValue: number, itemCount: number, prod
 
   const data: FacebookPixelEventData = {
     value: cartValue.toFixed(2),
-    currency: "INR",
+    currency: CURRENCY_CODE,
     num_items: itemCount,
     ...(productIds && { content_ids: productIds }),
     content_type: "product",
@@ -159,7 +161,7 @@ export function trackPurchase(
 
   const data: FacebookPixelEventData = {
     value: orderValue.toFixed(2),
-    currency: "INR",
+    currency: CURRENCY_CODE,
     transaction_id: orderId,
     num_items: itemCount,
     ...(productIds && { content_ids: productIds }),

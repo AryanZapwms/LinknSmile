@@ -4,28 +4,10 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import LinkAndSmileLogo from "@/public/LinkAndSmile2.png";
 import { Divide } from "lucide-react";
-
-const categories = [
-  { href: "/categories/organic-products", label: "Organic Products" },
-  { href: "/categories/handmade-items", label: "Handmade Items" },
-  { href: "/categories/fashion-apparel", label: "Fashion & Apparel" },
-  { href: "/categories/home-living", label: "Home & Living" },
-];
-
-const quickLinks = [
-  { href: "/about-us", label: "About Us" },
-  { href: "/contact-us", label: "Contact Us" },
-  { href: "/register-as-seller", label: "Sell With Us" },
-];
-
-const policies = [
-  { href: "/termsofservice", label: "Terms of Service" },
-  { href: "/refund-policy", label: "Refund Policy" },
-  { href: "/privacy-policy", label: "Privacy Policy" },
-  { href: "/orders-and-returns", label: "Orders & Returns" },
-];
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 const socials = [
   {
@@ -65,6 +47,31 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 }
 
 export default function Footer() {
+  const { supportEmail, supportPhone, brandTagline } = usePlatformSettings();
+  const supportPhoneHref = `tel:${supportPhone.replace(/\s/g, "")}`;
+  const t = useTranslations("Footer");
+
+  const categories = [
+    { href: "/categories/organic-products", label: t("categoryLabels.organicProducts") },
+    { href: "/categories/handmade-items", label: t("categoryLabels.handmadeItems") },
+    { href: "/categories/fashion-apparel", label: t("categoryLabels.fashionApparel") },
+    { href: "/categories/home-living", label: t("categoryLabels.homeLiving") },
+  ];
+
+  const quickLinks = [
+    { href: "/about-us", label: t("quickLinks.aboutUs") },
+    { href: "/blog", label: t("quickLinks.blog") },
+    { href: "/contact-us", label: t("quickLinks.contactUs") },
+    { href: "/register-as-seller", label: t("quickLinks.sellWithUs") },
+  ];
+
+  const policies = [
+    { href: "/termsofservice", label: t("policyLinks.termsOfService") },
+    { href: "/refund-policy", label: t("policyLinks.refundPolicy") },
+    { href: "/privacy-policy", label: t("policyLinks.privacyPolicy") },
+    { href: "/orders-and-returns", label: t("policyLinks.ordersReturns") },
+  ];
+
   return (
     <footer className="border-t border-stone-100 bg-stone-50 text-stone-800">
       {/* Top accent */}
@@ -90,15 +97,12 @@ export default function Footer() {
                   linknsmile
                 </span>
                 <span className="mt-0.5 text-[10px] font-medium tracking-widest text-stone-400 uppercase">
-                  Net & Work Builds Up Net-Worth
+                  {brandTagline}
                 </span>
               </div>
             </Link>
 
-            <p className="max-w-sm text-sm leading-relaxed text-stone-500">
-              India's trusted online marketplace connecting small businesses, local sellers, and
-              conscious shoppers under one digital roof.
-            </p>
+            <p className="max-w-sm text-sm leading-relaxed text-stone-500">{t("description")}</p>
 
             {/* Socials */}
             <div className="flex items-center gap-2">
@@ -124,7 +128,11 @@ export default function Footer() {
 
             {/* Trust badges */}
             <div className="flex flex-wrap gap-2 pt-1">
-              {["Verified Sellers", "Made in India", "Secure Payments"].map((badge) => (
+              {[
+                t("trustBadges.verifiedSellers"),
+                t("trustBadges.madeInIndia"),
+                t("trustBadges.securePayments"),
+              ].map((badge) => (
                 <span
                   key={badge}
                   className="inline-flex items-center gap-1.5 rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700"
@@ -140,7 +148,7 @@ export default function Footer() {
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:col-span-8">
             <div>
               <h4 className="mb-4 text-xs font-bold tracking-widest text-stone-900 uppercase">
-                Categories
+                {t("categories")}
               </h4>
               <ul className="space-y-2.5">
                 {categories.map((c) => (
@@ -151,7 +159,7 @@ export default function Footer() {
 
             <div>
               <h4 className="mb-4 text-xs font-bold tracking-widest text-stone-900 uppercase">
-                Company
+                {t("company")}
               </h4>
               <ul className="space-y-2.5">
                 {quickLinks.map((c) => (
@@ -162,7 +170,7 @@ export default function Footer() {
 
             <div>
               <h4 className="mb-4 text-xs font-bold tracking-widest text-stone-900 uppercase">
-                Policies
+                {t("policies")}
               </h4>
               <ul className="space-y-2.5">
                 {policies.map((c) => (
@@ -173,13 +181,13 @@ export default function Footer() {
 
             <div>
               <h4 className="mb-4 text-xs font-bold tracking-widest text-stone-900 uppercase">
-                Get in Touch
+                {t("getInTouch")}
               </h4>
               <div className="space-y-3">
                 <div>
-                  <strong className="text-md">Customer Support</strong>
+                  <strong className="text-md">{t("customerSupport")}</strong>
                   <a
-                  href="mailto:care@linknsmile.com"
+                  href={`mailto:${supportEmail}`}
                   className="flex items-start gap-2 text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
                 >
                   <svg
@@ -195,16 +203,16 @@ export default function Footer() {
                       d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                     />
                   </svg>
-                 
-                  care@linknsmile.com 
+
+                  {supportEmail}
                 </a>
                 </div>
                 
 
             <div>
-              <strong className="text-md">Vendor Support</strong>
+              <strong className="text-md">{t("vendorSupport")}</strong>
              <a
-                  href="mailto:care@linknsmile.com"
+                  href={`mailto:${supportEmail}`}
                   className="flex items-start gap-2 text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
                 >
                   <svg
@@ -220,8 +228,8 @@ export default function Footer() {
                       d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                     />
                   </svg>
-                  
-                  support@linknsmile.com 
+
+                  {supportEmail}
                 </a>
             </div>
                
@@ -242,10 +250,10 @@ export default function Footer() {
                   </svg>
                   <div className="space-y-1">
                     <a
-                      href="tel:+918355991099"
+                      href={supportPhoneHref}
                       className="block text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
                     >
-                      +91 8355991099
+                      {supportPhone}
                     </a>
                   
                   </div>
@@ -285,9 +293,9 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col items-center justify-between gap-3 border-t border-stone-100 py-5 sm:flex-row">
           <p className="text-xs text-stone-400">
-            © {new Date().getFullYear()} Linknsmile. All rights reserved.
+            {t("copyright", { year: new Date().getFullYear() })}
           </p>
-          <p className="text-xs text-stone-400">Crafted with ❤️ in Mumbai, India</p>
+          <p className="text-xs text-stone-400">{t("craftedWith")}</p>
         </div>
       </div>
     </footer>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ import {
   XCircle,
   Package,
   BarChart3,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -47,6 +49,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
+import { formatCurrency } from "@/lib/currency";
 
 interface Product {
   _id: string;
@@ -71,6 +74,7 @@ interface ProductStats {
 }
 
 export default function VendorProductsPage() {
+  const t = useTranslations("VendorProductsPage");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -101,7 +105,7 @@ export default function VendorProductsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch products:", error);
-      toast.error("Failed to load products");
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -124,15 +128,15 @@ export default function VendorProductsPage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success("Product deleted successfully");
+        toast.success(t("deleteSuccess"));
         setProducts(products.filter((p) => p._id !== deleteId));
         setDeleteId(null);
       } else {
-        toast.error(data.message || "Failed to delete product");
+        toast.error(data.message || t("deleteFailed"));
       }
     } catch (error) {
       console.error("Delete error:", error);
-      toast.error("Failed to delete product");
+      toast.error(t("deleteFailed"));
     } finally {
       setDeleting(false);
     }
@@ -150,7 +154,7 @@ export default function VendorProductsPage() {
       setProductStats(statsForProduct || { totalOrders: 0, totalQuantity: 0, totalRevenue: 0 });
     } catch (error) {
       console.error("Failed to fetch stats:", error);
-      toast.error("Failed to load product stats");
+      toast.error(t("statsLoadFailed"));
       setProductStats(null);
     } finally {
       setLoadingStats(false);
@@ -162,22 +166,22 @@ export default function VendorProductsPage() {
       case "approved":
         return (
           <Badge variant="default" className="bg-green-500">
-            <CheckCircle className="mr-1 h-3 w-3" />
-            Approved
+            <CheckCircle className="me-1 h-3 w-3" />
+            {t("approved")}
           </Badge>
         );
       case "pending":
         return (
           <Badge variant="outline" className="border-orange-500 text-orange-500">
-            <Clock className="mr-1 h-3 w-3" />
-            Pending
+            <Clock className="me-1 h-3 w-3" />
+            {t("pending")}
           </Badge>
         );
       case "rejected":
         return (
           <Badge variant="destructive">
-            <XCircle className="mr-1 h-3 w-3" />
-            Rejected
+            <XCircle className="me-1 h-3 w-3" />
+            {t("rejected")}
           </Badge>
         );
       default:
@@ -190,46 +194,54 @@ export default function VendorProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-          <p className="text-muted-foreground">Manage your product listings</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <Button asChild>
-          <Link href="/vendor/products/add">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/vendor/products/bulk-upload">
+              <Upload className="me-2 h-4 w-4" />
+              {t("bulkUpload")}
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/vendor/products/add">
+              <Plus className="me-2 h-4 w-4" />
+              {t("addProduct")}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Products</CardTitle>
+          <CardTitle>{t("filterProducts")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4 md:flex-row">
             <form onSubmit={handleSearch} className="flex flex-1 gap-2">
               <div className="relative flex-1">
-                <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+                <Search className="text-muted-foreground absolute top-2.5 start-2.5 h-4 w-4" />
                 <Input
-                  placeholder="Search products..."
+                  placeholder={t("searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8"
+                  className="ps-8"
                 />
               </div>
-              <Button type="submit">Search</Button>
+              <Button type="submit">{t("search")}</Button>
             </form>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t("filterByStatus")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="all">{t("allStatus")}</SelectItem>
+                <SelectItem value="approved">{t("approved")}</SelectItem>
+                <SelectItem value="pending">{t("pending")}</SelectItem>
+                <SelectItem value="rejected">{t("rejected")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -247,11 +259,11 @@ export default function VendorProductsPage() {
             </div>
           ) : products.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-muted-foreground mb-4">No products found</p>
+              <p className="text-muted-foreground mb-4">{t("noProductsFound")}</p>
               <Button asChild>
                 <Link href="/vendor/products/add">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Your First Product
+                  <Plus className="me-2 h-4 w-4" />
+                  {t("addFirstProduct")}
                 </Link>
               </Button>
             </div>
@@ -259,13 +271,13 @@ export default function VendorProductsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-center">Orders</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableHead>{t("colProduct")}</TableHead>
+                  <TableHead>{t("colPrice")}</TableHead>
+                  <TableHead>{t("colStock")}</TableHead>
+                  <TableHead>{t("colStatus")}</TableHead>
+                  <TableHead>{t("colCreated")}</TableHead>
+                  <TableHead className="text-center">{t("colOrders")}</TableHead>
+                  <TableHead className="text-center">{t("colActions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -289,17 +301,17 @@ export default function VendorProductsPage() {
                         <div>
                           <p className="font-medium">{product.name}</p>
                           <p className="text-muted-foreground text-sm">
-                            {product.category?.name || "Uncategorized"}
+                            {product.category?.name || t("uncategorized")}
                           </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">₹{product.price}</p>
+                        <p className="font-medium">{formatCurrency(product.price)}</p>
                         {product.discountPrice && (
                           <p className="text-muted-foreground text-sm line-through">
-                            ₹{product.discountPrice}
+                            {formatCurrency(product.discountPrice)}
                           </p>
                         )}
                       </div>
@@ -309,7 +321,7 @@ export default function VendorProductsPage() {
                         className="text-blue-700"
                         variant={product.stock > 0 ? "default" : "destructive"}
                       >
-                        {product.stock} units
+                        {t("stockUnits", { count: product.stock })}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -317,7 +329,7 @@ export default function VendorProductsPage() {
                         {getStatusBadge(product.approvalStatus)}
                         {product.approvalStatus === "rejected" && product.rejectionReason && (
                           <p className="max-w-xs text-xs text-red-600">
-                            Reason: {product.rejectionReason}
+                            {t("reasonLabel", { reason: product.rejectionReason })}
                           </p>
                         )}
                       </div>
@@ -325,11 +337,11 @@ export default function VendorProductsPage() {
                     <TableCell>{new Date(product.createdAt).toLocaleDateString()}</TableCell>
                     <TableCell className="text-center">
                       <Button variant="outline" size="sm" onClick={() => handleViewStats(product)}>
-                        <BarChart3 className="mr-1 h-4 w-4" />
-                        Stats
+                        <BarChart3 className="me-1 h-4 w-4" />
+                        {t("stats")}
                       </Button>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" size="sm" asChild>
                           <Link href={`/vendor/products/edit/${product._id}`}>
@@ -359,19 +371,17 @@ export default function VendorProductsPage() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this product. This action cannot be undone.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteConfirmDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? t("deleting") : t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -381,7 +391,7 @@ export default function VendorProductsPage() {
       <Dialog open={statsDialogOpen} onOpenChange={setStatsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Product Performance: {selectedProduct?.name}</DialogTitle>
+            <DialogTitle>{t("productPerformance", { name: selectedProduct?.name || "" })}</DialogTitle>
           </DialogHeader>
           {loadingStats ? (
             <div className="flex justify-center py-8">
@@ -392,27 +402,23 @@ export default function VendorProductsPage() {
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="rounded-lg bg-blue-50 p-3">
                   <p className="text-2xl font-bold text-blue-700">{productStats.totalOrders}</p>
-                  <p className="text-xs text-blue-600">Total Orders</p>
+                  <p className="text-xs text-blue-600">{t("totalOrders")}</p>
                 </div>
                 <div className="rounded-lg bg-green-50 p-3">
                   <p className="text-2xl font-bold text-green-700">{productStats.totalQuantity}</p>
-                  <p className="text-xs text-green-600">Units Sold</p>
+                  <p className="text-xs text-green-600">{t("unitsSold")}</p>
                 </div>
                 <div className="rounded-lg bg-purple-50 p-3">
                   <p className="text-2xl font-bold text-purple-700">
-                    ₹{productStats.totalRevenue.toLocaleString()}
+                    {formatCurrency(productStats.totalRevenue)}
                   </p>
-                  <p className="text-xs text-purple-600">Revenue (Your Earnings)</p>
+                  <p className="text-xs text-purple-600">{t("revenueYourEarnings")}</p>
                 </div>
               </div>
-              <p className="text-muted-foreground text-center text-xs">
-                Stats based on completed/delivered orders only.
-              </p>
+              <p className="text-muted-foreground text-center text-xs">{t("statsFootnote")}</p>
             </div>
           ) : (
-            <div className="text-muted-foreground py-8 text-center">
-              No sales data available for this product yet.
-            </div>
+            <div className="text-muted-foreground py-8 text-center">{t("noSalesData")}</div>
           )}
         </DialogContent>
       </Dialog>

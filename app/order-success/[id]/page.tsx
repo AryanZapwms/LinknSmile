@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { trackPurchase } from "@/lib/facebook-pixel";
+import { GOOGLE_ADS_ID, GOOGLE_ADS_CONVERSION_LABEL } from "@/lib/site-config";
 import { useSession } from "next-auth/react";
 
 declare global {
@@ -18,6 +20,7 @@ declare global {
 export default function OrderSuccessPage() {
   const params = useParams();
   const orderId = params.id as string;
+  const t = useTranslations("OrderSuccess");
   const { data: session } = useSession();
   const [orderData, setOrderData] = useState<any>(null);
 
@@ -25,7 +28,7 @@ export default function OrderSuccessPage() {
     // Fire conversion event with transaction_id
     if (window.gtag) {
       window.gtag("event", "conversion", {
-        send_to: "AW-602275335/U1R3CO3tn6wbEIf8l58C",
+        send_to: `${GOOGLE_ADS_ID}/${GOOGLE_ADS_CONVERSION_LABEL}`,
         transaction_id: orderId,
       });
     }
@@ -69,29 +72,25 @@ export default function OrderSuccessPage() {
           <div className="mb-4 flex justify-center">
             <CheckCircle className="h-16 w-16 text-green-600" />
           </div>
-          <CardTitle className="text-2xl">Order Placed Successfully!</CardTitle>
+          <CardTitle className="text-2xl">{t("title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-center">
-          <p className="text-muted-foreground">
-            Thank you for your purchase. Your order has been confirmed.
-          </p>
+          <p className="text-muted-foreground">{t("thankYou")}</p>
 
           <div className="bg-muted rounded p-4">
-            <p className="text-muted-foreground text-sm">Order ID</p>
+            <p className="text-muted-foreground text-sm">{t("orderId")}</p>
             <p className="text-foreground font-mono font-semibold">{orderId}</p>
           </div>
 
-          <p className="text-muted-foreground text-sm">
-            You will receive an email confirmation shortly with tracking information.
-          </p>
+          <p className="text-muted-foreground text-sm">{t("emailConfirmation")}</p>
 
           <div className="space-y-2 pt-4">
             <Link href={`/profile/orders/${orderId}`} className="block">
-              <Button className="w-full">View Your Order Details</Button>
+              <Button className="w-full">{t("viewOrderDetails")}</Button>
             </Link>
             <Link href="/shop" className="block">
               <Button variant="outline" className="w-full bg-transparent">
-                Continue Shopping
+                {t("continueShopping")}
               </Button>
             </Link>
           </div>

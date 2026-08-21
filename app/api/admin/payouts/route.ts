@@ -9,6 +9,7 @@ import Shop from "@/lib/models/shop";
 import { LedgerService } from "@/lib/services/ledger-service";
 import { sendEmail, getPayoutStatusEmail } from "@/lib/email";
 import { sendPushNotificationToVendor } from "@/lib/services/push-notification";
+import { formatCurrency } from "@/lib/currency";
 
 export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -155,13 +156,13 @@ export async function PUT(req: NextRequest) {
 
     if (action === "approve") {
       title = "💰 Payout Approved";
-      notificationBody = `Your payout request of ₹${payout.amount.toFixed(2)} has been approved. Funds will be transferred shortly.`;
+      notificationBody = `Your payout request of ${formatCurrency(payout.amount)} has been approved. Funds will be transferred shortly.`;
     } else if (action === "complete") {
       title = "✅ Payout Completed";
-      notificationBody = `Your payout of ₹${payout.amount.toFixed(2)} has been sent to your bank account. Transaction ID: ${transactionId}`;
+      notificationBody = `Your payout of ${formatCurrency(payout.amount)} has been sent to your bank account. Transaction ID: ${transactionId}`;
     } else if (action === "reject") {
       title = "❌ Payout Rejected";
-      notificationBody = `Your payout request of ₹${payout.amount.toFixed(2)} was rejected. Reason: ${failureReason}`;
+      notificationBody = `Your payout request of ${formatCurrency(payout.amount)} was rejected. Reason: ${failureReason}`;
     }
 
     if (title) {

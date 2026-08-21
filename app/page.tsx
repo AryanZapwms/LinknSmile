@@ -2,11 +2,14 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { ProductCard } from "@/components/product-card";
 import { HomeCarousel } from "@/components/home-carousel";
 import { CategorySlider } from "@/components/category-slider";
 import WhyChoose from "@/components/why-choose";
 import { getCachedSync, fetchWithCache, invalidateCache } from "@/lib/cacheClient";
+import { formatCurrency } from "@/lib/currency";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 interface Product {
   _id: string;
@@ -15,6 +18,14 @@ interface Product {
   discountPrice?: number;
   image: string;
   slug: string;
+}
+
+interface BannerImage {
+  _id: string;
+  url: string;
+  title?: string;
+  description?: string;
+  href?: string | null;
 }
 
 interface Review {
@@ -31,6 +42,8 @@ interface Review {
 const SUGGESTED_PRODUCTS_KEY = "home:products:suggested:8";
 const ALL_PRODUCTS_KEY = "home:products:all:100";
 const REVIEWS_KEY = "home:reviews:all";
+const HOME_BANNER_KEY = "home:banner";
+const HERO_PRODUCTS_KEY = "home:hero-products";
 const TTL = 1000 * 60 * 5;
 const MAX_AGE = 1000 * 60 * 60 * 24;
 
@@ -55,6 +68,20 @@ async function fetchAllProductsAPI(): Promise<Product[]> {
   return [];
 }
 
+async function fetchHomeBannerAPI(): Promise<BannerImage[]> {
+  const res = await fetch("/api/home-banner", { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch home banner");
+  const json = await res.json();
+  return Array.isArray(json) ? json : [];
+}
+
+async function fetchHeroProductsAPI(): Promise<Product[]> {
+  const res = await fetch("/api/hero-products", { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch hero products");
+  const json = await res.json();
+  return Array.isArray(json) ? json : [];
+}
+
 async function fetchReviewsAPI(): Promise<Review[]> {
   const res = await fetch("/api/products/reviews/all", { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch reviews");
@@ -76,6 +103,8 @@ function invalidateHomeCaches() {
   invalidateCache(SUGGESTED_PRODUCTS_KEY);
   invalidateCache(ALL_PRODUCTS_KEY);
   invalidateCache(REVIEWS_KEY);
+  invalidateCache(HOME_BANNER_KEY);
+  invalidateCache(HERO_PRODUCTS_KEY);
 }
 
 /* ─── Skeleton card ──────────────────────────── */
@@ -139,10 +168,27 @@ export default function Home() {
     []
   );
 
+  const initialBanner = useMemo(
+    () =>
+      typeof window === "undefined"
+        ? []
+        : (getCachedSync<BannerImage[]>(HOME_BANNER_KEY, MAX_AGE) ?? []),
+    []
+  );
+  const initialHeroProducts = useMemo(
+    () =>
+      typeof window === "undefined"
+        ? []
+        : (getCachedSync<Product[]>(HERO_PRODUCTS_KEY, MAX_AGE) ?? []),
+    []
+  );
+
   const [suggestedProducts, setSuggestedProducts] = useState<Product[]>(initialSuggestedProducts);
   const [allProducts, setAllProducts] = useState<Product[]>(initialAllProducts);
   const [loading, setLoading] = useState(initialAllProducts.length === 0);
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
+  const [banner, setBanner] = useState<BannerImage[]>(initialBanner);
+  const [heroProducts, setHeroProducts] = useState<Product[]>(initialHeroProducts);
   const [showTopButton, setShowTopButton] = useState(false);
   const [waMenuOpen, setWaMenuOpen] = useState(false);
   const waMenuRef = useRef<HTMLDivElement | null>(null);
@@ -163,6 +209,40 @@ export default function Home() {
     })
       .then((data) => {
         if (mounted) setSuggestedProducts(data);
+      })
+      .catch(console.error);
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchWithCache<BannerImage[]>(HOME_BANNER_KEY, fetchHomeBannerAPI, {
+      ttlMs: TTL,
+      maxAgeMs: MAX_AGE,
+      backgroundRefresh: true,
+      persistToStorage: true,
+    })
+      .then((data) => {
+        if (mounted) setBanner(data);
+      })
+      .catch(console.error);
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchWithCache<Product[]>(HERO_PRODUCTS_KEY, fetchHeroProductsAPI, {
+      ttlMs: TTL,
+      maxAgeMs: MAX_AGE,
+      backgroundRefresh: true,
+      persistToStorage: true,
+    })
+      .then((data) => {
+        if (mounted) setHeroProducts(data);
       })
       .catch(console.error);
     return () => {
@@ -235,8 +315,11 @@ export default function Home() {
     };
   }, []);
 
-  const PRIMARY_WA = "8355991099";
-  const SECONDARY_WA = "8355991099";
+  const { supportPhone } = usePlatformSettings();
+  const t = useTranslations("HomePage");
+  const waNumber = supportPhone.replace(/\D/g, "");
+  const PRIMARY_WA = waNumber;
+  const SECONDARY_WA = waNumber;
   const buildWaLink = (n: string) => `https://wa.me/${n}`;
   const openWaFor = (n: string) => {
     window.open(buildWaLink(n), "_blank", "noopener,noreferrer");
@@ -247,7 +330,7 @@ export default function Home() {
     <main className="min-h-screen bg-white">
       {/* ── Hero Carousel ─────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pt-5 pb-2 sm:px-6">
-        <HomeCarousel />
+        <HomeCarousel images={banner.length > 0 ? banner : undefined} />
       </section>
 
       {/* ── Promo ticker ──────────────────────────── */}
@@ -258,12 +341,13 @@ export default function Home() {
               key={i}
               className="flex shrink-0 items-center gap-6 px-6 text-xs font-medium tracking-wider text-stone-300"
             >
-              <span className="text-amber-400">✦</span> FREE SHIPPING ABOVE ₹499
-              <span className="text-amber-400">✦</span> 100% AUTHENTIC PRODUCTS
-              <span className="text-amber-400">✦</span> EASY 7-DAY RETURNS
-              <span className="text-amber-400">✦</span> VERIFIED LOCAL SELLERS
-              <span className="text-amber-400">✦</span> MADE IN INDIA
-              <span className="text-amber-400">✦</span> SECURE PAYMENTS
+              <span className="text-amber-400">✦</span>{" "}
+              {t("promoTicker.freeShipping", { amount: formatCurrency(499) })}
+              <span className="text-amber-400">✦</span> {t("promoTicker.authentic")}
+              <span className="text-amber-400">✦</span> {t("promoTicker.easyReturns")}
+              <span className="text-amber-400">✦</span> {t("promoTicker.verifiedSellers")}
+              <span className="text-amber-400">✦</span> {t("promoTicker.madeInIndia")}
+              <span className="text-amber-400">✦</span> {t("promoTicker.securePayments")}
             </span>
           ))}
         </div>
@@ -274,18 +358,39 @@ export default function Home() {
         <CategorySlider />
       </section>
 
+      {/* ── Featured (Hero Products) ──────────────── */}
+      {heroProducts.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14">
+          <Section title={t("featured.title")} subtitle={t("featured.subtitle")}>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+              {heroProducts.map((p) => (
+                <ProductCard
+                  key={p._id}
+                  id={p._id}
+                  name={p.name}
+                  price={p.price}
+                  discountPrice={p.discountPrice}
+                  image={p.image}
+                  slug={p.slug}
+                />
+              ))}
+            </div>
+          </Section>
+        </section>
+      )}
+
       {/* ── Suggested Products ────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14">
         <Section
-          title="Suggested For You"
-          subtitle="Handpicked products from our trusted partners"
+          title={t("suggested.title")}
+          subtitle={t("suggested.subtitle")}
           action={
             <a
               href="/products"
               className="hidden items-center gap-1 text-sm font-medium text-amber-600 transition-colors hover:text-amber-700 sm:inline-flex"
             >
-              View all
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {t("suggested.viewAll")}
+              <svg className="h-4 w-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -325,20 +430,20 @@ export default function Home() {
               backgroundSize: "40px 40px",
             }}
           />
-          <div className="relative z-10 text-center sm:text-left">
+          <div className="relative z-10 text-center sm:text-start">
             <p className="mb-1 text-xs font-bold tracking-widest text-amber-100 uppercase">
-              Grow Your Business
+              {t("sellerBanner.eyebrow")}
             </p>
             <h3 className="text-xl font-bold text-white md:text-2xl">
-              Become a Seller on LinknSmile
+              {t("sellerBanner.title")}
             </h3>
-            <p className="mt-1 text-sm text-amber-100">Reach thousands of buyers across India</p>
+            <p className="mt-1 text-sm text-amber-100">{t("sellerBanner.subtitle")}</p>
           </div>
           <a
             href="/register-as-seller"
             className="relative z-10 shrink-0 rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-amber-600 shadow-md transition-all duration-150 hover:bg-amber-50"
           >
-            Register Now →
+            {t("sellerBanner.cta")} <span className="rtl:inline-block rtl:rotate-180">→</span>
           </a>
         </div>
       </section>
@@ -346,15 +451,15 @@ export default function Home() {
       {/* ── All Products ──────────────────────────── */}
       <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 md:pb-14">
         <Section
-          title="Shop All Products"
-          subtitle="Browse our complete collection from all brands"
+          title={t("allProducts.title")}
+          subtitle={t("allProducts.subtitle")}
         >
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
             {!isClient || loading ? (
               [...Array(12)].map((_, i) => <SkeletonCard key={i} />)
             ) : allProducts.length === 0 ? (
               <div className="col-span-full py-16 text-center">
-                <p className="text-sm text-stone-400">No products available yet</p>
+                <p className="text-sm text-stone-400">{t("allProducts.empty")}</p>
               </div>
             ) : (
               allProducts.map((p) => (
@@ -380,13 +485,13 @@ export default function Home() {
       </section>
 
       {/* ── Floating buttons ──────────────────────── */}
-      <div className="fixed bottom-6 left-4 z-50 flex flex-col items-center gap-3">
+      <div className="fixed bottom-6 start-4 z-50 flex flex-col items-center gap-3">
         {/* Amazon */}
         <a
           href="https://www.amazon.in/stores/LINKANDSMILE"
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Shop on Amazon"
+          aria-label={t("shopOnAmazon")}
           className="flex h-12 w-12 items-center justify-center rounded-full border border-stone-200 bg-white shadow-lg transition-all duration-150 hover:-translate-y-0.5 hover:shadow-xl"
         >
           <img
@@ -404,7 +509,7 @@ export default function Home() {
             type="button"
             aria-haspopup="menu"
             aria-expanded={waMenuOpen}
-            aria-label="Open WhatsApp options"
+            aria-label={t("whatsapp.openOptions")}
             className="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] shadow-lg transition-all duration-150 hover:-translate-y-0.5 hover:shadow-xl"
           >
             <svg
@@ -429,7 +534,7 @@ export default function Home() {
               <button
                 role="menuitem"
                 onClick={() => openWaFor(PRIMARY_WA)}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-stone-700 transition-colors hover:bg-stone-50"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm text-stone-700 transition-colors hover:bg-stone-50"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#25D366]/10">
                   <svg
@@ -444,7 +549,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-xs font-medium">Chat with LinknSmile</p>
+                  <p className="text-xs font-medium">{t("whatsapp.chatWithLinknsmile")}</p>
                   <p className="text-xs text-stone-400">{PRIMARY_WA}</p>
                 </div>
               </button>
@@ -452,7 +557,7 @@ export default function Home() {
               <button
                 role="menuitem"
                 onClick={() => openWaFor(SECONDARY_WA)}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm text-stone-700 transition-colors hover:bg-stone-50"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm text-stone-700 transition-colors hover:bg-stone-50"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50">
                   <svg
@@ -467,7 +572,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-xs font-medium">Chat with Support</p>
+                  <p className="text-xs font-medium">{t("whatsapp.chatWithSupport")}</p>
                   <p className="text-xs text-stone-400">{SECONDARY_WA}</p>
                 </div>
               </button>
@@ -479,7 +584,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                   className="block rounded-xl py-2 text-center text-xs text-stone-400 transition-colors hover:bg-stone-50 hover:text-stone-600"
                 >
-                  Open in WhatsApp Web
+                  {t("whatsapp.openInWeb")}
                 </a>
               </div>
             </div>
@@ -490,8 +595,8 @@ export default function Home() {
       {/* Scroll to top */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        aria-label="Scroll to top"
-        className={`fixed right-5 bottom-6 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-stone-900 shadow-lg transition-all duration-200 hover:bg-stone-800 ${
+        aria-label={t("scrollToTop")}
+        className={`fixed end-5 bottom-6 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-stone-900 shadow-lg transition-all duration-200 hover:bg-stone-800 ${
           showTopButton
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"

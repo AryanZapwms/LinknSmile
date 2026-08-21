@@ -1,5 +1,5 @@
 {
-  "name": "instapeels",
+  "name": "linknsmile",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -59,6 +59,7 @@
     "mongoose": "8.24.2",
     "next": "^15.5.23",
     "next-auth": "^4.24.11",
+    "next-intl": "^4.13.7",
     "next-themes": "^0.4.6",
     "nodemailer": "6.9.16",
     "razorpay": "2.9.8",
@@ -85,6 +86,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22",
     "@types/nodemailer": "^7.0.9",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.27",

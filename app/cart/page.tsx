@@ -15,13 +15,23 @@ import {
   Truck,
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/currency";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 export default function CartPage() {
+  const t = useTranslations("Cart");
   const { items, removeItem, updateQuantity, getTotalPrice, getTotalItems } = useCartStore();
+  const { supportPhone, taxRatePercent } = usePlatformSettings();
   const totalPrice = getTotalPrice();
+  // Preview only — the real charge is always recomputed server-side via
+  // computeOrderPricing (lib/pricing.ts) at checkout, same as totalPrice
+  // itself already is today.
+  const taxAmount = Math.round(((totalPrice * taxRatePercent) / 100) * 100) / 100;
+  const grandTotal = totalPrice + taxAmount;
   const router = useRouter();
   const [showBulkOrderModal, setShowBulkOrderModal] = useState(false);
 
@@ -33,16 +43,13 @@ export default function CartPage() {
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-stone-100">
             <ShoppingBag className="h-8 w-8 text-stone-300" />
           </div>
-          <h2 className="mb-2 text-xl font-bold text-stone-800">Your cart is empty</h2>
-          <p className="mb-6 text-sm text-stone-400">
-            Looks like you haven't added anything yet. Browse our collection to find something
-            you'll love.
-          </p>
+          <h2 className="mb-2 text-xl font-bold text-stone-800">{t("emptyTitle")}</h2>
+          <p className="mb-6 text-sm text-stone-400">{t("emptyDesc")}</p>
           <Link
             href="/products"
             className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-6 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-amber-500"
           >
-            Browse Products <ChevronRight className="h-4 w-4" />
+            {t("browseProducts")} <ChevronRight className="h-4 w-4 rtl:rotate-180" />
           </Link>
         </div>
       </main>
@@ -58,12 +65,12 @@ export default function CartPage() {
         {/* Page header */}
         <div className="mb-8">
           <p className="mb-1 text-xs font-semibold tracking-widest text-amber-600 uppercase">
-            Your order
+            {t("yourOrder")}
           </p>
           <h1 className="text-2xl font-bold text-stone-900 md:text-3xl">
-            Shopping Cart
-            <span className="ml-3 text-base font-medium text-stone-400">
-              ({getTotalItems()} item{getTotalItems() !== 1 ? "s" : ""})
+            {t("shoppingCart")}
+            <span className="ms-3 text-base font-medium text-stone-400">
+              {t("itemCount", { count: getTotalItems() })}
             </span>
           </h1>
         </div>
@@ -96,11 +103,13 @@ export default function CartPage() {
                       {item.name}
                     </h3>
                   </Link>
-                  <p className="mt-0.5 text-xs text-stone-400">{item.shopName || "linknsmile"}</p>
+                  <p className="mt-0.5 text-xs text-stone-400">
+                    {item.shopName || t("defaultShopName")}
+                  </p>
                   {item.selectedSize && (
                     <p className="mt-1 text-xs text-stone-500">
-                      <span className="font-medium">Size:</span> {item.selectedSize.size} ·{" "}
-                      {item.selectedSize.quantity}
+                      <span className="font-medium">{t("sizeLabel")}</span> {item.selectedSize.size}{" "}
+                      · {item.selectedSize.quantity}
                       {item.selectedSize.unit}
                     </p>
                   )}
@@ -138,15 +147,12 @@ export default function CartPage() {
                     </div>
 
                     {/* Price */}
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-base font-bold text-stone-900">
-                        ₹
-                        {Math.round(
-                          (item.discountPrice || item.price) * item.quantity
-                        ).toLocaleString()}
+                        {formatCurrency((item.discountPrice || item.price) * item.quantity)}
                       </p>
                       <p className="text-xs text-stone-400">
-                        ₹{(item.discountPrice || item.price).toLocaleString()} each
+                        {formatCurrency(item.discountPrice || item.price)} {t("each")}
                       </p>
                     </div>
                   </div>
@@ -156,7 +162,7 @@ export default function CartPage() {
                 <button
                   onClick={() => removeItem(item.productId, sizeKey(item))}
                   className="flex h-8 w-8 shrink-0 items-center justify-center self-start rounded-lg text-stone-300 transition-all hover:bg-red-50 hover:text-red-400"
-                  aria-label="Remove item"
+                  aria-label={t("removeItem")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -168,8 +174,8 @@ export default function CartPage() {
               href="/products"
               className="inline-flex items-center gap-1.5 pt-1 text-sm font-medium text-amber-600 transition-colors hover:text-amber-700"
             >
-              <ChevronRight className="h-4 w-4 rotate-180" />
-              Continue shopping
+              <ChevronRight className="h-4 w-4 rotate-180 rtl:rotate-0" />
+              {t("continueShopping")}
             </Link>
           </div>
 
@@ -179,7 +185,7 @@ export default function CartPage() {
               {/* Header */}
               <div className="border-b border-stone-100 px-5 py-4">
                 <h2 className="text-sm font-bold tracking-wider text-stone-900 uppercase">
-                  Order Summary
+                  {t("orderSummary")}
                 </h2>
               </div>
 
@@ -187,18 +193,24 @@ export default function CartPage() {
                 {/* Line items */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-stone-500">Subtotal ({getTotalItems()} items)</span>
+                    <span className="text-stone-500">
+                      {t("subtotalWithCount", { count: getTotalItems() })}
+                    </span>
                     <span className="font-semibold text-stone-800">
-                      ₹{Math.round(totalPrice).toLocaleString()}
+                      {formatCurrency(totalPrice)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-stone-500">Shipping</span>
-                    <span className="font-semibold text-green-600">Free</span>
+                    <span className="text-stone-500">{t("shipping")}</span>
+                    <span className="font-semibold text-green-600">{t("free")}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-stone-500">Tax</span>
-                    <span className="font-semibold text-stone-800">Included</span>
+                    <span className="text-stone-500">
+                      {taxRatePercent > 0 ? t("taxWithRate", { rate: taxRatePercent }) : t("tax")}
+                    </span>
+                    <span className="font-semibold text-stone-800">
+                      {formatCurrency(taxAmount)}
+                    </span>
                   </div>
                 </div>
 
@@ -207,9 +219,9 @@ export default function CartPage() {
 
                 {/* Total */}
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-bold text-stone-900">Total</span>
+                  <span className="text-base font-bold text-stone-900">{t("total")}</span>
                   <span className="text-xl font-black text-stone-900">
-                    ₹{Math.round(totalPrice).toLocaleString()}
+                    {formatCurrency(grandTotal)}
                   </span>
                 </div>
 
@@ -218,7 +230,7 @@ export default function CartPage() {
                   onClick={() => router.push("/checkout")}
                   className="mt-1 h-12 w-full rounded-xl bg-stone-900 text-sm font-bold text-white transition-all duration-200 hover:bg-amber-500 hover:shadow-md active:scale-[0.98]"
                 >
-                  Proceed to Checkout
+                  {t("proceedToCheckout")}
                 </button>
               </div>
 
@@ -226,11 +238,11 @@ export default function CartPage() {
               <div className="flex items-center gap-4 border-t border-stone-100 bg-stone-50 px-5 py-3">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-stone-400">
                   <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
-                  Secure checkout
+                  {t("secureCheckout")}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs font-medium text-stone-400">
                   <Truck className="h-3.5 w-3.5 text-amber-500" />
-                  Free delivery
+                  {t("freeDelivery")}
                 </div>
               </div>
             </div>
@@ -243,23 +255,18 @@ export default function CartPage() {
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-stone-900">
-              Need a bulk order?
+              {t("bulkOrderTitle")}
             </DialogTitle>
           </DialogHeader>
-          <p className="mb-4 text-sm text-stone-500">
-            You've reached the 5-item cart limit. For bulk orders, contact us directly.
-          </p>
+          <p className="mb-4 text-sm text-stone-500">{t("bulkOrderDesc")}</p>
           <div className="mb-4 space-y-2">
-            {["+91 8355991099", "+91 8355991099"].map((num) => (
-              <a
-                key={num}
-                href={`tel:${num.replace(/\s/g, "")}`}
-                className="flex items-center gap-3 rounded-xl border border-stone-100 bg-stone-50 p-3 transition-colors hover:border-amber-200 hover:bg-amber-50"
-              >
-                <Phone className="h-4 w-4 text-amber-600" />
-                <span className="text-sm font-medium text-stone-700">{num}</span>
-              </a>
-            ))}
+            <a
+              href={`tel:${supportPhone.replace(/\s/g, "")}`}
+              className="flex items-center gap-3 rounded-xl border border-stone-100 bg-stone-50 p-3 transition-colors hover:border-amber-200 hover:bg-amber-50"
+            >
+              <Phone className="h-4 w-4 text-amber-600" />
+              <span className="text-sm font-medium text-stone-700">{supportPhone}</span>
+            </a>
           </div>
           <div className="flex gap-2">
             <Button
@@ -267,7 +274,7 @@ export default function CartPage() {
               className="flex-1 rounded-xl"
               onClick={() => setShowBulkOrderModal(false)}
             >
-              Continue
+              {t("continue")}
             </Button>
             <Button
               className="flex-1 rounded-xl bg-stone-900 transition-colors hover:bg-amber-500"
@@ -275,7 +282,7 @@ export default function CartPage() {
                 window.location.href = "tel:+919820623835";
               }}
             >
-              Call Now
+              {t("callNow")}
             </Button>
           </div>
         </DialogContent>

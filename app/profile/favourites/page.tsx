@@ -4,6 +4,7 @@ import { useFavouritesStore } from "@/hooks/useFavourites";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import FavouriteButton from "@/components/FavouriteButton";
+import { formatCurrency } from "@/lib/currency";
 
 export default function FavouritesPage() {
   const { favourites } = useFavouritesStore();
@@ -90,7 +91,7 @@ export default function FavouritesPage() {
                   <img src={p.images?.[0]} className="h-40 w-full object-cover" alt={p.name} />
                   <div className="p-3">
                     <p className="text-sm font-medium">{p.name}</p>
-                    <p className="text-sm text-gray-600">₹{p.price}</p>
+                    <p className="text-sm text-gray-600">{formatCurrency(p.price)}</p>
                   </div>
                 </Link>
               </div>

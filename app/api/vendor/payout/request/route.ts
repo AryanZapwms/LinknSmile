@@ -10,6 +10,7 @@ import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { sendPushNotificationToVendor } from "@/lib/services/push-notification";
 import crypto from "crypto";
+import { formatCurrency } from "@/lib/currency";
 
 export async function POST(request: Request) {
   if (request.method === "OPTIONS") {
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
     if (amount < wallet.minimumThreshold) {
       return withCORS(
         NextResponse.json(
-          { error: `Minimum withdrawal is ₹${wallet.minimumThreshold}` },
+          { error: `Minimum withdrawal is ${formatCurrency(wallet.minimumThreshold)}` },
           { status: 400 }
         )
       );
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
     if (wallet.withdrawableBalance < amount) {
       return withCORS(
         NextResponse.json(
-          { error: `Insufficient withdrawable balance. Available: ₹${wallet.withdrawableBalance}` },
+          { error: `Insufficient withdrawable balance. Available: ${formatCurrency(wallet.withdrawableBalance)}` },
           { status: 400 }
         )
       );
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
     await sendPushNotificationToVendor(
       (shop._id as any).toString(),
       "💰 Payout Request Submitted",
-      `Your request for ₹${amount} has been submitted. It will be processed within 3-5 business days.`,
+      `Your request for ${formatCurrency(amount)} has been submitted. It will be processed within 3-5 business days.`,
       { screen: "wallet" }
     );
 
@@ -146,7 +147,7 @@ export async function POST(request: Request) {
     await sendPushNotificationToVendor(
       (shop._id as any).toString(),
       "💰 Payout Request Submitted",
-      `Your request for ₹${amount} has been submitted. It will be processed within 3-5 business days.`,
+      `Your request for ${formatCurrency(amount)} has been submitted. It will be processed within 3-5 business days.`,
       { screen: "wallet" }
     );
 

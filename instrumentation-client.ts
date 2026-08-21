@@ -3,9 +3,10 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
+import { SENTRY_DSN } from "@/lib/site-config";
 
 Sentry.init({
-  dsn: "https://45176dfa3998ff88a2d6407caa15c137@o4511505865048064.ingest.us.sentry.io/4511505866293248",
+  dsn: SENTRY_DSN,
 
   // Add optional integrations for additional features
   integrations: [Sentry.replayIntegration()],

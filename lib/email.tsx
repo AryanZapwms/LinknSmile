@@ -1,5 +1,14 @@
 // email.tsx
 import nodemailer from "nodemailer";
+import { formatCurrency, LOCALE } from "@/lib/currency";
+
+// Single source of truth for absolute links/domain text in these email
+// templates — mirrors the exact pattern already used in app/robots.ts and
+// app/sitemap.ts, so this file, robots.txt, and sitemap.xml all agree on
+// the same domain instead of each hardcoding their own.
+const SITE_URL = process.env.NEXTAUTH_URL ?? "https://linkn-smile.vercel.app";
+const SITE_HOST = SITE_URL.replace(/^https?:\/\//, "");
+
 let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter() {
@@ -47,7 +56,7 @@ export async function sendEmail({
     }
 
     await emailTransporter.sendMail({
-      from: `"LinkNSmile" <${process.env.GMAIL_EMAIL}>`,
+      from: `"Linknsmile" <${process.env.GMAIL_EMAIL}>`,
       to,
       subject,
       html,
@@ -220,8 +229,8 @@ export function getWelcomeEmail(name: string) {
           <div class="container">
             <!-- Header -->
             <div class="header">
-             <img src="https://linknsmile.com/companylogo.jpg" alt="LinkNSmile Logo" class="logo">
-             <h1>Welcome to LinkNSmile!</h1>
+             <img src="${SITE_URL}/companylogo.jpg" alt="Linknsmile Logo" class="logo">
+             <h1>Welcome to Linknsmile!</h1>
 <p>India's Trusted Marketplace</p>
             </div>
 
@@ -230,7 +239,7 @@ export function getWelcomeEmail(name: string) {
               <p class="greeting">Hello <strong>${name}</strong>,</p>
               
               <p class="text-block">
-                Thank you for creating an account with us! We're thrilled to welcome you to the LinkNSmile family.
+                Thank you for creating an account with us! We're thrilled to welcome you to the Linknsmile family.
               </p>
 
               <div class="features">
@@ -246,11 +255,11 @@ export function getWelcomeEmail(name: string) {
               </div>
 
               <div style="text-align: center;">
-                <a href="https://linknsmile.com/products" class="cta-button">Start Shopping Now</a>
+                <a href="${SITE_URL}/products" class="cta-button">Start Shopping Now</a>
               </div>
 
               <p class="text-block">
-                At Instapeels, we're committed to providing you with the highest quality skincare products backed by science and expertise. Our team is dedicated to helping you achieve your best skin.
+                At Linknsmile, we're committed to providing you with the highest quality skincare products backed by science and expertise. Our team is dedicated to helping you achieve your best skin.
               </p>
 
               <p class="text-block">
@@ -265,16 +274,16 @@ export function getWelcomeEmail(name: string) {
             <!-- Footer -->
             <div class="footer">
               <div class="footer-links">
-                <a href="https://instapeels.com">Home</a>
-                <a href="https://instapeels.com/shop">Shop</a>
-                <a href="https://instapeels.com/blog">Blog</a>
-                <a href="https://instapeels.com/profile">Account</a>
+                <a href="${SITE_URL}">Home</a>
+                <a href="${SITE_URL}/shop">Shop</a>
+                <a href="${SITE_URL}/blog">Blog</a>
+                <a href="${SITE_URL}/profile">Account</a>
               </div>
               <div class="footer-text">
-                <p><strong>LinkNSmile</strong></p>
+                <p><strong>Linknsmile</strong></p>
 <p>Net & Work Builds Up Net-Worth</p>
-<p>📧 support@linknsmile.com | 🌐 www.linknsmile.com</p>
-<p>&copy; 2026 LinkNSmile. All rights reserved.</p>
+<p>📧 support@linknsmile.com | 🌐 ${SITE_HOST}</p>
+<p>&copy; 2026 Linknsmile. All rights reserved.</p>
               </div>
             </div>
           </div>
@@ -328,7 +337,7 @@ export function getOrderConfirmationEmail({
           ${item.quantity}
         </td>
         <td style="padding: 15px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">
-          ₹${(item.price * item.quantity).toFixed(2)}
+          ${formatCurrency(item.price * item.quantity)}
         </td>
       </tr>
     `
@@ -548,7 +557,7 @@ export function getOrderConfirmationEmail({
           <div class="container">
             <!-- Header -->
             <div class="header">
-              <img src="https://instapeels.com/companylogo.jpg" alt="Instapeels Logo" class="logo">
+              <img src="${SITE_URL}/companylogo.jpg" alt="Linknsmile Logo" class="logo">
               <h1>Order Confirmation</h1>
               <p>Your order has been received!</p>
             </div>
@@ -571,7 +580,7 @@ export function getOrderConfirmationEmail({
                 </div>
                 <div class="order-info-row">
                   <span class="order-info-label">Order Date</span>
-                  <span class="order-info-value">${orderDate || new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</span>
+                  <span class="order-info-value">${orderDate || new Date().toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</span>
                 </div>
                 <div class="order-info-row">
                   <span class="order-info-label">Payment Status</span>
@@ -600,7 +609,7 @@ export function getOrderConfirmationEmail({
               <div class="price-summary">
                 <div class="price-row">
                   <span>Subtotal</span>
-                  <span>₹${itemsSubtotal.toFixed(2)}</span>
+                  <span>${formatCurrency(itemsSubtotal)}</span>
                 </div>
                 <div class="price-row">
                   <span>Shipping</span>
@@ -608,7 +617,7 @@ export function getOrderConfirmationEmail({
                 </div>
                 <div class="price-row total">
                   <span>Total Amount</span>
-                  <span>₹${total.toFixed(2)}</span>
+                  <span>${formatCurrency(total)}</span>
                 </div>
               </div>
 
@@ -621,30 +630,30 @@ export function getOrderConfirmationEmail({
               </div>
 
               <div style="text-align: center;">
-                <a href="https://instapeels.com/profile/orders" class="cta-button">Track Your Order</a>
+                <a href="${SITE_URL}/profile/orders" class="cta-button">Track Your Order</a>
               </div>
 
               <p class="text-block">
-                If you have any questions about your order or our products, our customer support team is here to help. We're committed to ensuring you have the best experience with Instapeels.
+                If you have any questions about your order or our products, our customer support team is here to help. We're committed to ensuring you have the best experience with Linknsmile.
               </p>
             </div>
 
             <!-- Footer -->
             <div class="footer">
               <div class="footer-links">
-                <a href="https://instapeels.com">Home</a>
-                <a href="https://instapeels.com/shop">Shop</a>
-                <a href="https://instapeels.com/blog">Blog</a>
-                <a href="https://instapeels.com/profile/orders">Orders</a>
+                <a href="${SITE_URL}">Home</a>
+                <a href="${SITE_URL}/shop">Shop</a>
+                <a href="${SITE_URL}/blog">Blog</a>
+                <a href="${SITE_URL}/profile/orders">Orders</a>
               </div>
               <div class="footer-text">
-                <p><strong>Instapeels</strong></p>
+                <p><strong>Linknsmile</strong></p>
                 <p>Premium Skincare for Everyone</p>
                 <p style="margin-top: 10px; color: #95a5a6;">
-                  📧 care@instapeels.com | 🌐 www.instapeels.com
+                  📧 care@linknsmile.com | 🌐 ${SITE_HOST}
                 </p>
                 <p style="margin-top: 15px; color: #bdc3c7;">
-                  &copy; 2025 Instapeels.com. All rights reserved.
+                  &copy; 2025 Linknsmile. All rights reserved.
                 </p>
               </div>
               <div class="support-text">
@@ -699,7 +708,7 @@ export function getOrderStatusUpdateEmail({
           }
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: center; color: #34495e;">${item.quantity}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">₹${(item.price * item.quantity).toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">${formatCurrency(item.price * item.quantity)}</td>
       </tr>
     `
     )
@@ -724,8 +733,8 @@ export function getOrderStatusUpdateEmail({
 
   const paymentInfo =
     paymentStatus === "completed"
-      ? `<p style="color: #27ae60; font-weight: 600;">✓ Payment Received: ₹${totalAmount.toFixed(2)}</p>`
-      : `<p style="color: #f39c12; font-weight: 600;">⏱ Amount to Pay on Delivery: ₹${totalAmount.toFixed(2)}</p>`;
+      ? `<p style="color: #27ae60; font-weight: 600;">✓ Payment Received: ${formatCurrency(totalAmount)}</p>`
+      : `<p style="color: #f39c12; font-weight: 600;">⏱ Amount to Pay on Delivery: ${formatCurrency(totalAmount)}</p>`;
 
   return `
     <!DOCTYPE html>
@@ -887,7 +896,7 @@ export function getOrderStatusUpdateEmail({
           <div class="container">
             <!-- Header -->
             <div class="header">
-              <img src="https://instapeels.com/companylogo.jpg" alt="Instapeels Logo" class="logo">
+              <img src="${SITE_URL}/companylogo.jpg" alt="Linknsmile Logo" class="logo">
               <h1>Order Update</h1>
               <p>Your order status has been updated</p>
             </div>
@@ -920,7 +929,7 @@ export function getOrderStatusUpdateEmail({
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Total Amount:</span>
-                  <span class="detail-value">₹${totalAmount.toFixed(2)}</span>
+                  <span class="detail-value">${formatCurrency(totalAmount)}</span>
                 </div>
               </div>
 
@@ -945,7 +954,7 @@ export function getOrderStatusUpdateEmail({
               </div>
 
               <div style="text-align: center;">
-                <a href="https://instapeels.com/profile/orders" class="cta-button">Track Your Order</a>
+                <a href="${SITE_URL}/profile/orders" class="cta-button">Track Your Order</a>
               </div>
 
               <p class="text-block">
@@ -956,19 +965,19 @@ export function getOrderStatusUpdateEmail({
             <!-- Footer -->
             <div class="footer">
               <div class="footer-links">
-                <a href="https://instapeels.com">Home</a>
-                <a href="https://instapeels.com/shop">Shop</a>
-                <a href="https://instapeels.com/blog">Blog</a>
-                <a href="https://instapeels.com/profile/orders">Orders</a>
+                <a href="${SITE_URL}">Home</a>
+                <a href="${SITE_URL}/shop">Shop</a>
+                <a href="${SITE_URL}/blog">Blog</a>
+                <a href="${SITE_URL}/profile/orders">Orders</a>
               </div>
               <div class="footer-text">
-                <p><strong>Instapeels</strong></p>
+                <p><strong>Linknsmile</strong></p>
                 <p>Premium Skincare for Everyone</p>
                 <p style="margin-top: 10px; color: #95a5a6;">
-                  📧 care@instapeels.com | 🌐 www.instapeels.com
+                  📧 care@linknsmile.com | 🌐 ${SITE_HOST}
                 </p>
                 <p style="margin-top: 15px; color: #bdc3c7;">
-                  &copy; 2025 Instapeels.com. All rights reserved.
+                  &copy; 2025 Linknsmile. All rights reserved.
                 </p>
               </div>
             </div>
@@ -1036,7 +1045,7 @@ export function getAdminOrderNotificationEmail({
           }
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: center; color: #34495e;">${item.quantity}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">₹${(item.price * item.quantity).toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">${formatCurrency(item.price * item.quantity)}</td>
       </tr>
     `
     )
@@ -1226,7 +1235,7 @@ export function getAdminOrderNotificationEmail({
             <!-- Alert Header -->
             <div class="alert-header">
               <h1>🚨 NEW ORDER RECEIVED</h1>
-              <p>Order ID: ${orderId} | ${orderDate || new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
+              <p>Order ID: ${orderId} | ${orderDate || new Date().toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</p>
             </div>
 
             <!-- Content -->
@@ -1277,7 +1286,7 @@ export function getAdminOrderNotificationEmail({
               <div class="total-section">
                 <div class="total-row">
                   <span>Subtotal:</span>
-                  <span>₹${itemsSubtotal.toFixed(2)}</span>
+                  <span>${formatCurrency(itemsSubtotal)}</span>
                 </div>
                 <div class="total-row">
                   <span>Shipping:</span>
@@ -1285,7 +1294,7 @@ export function getAdminOrderNotificationEmail({
                 </div>
                 <div class="total-row grand-total">
                   <span>TOTAL AMOUNT:</span>
-                  <span>₹${totalAmount.toFixed(2)}</span>
+                  <span>${formatCurrency(totalAmount)}</span>
                 </div>
               </div>
 
@@ -1305,10 +1314,10 @@ export function getAdminOrderNotificationEmail({
 
             <!-- Footer -->
             <div class="footer">
-              <p><strong>Instapeels Order Management System</strong></p>
+              <p><strong>Linknsmile Order Management System</strong></p>
               <p>This is an automated admin notification. Please process this order accordingly.</p>
               <p style="margin-top: 10px; border-top: 1px solid #ecf0f1; padding-top: 10px;">
-                &copy; 2025 Instapeels.com. All rights reserved.
+                &copy; 2025 Linknsmile. All rights reserved.
               </p>
             </div>
           </div>
@@ -1338,11 +1347,11 @@ export function getPayoutRequestedEmail({
             <p>Admin,</p>
             <p>A new payout request has been submitted by <strong>${shopName}</strong>.</p>
             <div style="background:#f9f9f9;padding:15px;border-radius:5px;margin:15px 0;">
-              <p><strong>Amount:</strong> ₹${amount.toLocaleString()}</p>
+              <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
               <p><strong>Request ID:</strong> ${requestId}</p>
             </div>
             <p>Please review and process this request in the admin panel.</p>
-            <div style="text-align:center;"><a href="https://linknsmile.com/admin/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Request</a></div>
+            <div style="text-align:center;"><a href="${SITE_URL}/admin/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Request</a></div>
           </div>
           <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
@@ -1380,13 +1389,13 @@ export function getPayoutStatusEmail({
           <div class="header"><h1>${statusTitles[status] || "Payout Update"}</h1></div>
           <div class="content">
             <p>Hello ${shopName},</p>
-            <p>Your payout request for <strong>₹${amount.toLocaleString()}</strong> has been updated to <strong>${status}</strong>.</p>
+            <p>Your payout request for <strong>${formatCurrency(amount)}</strong> has been updated to <strong>${status}</strong>.</p>
             
             ${transactionId ? `<p><strong>Transaction ID:</strong> ${transactionId}</p>` : ""}
             ${failureReason ? `<p style="color:#e74c3c"><strong>Reason:</strong> ${failureReason}</p>` : ""}
             
             <p>You can track all your payouts in your dashboard.</p>
-            <div style="text-align:center;"><a href="https://linknsmile.com/vendor/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Check Dashboard</a></div>
+            <div style="text-align:center;"><a href="${SITE_URL}/vendor/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Check Dashboard</a></div>
           </div>
           <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
@@ -1426,8 +1435,8 @@ export function getVendorSubscriptionPaymentEmail({
             <p>Hello ${vendorName},</p>
             <p>Your annual subscription for <strong>${shopName}</strong> is now active.</p>
             <div style="background:#f9f9f9;padding:15px;border-radius:5px;margin:15px 0;">
-              <p><strong>Amount paid:</strong> ₹${amount.toLocaleString()}</p>
-              <p><strong>Valid until:</strong> ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
+              <p><strong>Amount paid:</strong> ${formatCurrency(amount)}</p>
+              <p><strong>Valid until:</strong> ${expiryDate.toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</p>
             </div>
             <p>Your vendor dashboard and storefront listings are fully active.</p>
             ${SUBSCRIPTION_SUPPORT_NOTE}
@@ -1463,10 +1472,10 @@ export function getAdminVendorSubscriptionPaidEmail({
             <p>Admin,</p>
             <p><strong>${shopName}</strong> (${ownerName}, ${ownerEmail}) just paid their annual subscription.</p>
             <div style="background:#f9f9f9;padding:15px;border-radius:5px;margin:15px 0;">
-              <p><strong>Amount:</strong> ₹${amount.toLocaleString()}</p>
-              <p><strong>Valid until:</strong> ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
+              <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
+              <p><strong>Valid until:</strong> ${expiryDate.toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</p>
             </div>
-            <div style="text-align:center;"><a href="https://linknsmile.com/admin/vendors/subscriptions" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Subscriptions</a></div>
+            <div style="text-align:center;"><a href="${SITE_URL}/admin/vendors/subscriptions" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Subscriptions</a></div>
           </div>
           <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
@@ -1489,8 +1498,8 @@ export function getVendorSubscriptionExpiryReminderEmail({
   const inGrace = daysRemaining <= 0;
   const title = inGrace ? "Your subscription has expired" : "Your subscription is expiring soon";
   const bodyLine = inGrace
-    ? `Your subscription expired on ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}. You have ${7 + daysRemaining} day(s) left of dashboard access before it is blocked.`
-    : `Your subscription for <strong>${shopName}</strong> expires in ${daysRemaining} day(s), on ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}.`;
+    ? `Your subscription expired on ${expiryDate.toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}. You have ${7 + daysRemaining} day(s) left of dashboard access before it is blocked.`
+    : `Your subscription for <strong>${shopName}</strong> expires in ${daysRemaining} day(s), on ${expiryDate.toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}.`;
 
   return `
     <!DOCTYPE html>
@@ -1503,7 +1512,7 @@ export function getVendorSubscriptionExpiryReminderEmail({
             <p>Hello ${vendorName},</p>
             <p>${bodyLine}</p>
             <p>Renew now to avoid losing access to your vendor dashboard.</p>
-            <div style="text-align:center;"><a href="https://linknsmile.com/vendor/settings" style="background:#f59e0b;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Subscription</a></div>
+            <div style="text-align:center;"><a href="${SITE_URL}/vendor/settings" style="background:#f59e0b;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Subscription</a></div>
             ${SUBSCRIPTION_SUPPORT_NOTE}
           </div>
           <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
@@ -1561,9 +1570,9 @@ export function getVendorSubscriptionStorefrontWarningEmail({
           <div class="header"><h1>Final Warning: Products Coming Down</h1></div>
           <div class="content">
             <p>Hello ${vendorName},</p>
-            <p>Your <strong>${shopName}</strong> products will be removed from the Linknsmile storefront on ${hideDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })} because your subscription has not been renewed.</p>
+            <p>Your <strong>${shopName}</strong> products will be removed from the Linknsmile storefront on ${hideDate.toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })} because your subscription has not been renewed.</p>
             <p>Your product data will be kept and will automatically reappear as soon as you renew — even after this date.</p>
-            <div style="text-align:center;"><a href="https://linknsmile.com/vendor/settings" style="background:#e74c3c;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Now</a></div>
+            <div style="text-align:center;"><a href="${SITE_URL}/vendor/settings" style="background:#e74c3c;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Now</a></div>
             ${SUBSCRIPTION_SUPPORT_NOTE}
           </div>
           <div class="footer"><p>&copy; 2026 Linknsmile</p></div>

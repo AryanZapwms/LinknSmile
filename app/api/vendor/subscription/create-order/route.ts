@@ -1,17 +1,18 @@
 import { withCORS } from "@/lib/cors";
 import { type NextRequest, NextResponse } from "next/server";
-import Razorpay from "razorpay";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { VendorSubscription } from "@/lib/models/vendor-subscription";
 import { VendorSubscriptionSettings } from "@/lib/models/vendor-subscription-settings";
+import { CURRENCY_CODE } from "@/lib/currency";
+import { razorpayAdapter } from "@/lib/payments/razorpay";
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
+// Thin, behavior-preserving wrapper around lib/payments/razorpay.ts — see
+// app/api/razorpay/create-order for the same pattern. Response shape
+// unchanged: { id, amount, currency, annualFeeAmount }. Multi-gateway
+// deployments should call /api/vendor/subscription/tap/create-order
+// instead — this URL stays Razorpay-specific.
 export async function POST(request: NextRequest) {
   if (request.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
@@ -36,13 +37,9 @@ export async function POST(request: NextRequest) {
       settings = await VendorSubscriptionSettings.create({});
     }
     const amount = settings.annualFeeAmount;
-    const currency = settings.currency || "INR";
+    const currency = settings.currency || CURRENCY_CODE;
 
-    const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(amount * 100), // paise
-      currency,
-      payment_capture: true,
-    });
+    const razorpayOrder = await razorpayAdapter.createPaymentOrder({ amount, currency });
 
     // Track the pending attempt so the admin table can see "payment initiated".
     // verify-payment remains the source of truth for actually activating access.
@@ -54,7 +51,7 @@ export async function POST(request: NextRequest) {
           status: "pending",
           amount,
           currency,
-          razorpayOrderId: razorpayOrder.id,
+          razorpayOrderId: razorpayOrder.gatewayOrderId,
         },
       },
       { upsert: true, new: true }
@@ -62,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     return withCORS(
       NextResponse.json({
-        id: razorpayOrder.id,
+        id: razorpayOrder.gatewayOrderId,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         annualFeeAmount: amount, // rupees — for display only

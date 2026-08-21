@@ -1,4 +1,21 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import createNextIntlPlugin from "next-intl/plugin";
+
+// i18n Step 8 (2026-08-21) — "without i18n routing" mode, see i18n/request.ts
+// for why. Explicit path, not relying on the default resolution order.
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
+// Deployment's own image-serving hostnames, comma-separated. Optional —
+// defaults to today's two India hostnames, so this is a no-op unless a new
+// country deployment sets it. res.cloudinary.com (the CDN, not brand-
+// specific) is always allowed regardless.
+const imageHostnames = (
+  process.env.NEXT_PUBLIC_IMAGE_HOSTNAMES || "linknsmile.com,care.linknsmile.com"
+)
+  .split(",")
+  .map((h) => h.trim())
+  .filter(Boolean);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -10,14 +27,7 @@ const nextConfig = {
   images: {
   qualities: [75, 90],
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "linknsmile.com",
-      },
-      {
-        protocol: "https",
-        hostname: "care.linknsmile.com",
-      },
+      ...imageHostnames.map((hostname) => ({ protocol: "https", hostname })),
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
@@ -111,7 +121,7 @@ const nextConfig = {
   },
 };
 
-export default withSentryConfig(nextConfig, {
+export default withSentryConfig(withNextIntl(nextConfig), {
  // For all available options, see:
  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
