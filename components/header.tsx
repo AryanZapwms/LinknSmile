@@ -18,6 +18,7 @@ import {
   LogOut,
   ShoppingBag,
   ChevronDown,
+  ChevronRight,
   LayoutDashboard,
   Menu,
   Tag,
@@ -27,7 +28,9 @@ import {
   Globe2,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { useTranslations } from "next-intl";
 import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 /* ─── Types ─────────────────────────────────────────────── */
 interface Category {
@@ -71,6 +74,7 @@ function MegaMenu({
   onClose: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<"categories" | "origin" | "sellers">("categories");
+  const t = useTranslations("Header.megaMenu");
 
   return (
     <div
@@ -84,20 +88,20 @@ function MegaMenu({
         {/* Left — Tab nav */}
         <div className="flex flex-col gap-1 border-r border-stone-100 bg-stone-50 p-4">
           <p className="mb-2 px-2 text-xs font-bold tracking-widest text-stone-400 uppercase">
-            Browse
+            {t("browse")}
           </p>
 
           {/* Tab buttons */}
           {[
-            { key: "categories", icon: Tag, label: "By Category" },
-            { key: "origin", icon: Flag, label: "By Origin" },
-            { key: "sellers", icon: Store, label: "By Seller" },
+            { key: "categories", icon: Tag, label: t("byCategory") },
+            { key: "origin", icon: Flag, label: t("byOrigin") },
+            { key: "sellers", icon: Store, label: t("bySeller") },
           ].map(({ key, icon: Icon, label }) => (
             <button
               key={key}
               onMouseEnter={() => setActiveTab(key as any)}
               onClick={() => setActiveTab(key as any)}
-              className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+              className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-start text-sm font-medium transition-colors ${
                 activeTab === key
                   ? "bg-white text-amber-700 shadow-sm"
                   : "text-stone-600 hover:bg-white/60 hover:text-stone-800"
@@ -114,7 +118,7 @@ function MegaMenu({
               onClick={onClose}
               className="flex items-center gap-2 rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-amber-700 transition-colors hover:bg-amber-500 hover:text-white"
             >
-              View All →
+              {t("viewAll")} <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
             </Link>
           </div>
         </div>
@@ -125,12 +129,12 @@ function MegaMenu({
           {activeTab === "categories" && (
             <>
               <p className="mb-3 text-xs font-bold tracking-widest text-stone-400 uppercase">
-                Shop by Category
+                {t("shopByCategory")}
               </p>
               <div className="grid max-h-[340px] grid-cols-2 gap-0.5 overflow-y-auto">
                 {categories.length === 0 ? (
                   <div className="col-span-2 flex h-20 items-center justify-center text-sm text-stone-400">
-                    Loading categories…
+                    {t("loadingCategories")}
                   </div>
                 ) : (
                   categories.map((cat) => (
@@ -145,7 +149,7 @@ function MegaMenu({
           {activeTab === "origin" && (
             <>
               <p className="mb-4 text-xs font-bold tracking-widest text-stone-400 uppercase">
-                Shop by Origin
+                {t("shopByOrigin")}
               </p>
               <div className="flex flex-col gap-3">
                 {/* Made in India */}
@@ -159,10 +163,10 @@ function MegaMenu({
                   </div>
                   <div>
                     <p className="font-bold text-stone-800 transition-colors group-hover:text-amber-700">
-                      Made in India
+                      {t("madeInIndia")}
                     </p>
                     <p className="mt-0.5 text-xs text-stone-400">
-                      Proudly crafted by Indian sellers &amp; artisans
+                      {t("madeInIndiaDesc")}
                     </p>
                   </div>
                 </Link>
@@ -199,10 +203,10 @@ function MegaMenu({
 
                   <div>
                     <p className="font-bold text-stone-800 transition-colors group-hover:text-amber-700">
-                      All Products
+                      {t("allProducts")}
                     </p>
                     <p className="mt-0.5 text-xs text-stone-400">
-                      Browse everything on Linknsmile
+                      {t("allProductsDesc")}
                     </p>
                   </div>
                 </Link>
@@ -214,11 +218,11 @@ function MegaMenu({
           {activeTab === "sellers" && (
             <>
               <p className="mb-3 text-xs font-bold tracking-widest text-stone-400 uppercase">
-                Shop by Seller
+                {t("shopBySeller")}
               </p>
               {shops.length === 0 ? (
                 <div className="flex h-20 items-center justify-center text-sm text-stone-400">
-                  Loading shops…
+                  {t("loadingShops")}
                 </div>
               ) : (
                 <div className="grid max-h-[320px] grid-cols-2 gap-2 overflow-y-auto">
@@ -255,7 +259,8 @@ function MegaMenu({
                   onClick={onClose}
                   className="inline-flex items-center gap-2 rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-amber-700 transition-colors hover:bg-amber-500 hover:text-white"
                 >
-                  <Store size={14} /> View All Sellers →
+                  <Store size={14} /> {t("viewAllSellers")}{" "}
+                  <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
                 </Link>
               </div>
             </>
@@ -271,6 +276,7 @@ export function Header() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("Header");
 
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -333,8 +339,9 @@ export function Header() {
   const isLoggedIn = !!session?.user;
 
   const navLinks = [
-    { href: "/about-us", label: "About Us" },
-    { href: "/contact-us", label: "Contact" },
+    { href: "/blog", label: t("blog") },
+    { href: "/about-us", label: t("aboutUs") },
+    { href: "/contact-us", label: t("contact") },
   ];
 
   return (
@@ -353,7 +360,7 @@ export function Header() {
           <button
             onClick={() => router.push("/")}
             className="group flex shrink-0 items-center gap-2.5 focus:outline-none"
-            aria-label="Go to home"
+            aria-label={t("goToHome")}
           >
 
             <div className="relative h-22 w-35 mt-4 px-2 overflow-hidden rounded-[50%] bg-white transition-all duration-200 group-hover:ring-amber-400">
@@ -381,7 +388,7 @@ export function Header() {
                     : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
                 }`}
               >
-                Products
+                {t("products")}
                 <ChevronDown
                   className={`h-3.5 w-3.5 transition-transform duration-200 ${productsMenuOpen ? "rotate-180" : ""}`}
                 />
@@ -413,9 +420,9 @@ export function Header() {
             {!isVendor && !isAdmin && (
               <Link
                 href="/register-as-seller"
-                className="ml-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-all duration-150 hover:bg-amber-100"
+                className="ms-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-all duration-150 hover:bg-amber-100"
               >
-                Sell with us
+                {t("sellWithUs")}
               </Link>
             )}
 
@@ -423,12 +430,14 @@ export function Header() {
             {(isVendor || isAdmin) && (
               <Link
                 href={isAdmin ? "/admin" : "/vendor"}
-                className="ml-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-all duration-150 hover:bg-amber-100"
+                className="ms-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-all duration-150 hover:bg-amber-100"
               >
                 <LayoutDashboard className="h-3.5 w-3.5" />
-                Dashboard
+                {t("dashboard")}
               </Link>
             )}
+
+            <LocaleSwitcher />
           </nav>
 
           {/* Right actions */}
@@ -446,7 +455,7 @@ export function Header() {
                       <User className="h-3.5 w-3.5 text-amber-700" />
                     </div>
                     <span className="hidden max-w-[100px] truncate text-sm font-medium text-stone-700 sm:inline">
-                      {session.user.name?.split(" ")[0] || "Account"}
+                      {session.user.name?.split(" ")[0] || t("account")}
                     </span>
                     <ChevronDown className="h-3 w-3 text-stone-400" />
                   </Button>
@@ -457,7 +466,7 @@ export function Header() {
                 >
                   <div className="mb-1 px-3 py-2">
                     <p className="text-xs font-semibold tracking-wider text-stone-500 uppercase">
-                      Account
+                      {t("account")}
                     </p>
                     <p className="mt-0.5 truncate text-sm font-medium text-stone-800">
                       {session.user.name || session.user.email}
@@ -469,7 +478,7 @@ export function Header() {
                   <div className="md:hidden">
                     <DropdownMenuItem asChild>
                       <Link href="/products" className="cursor-pointer rounded-lg text-sm">
-                        Products
+                        {t("products")}
                       </Link>
                     </DropdownMenuItem>
                     {navLinks.map(({ href, label }) => (
@@ -480,6 +489,10 @@ export function Header() {
                       </DropdownMenuItem>
                     ))}
                     <div className="my-1 h-px bg-stone-100" />
+                    <div className="px-1">
+                      <LocaleSwitcher />
+                    </div>
+                    <div className="my-1 h-px bg-stone-100" />
                   </div>
 
                   <DropdownMenuItem asChild>
@@ -487,7 +500,7 @@ export function Header() {
                       href="/profile"
                       className="flex cursor-pointer items-center gap-2 rounded-lg text-sm"
                     >
-                      <User className="h-4 w-4 text-stone-400" /> My Profile
+                      <User className="h-4 w-4 text-stone-400" /> {t("myProfile")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -495,7 +508,7 @@ export function Header() {
                       href="/profile/orders"
                       className="flex cursor-pointer items-center gap-2 rounded-lg text-sm"
                     >
-                      <ShoppingBag className="h-4 w-4 text-stone-400" /> My Orders
+                      <ShoppingBag className="h-4 w-4 text-stone-400" /> {t("myOrders")}
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
@@ -504,7 +517,7 @@ export function Header() {
                         href="/admin"
                         className="flex cursor-pointer items-center gap-2 rounded-lg text-sm"
                       >
-                        <LayoutDashboard className="h-4 w-4 text-stone-400" /> Admin Dashboard
+                        <LayoutDashboard className="h-4 w-4 text-stone-400" /> {t("adminDashboard")}
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -514,7 +527,7 @@ export function Header() {
                         href="/vendor"
                         className="flex cursor-pointer items-center gap-2 rounded-lg text-sm"
                       >
-                        <LayoutDashboard className="h-4 w-4 text-stone-400" /> Vendor Dashboard
+                        <LayoutDashboard className="h-4 w-4 text-stone-400" /> {t("vendorDashboard")}
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -523,7 +536,7 @@ export function Header() {
                     onClick={() => signOut({ callbackUrl: "/" })}
                     className="flex cursor-pointer items-center gap-2 rounded-lg text-sm text-red-500 focus:bg-red-50 focus:text-red-600"
                   >
-                    <LogOut className="h-4 w-4" /> Sign Out
+                    <LogOut className="h-4 w-4" /> {t("signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -542,7 +555,7 @@ export function Header() {
                     >
                       <DropdownMenuItem asChild>
                         <Link href="/products" className="cursor-pointer rounded-lg text-sm">
-                          Products
+                          {t("products")}
                         </Link>
                       </DropdownMenuItem>
                       {navLinks.map(({ href, label }) => (
@@ -553,11 +566,15 @@ export function Header() {
                         </DropdownMenuItem>
                       ))}
                       <div className="my-1 h-px bg-stone-100" />
+                      <div className="px-1">
+                        <LocaleSwitcher />
+                      </div>
+                      <div className="my-1 h-px bg-stone-100" />
                       <DropdownMenuItem
                         onClick={() => router.push("/auth/login")}
                         className="cursor-pointer rounded-lg text-sm"
                       >
-                        Sign In
+                        {t("signIn")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -567,7 +584,7 @@ export function Header() {
                   size="sm"
                   className="hidden h-9 rounded-xl bg-stone-900 px-4 text-sm font-medium text-white hover:bg-stone-800 md:flex"
                 >
-                  Sign In
+                  {t("signIn")}
                 </Button>
               </>
             )}

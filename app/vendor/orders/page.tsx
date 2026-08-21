@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import {
 import { Search, Eye, Package, DollarSign, Calendar, Info } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { formatCurrency } from "@/lib/currency";
 
 interface Order {
   _id: string;
@@ -45,6 +47,7 @@ interface Order {
 }
 
 export default function VendorOrdersPage() {
+  const t = useTranslations("VendorOrdersPage");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -68,7 +71,7 @@ export default function VendorOrdersPage() {
       }
     } catch (error) {
       console.error("Failed to fetch orders:", error);
-      toast.error("Failed to load orders");
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -91,9 +94,17 @@ export default function VendorOrdersPage() {
       cancelled: "text-white border-red-600",
     };
 
+    const labels: Record<string, string> = {
+      pending: t("statusPending"),
+      processing: t("statusProcessing"),
+      shipped: t("statusShipped"),
+      delivered: t("statusDelivered"),
+      cancelled: t("statusCancelled"),
+    };
+
     return (
       <Badge variant={variants[status] || "outline"} className={colors[status]}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {labels[status] || status}
       </Badge>
     );
   };
@@ -103,19 +114,19 @@ export default function VendorOrdersPage() {
       case "pending":
         return (
           <Badge variant="outline" className="text-orange-500">
-            Pending
+            {t("payoutPending")}
           </Badge>
         );
       case "released":
         return (
           <Badge variant="default" className="bg-green-500">
-            Released
+            {t("payoutReleased")}
           </Badge>
         );
       case "held":
         return (
           <Badge variant="outline" className="text-gray-500">
-            Held
+            {t("payoutHeld")}
           </Badge>
         );
       default:
@@ -134,15 +145,15 @@ export default function VendorOrdersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-        <p className="text-muted-foreground">Manage orders containing your products</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("totalOrders")}</CardTitle>
             <Package className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -152,35 +163,35 @@ export default function VendorOrdersPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("totalEarnings")}</CardTitle>
             <DollarSign className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ₹{orders.reduce((sum, order) => sum + order.vendorEarnings, 0).toFixed(2)}
+              {formatCurrency(orders.reduce((sum, order) => sum + order.vendorEarnings, 0))}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending Payouts</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("pendingPayouts")}</CardTitle>
             <DollarSign className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ₹
-              {orders
-                .filter((o) => o.payoutStatus === "pending")
-                .reduce((sum, order) => sum + order.vendorEarnings, 0)
-                .toFixed(2)}
+              {formatCurrency(
+                orders
+                  .filter((o) => o.payoutStatus === "pending")
+                  .reduce((sum, order) => sum + order.vendorEarnings, 0)
+              )}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("pendingOrders")}</CardTitle>
             <Package className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -194,31 +205,31 @@ export default function VendorOrdersPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Orders</CardTitle>
+          <CardTitle>{t("filterOrders")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
-              <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+              <Search className="text-muted-foreground absolute top-2.5 start-2.5 h-4 w-4" />
               <Input
-                placeholder="Search by order number, customer name or email..."
+                placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
+                className="ps-8"
               />
             </div>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t("filterByStatus")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="all">{t("allStatus")}</SelectItem>
+                <SelectItem value="pending">{t("statusPending")}</SelectItem>
+                <SelectItem value="processing">{t("statusProcessing")}</SelectItem>
+                <SelectItem value="shipped">{t("statusShipped")}</SelectItem>
+                <SelectItem value="delivered">{t("statusDelivered")}</SelectItem>
+                <SelectItem value="cancelled">{t("statusCancelled")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -238,23 +249,21 @@ export default function VendorOrdersPage() {
             <div className="py-12 text-center">
               <Package className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
               <p className="text-muted-foreground mb-4">
-                {search || statusFilter !== "all"
-                  ? "No orders found matching your filters"
-                  : "No orders yet"}
+                {search || statusFilter !== "all" ? t("noOrdersFilterMsg") : t("noOrdersYet")}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Your Earnings</TableHead>
-                  <TableHead>Payout</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t("colOrder")}</TableHead>
+                  <TableHead>{t("colCustomer")}</TableHead>
+                  <TableHead>{t("colItems")}</TableHead>
+                  <TableHead>{t("colYourEarnings")}</TableHead>
+                  <TableHead>{t("colPayout")}</TableHead>
+                  <TableHead>{t("colStatus")}</TableHead>
+                  <TableHead>{t("colDate")}</TableHead>
+                  <TableHead className="text-end">{t("colActions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -265,7 +274,7 @@ export default function VendorOrdersPage() {
                         <p className="font-medium">#{order.orderNumber}</p>
                         {order.paymentStatus === "completed" && (
                           <Badge variant="outline" className="mt-1 text-xs text-green-600">
-                            Paid
+                            {t("paid")}
                           </Badge>
                         )}
                       </div>
@@ -304,10 +313,10 @@ export default function VendorOrdersPage() {
                     </TableCell>
                     <TableCell>
                       <p className="font-medium text-green-600">
-                        ₹{order.vendorEarnings.toFixed(2)}
+                        {formatCurrency(order.vendorEarnings)}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        from ₹{order.vendorSubtotal.toFixed(2)}
+                        {t("fromLabel", { amount: formatCurrency(order.vendorSubtotal) })}
                       </p>
                     </TableCell>
                     <TableCell>{getPayoutBadge(order.payoutStatus)}</TableCell>
@@ -318,14 +327,14 @@ export default function VendorOrdersPage() {
                           <div className="group relative">
                             <Info className="text-muted-foreground h-4 w-4 cursor-help" />
                             <div className="invisible absolute bottom-full left-1/2 z-10 mb-1 w-48 -translate-x-1/2 rounded bg-gray-900 px-2 py-1 text-xs text-white group-hover:visible">
-                              Cancellation reason: {order.cancellationReason}
+                              {t("cancellationReasonTooltip", { reason: order.cancellationReason })}
                             </div>
                           </div>
                         )}
                       </div>
                       {order.orderStatus === "cancelled" && order.cancellationReason && (
                         <p className="mt-1 max-w-[150px] truncate text-xs text-red-500">
-                          Reason: {order.cancellationReason}
+                          {t("reasonLabel", { reason: order.cancellationReason })}
                         </p>
                       )}
                     </TableCell>
@@ -337,11 +346,11 @@ export default function VendorOrdersPage() {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/vendor/orders/${order._id}`}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
+                          <Eye className="me-2 h-4 w-4" />
+                          {t("view")}
                         </Link>
                       </Button>
                     </TableCell>

@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ interface ShopSettings {
 }
 
 export default function VendorSettingsPage() {
+  const t = useTranslations("VendorSettings");
   const [settings, setSettings] = useState<ShopSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -85,10 +87,10 @@ export default function VendorSettingsPage() {
           commissionRate: shop.commissionRate || 10,
         });
       } else {
-        toast.error("Failed to load settings");
+        toast.error(t("loadFailed"));
       }
     } catch (error) {
-      toast.error("Something went wrong");
+      toast.error(t("somethingWentWrong"));
     } finally {
       setLoading(false);
     }
@@ -105,12 +107,12 @@ export default function VendorSettingsPage() {
       });
       const json = await res.json();
       if (json.success) {
-        toast.success("Settings updated successfully!");
+        toast.success(t("updateSuccess"));
       } else {
-        toast.error(json.message || "Failed to update settings");
+        toast.error(json.message || t("updateFailed"));
       }
     } catch (error) {
-      toast.error("Failed to update settings");
+      toast.error(t("updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -127,25 +129,24 @@ export default function VendorSettingsPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Shop Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your shop profile, contact details, and bank information.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <form onSubmit={handleUpdate}>
         <Tabs defaultValue="profile" className="w-full space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center gap-2">
-              <Store className="h-4 w-4" /> <span className="hidden sm:inline">Shop Profile</span>
+              <Store className="h-4 w-4" />{" "}
+              <span className="hidden sm:inline">{t("tabShopProfile")}</span>
             </TabsTrigger>
             <TabsTrigger value="address" className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />{" "}
-              <span className="hidden sm:inline">Contact & Address</span>
+              <span className="hidden sm:inline">{t("tabContactAddress")}</span>
             </TabsTrigger>
             <TabsTrigger value="bank" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />{" "}
-              <span className="hidden sm:inline">Bank Details</span>
+              <span className="hidden sm:inline">{t("tabBankDetails")}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -153,34 +154,35 @@ export default function VendorSettingsPage() {
           <TabsContent value="profile" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Shop Profile</CardTitle>
-                <CardDescription>Update your shop's basic identity.</CardDescription>
+                <CardTitle>{t("shopProfileTitle")}</CardTitle>
+                <CardDescription>{t("shopProfileDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Shop Name</label>
+                  <label className="text-sm font-medium">{t("shopName")}</label>
                   <Input
                     value={settings.shopName}
                     onChange={(e) => setSettings({ ...settings, shopName: e.target.value })}
-                    placeholder="Enter shop name"
+                    placeholder={t("shopNamePlaceholder")}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
+                  <label className="text-sm font-medium">{t("description")}</label>
                   <Textarea
                     value={settings.description}
                     onChange={(e) => setSettings({ ...settings, description: e.target.value })}
-                    placeholder="Tell customers about your shop..."
+                    placeholder={t("descriptionPlaceholder")}
                     rows={4}
                   />
                 </div>
                 <div className="bg-muted/50 flex gap-3 rounded-lg p-4">
                   <Info className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
                   <p className="text-muted-foreground text-xs leading-relaxed">
-                    Your current platform commission rate is{" "}
-                    <strong>{settings.commissionRate}%</strong>. This rate is applied to each order.
-                    Contact admin to request a rate change.
+                    {t.rich("commissionInfo", {
+                      rate: settings.commissionRate,
+                      strong: (chunks) => <strong>{chunks}</strong>,
+                    })}
                   </p>
                 </div>
               </CardContent>
@@ -191,16 +193,16 @@ export default function VendorSettingsPage() {
           <TabsContent value="address" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-                <CardDescription>How customers and admin can reach you.</CardDescription>
+                <CardTitle>{t("contactInfoTitle")}</CardTitle>
+                <CardDescription>{t("contactInfoDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Phone Number</label>
+                  <label className="text-sm font-medium">{t("phoneNumber")}</label>
                   <div className="relative">
-                    <Phone className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                    <Phone className="text-muted-foreground absolute top-2.5 start-3 h-4 w-4" />
                     <Input
-                      className="pl-9"
+                      className="ps-9"
                       value={settings.contactInfo.phone}
                       onChange={(e) =>
                         setSettings({
@@ -208,17 +210,17 @@ export default function VendorSettingsPage() {
                           contactInfo: { ...settings.contactInfo, phone: e.target.value },
                         })
                       }
-                      placeholder="9876543210"
+                      placeholder={t("phoneNumberPlaceholder")}
                       required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Email Address</label>
+                  <label className="text-sm font-medium">{t("emailAddress")}</label>
                   <div className="relative">
-                    <Mail className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                    <Mail className="text-muted-foreground absolute top-2.5 start-3 h-4 w-4" />
                     <Input
-                      className="pl-9"
+                      className="ps-9"
                       type="email"
                       value={settings.contactInfo.email}
                       onChange={(e) =>
@@ -227,7 +229,7 @@ export default function VendorSettingsPage() {
                           contactInfo: { ...settings.contactInfo, email: e.target.value },
                         })
                       }
-                      placeholder="vendor@example.com"
+                      placeholder={t("emailAddressPlaceholder")}
                       required
                     />
                   </div>
@@ -237,12 +239,12 @@ export default function VendorSettingsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Shop Address</CardTitle>
-                <CardDescription>Primary business location.</CardDescription>
+                <CardTitle>{t("shopAddressTitle")}</CardTitle>
+                <CardDescription>{t("shopAddressDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium">Street Address</label>
+                  <label className="text-sm font-medium">{t("streetAddress")}</label>
                   <Input
                     value={settings.address.street}
                     onChange={(e) =>
@@ -251,12 +253,12 @@ export default function VendorSettingsPage() {
                         address: { ...settings.address, street: e.target.value },
                       })
                     }
-                    placeholder="123 Business Lane"
+                    placeholder={t("streetAddressPlaceholder")}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">City</label>
+                  <label className="text-sm font-medium">{t("city")}</label>
                   <Input
                     value={settings.address.city}
                     onChange={(e) =>
@@ -265,12 +267,12 @@ export default function VendorSettingsPage() {
                         address: { ...settings.address, city: e.target.value },
                       })
                     }
-                    placeholder="Mumbai"
+                    placeholder={t("cityPlaceholder")}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">State</label>
+                  <label className="text-sm font-medium">{t("state")}</label>
                   <Input
                     value={settings.address.state}
                     onChange={(e) =>
@@ -279,12 +281,12 @@ export default function VendorSettingsPage() {
                         address: { ...settings.address, state: e.target.value },
                       })
                     }
-                    placeholder="Maharashtra"
+                    placeholder={t("statePlaceholder")}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Pincode</label>
+                  <label className="text-sm font-medium">{t("pincode")}</label>
                   <Input
                     value={settings.address.pincode}
                     onChange={(e) =>
@@ -293,12 +295,12 @@ export default function VendorSettingsPage() {
                         address: { ...settings.address, pincode: e.target.value },
                       })
                     }
-                    placeholder="400001"
+                    placeholder={t("pincodePlaceholder")}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Country</label>
+                  <label className="text-sm font-medium">{t("country")}</label>
                   <Input
                     value={settings.address.country}
                     onChange={(e) =>
@@ -307,7 +309,7 @@ export default function VendorSettingsPage() {
                         address: { ...settings.address, country: e.target.value },
                       })
                     }
-                    placeholder="India"
+                    placeholder={t("countryPlaceholder")}
                     required
                   />
                 </div>
@@ -319,13 +321,13 @@ export default function VendorSettingsPage() {
           <TabsContent value="bank" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Bank Account Details</CardTitle>
-                <CardDescription>Essential for receiving your earnings.</CardDescription>
+                <CardTitle>{t("bankAccountTitle")}</CardTitle>
+                <CardDescription>{t("bankAccountDesc")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Account Holder Name</label>
+                    <label className="text-sm font-medium">{t("accountHolderName")}</label>
                     <Input
                       value={settings.bankDetails.accountHolderName}
                       onChange={(e) =>
@@ -337,16 +339,16 @@ export default function VendorSettingsPage() {
                           },
                         })
                       }
-                      placeholder="As per bank records"
+                      placeholder={t("accountHolderPlaceholder")}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Bank Name</label>
+                    <label className="text-sm font-medium">{t("bankName")}</label>
                     <div className="relative">
-                      <Building2 className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                      <Building2 className="text-muted-foreground absolute top-2.5 start-3 h-4 w-4" />
                       <Input
-                        className="pl-9"
+                        className="ps-9"
                         value={settings.bankDetails.bankName}
                         onChange={(e) =>
                           setSettings({
@@ -354,17 +356,17 @@ export default function VendorSettingsPage() {
                             bankDetails: { ...settings.bankDetails, bankName: e.target.value },
                           })
                         }
-                        placeholder="e.g. HDFC Bank"
+                        placeholder={t("bankNamePlaceholder")}
                         required
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Account Number</label>
+                    <label className="text-sm font-medium">{t("accountNumber")}</label>
                     <div className="relative">
-                      <CreditCard className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                      <CreditCard className="text-muted-foreground absolute top-2.5 start-3 h-4 w-4" />
                       <Input
-                        className="pl-9"
+                        className="ps-9"
                         value={settings.bankDetails.accountNumber}
                         onChange={(e) =>
                           setSettings({
@@ -372,13 +374,13 @@ export default function VendorSettingsPage() {
                             bankDetails: { ...settings.bankDetails, accountNumber: e.target.value },
                           })
                         }
-                        placeholder="0000000000"
+                        placeholder={t("accountNumberPlaceholder")}
                         required
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">IFSC Code</label>
+                    <label className="text-sm font-medium">{t("ifscCode")}</label>
                     <Input
                       value={settings.bankDetails.ifscCode}
                       onChange={(e) =>
@@ -390,18 +392,18 @@ export default function VendorSettingsPage() {
                           },
                         })
                       }
-                      placeholder="e.g. HDFC0001234"
+                      placeholder={t("ifscPlaceholder")}
                       className="font-mono tracking-wider"
                       required
                     />
-                    <p className="text-muted-foreground text-xs">
-                      11-character Indian bank branch code.
-                    </p>
+                    <p className="text-muted-foreground text-xs">{t("ifscHint")}</p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      SWIFT / BIC Code{" "}
-                      <span className="text-muted-foreground font-normal">(Optional)</span>
+                      {t("swiftCode")}{" "}
+                      <span className="text-muted-foreground font-normal">
+                        {t("swiftOptional")}
+                      </span>
                     </label>
                     <Input
                       value={settings.bankDetails.swiftCode ?? ""}
@@ -414,19 +416,17 @@ export default function VendorSettingsPage() {
                           },
                         })
                       }
-                      placeholder="e.g. HDFCINBBXXX"
+                      placeholder={t("swiftPlaceholder")}
                       className="font-mono tracking-wider"
                     />
-                    <p className="text-muted-foreground text-xs">
-                      Required for international payouts.
-                    </p>
+                    <p className="text-muted-foreground text-xs">{t("swiftHint")}</p>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">UPI ID (Optional)</label>
+                    <label className="text-sm font-medium">{t("upiId")}</label>
                     <div className="relative">
-                      <Globe className="text-muted-foreground absolute top-2.5 left-3 h-4 w-4" />
+                      <Globe className="text-muted-foreground absolute top-2.5 start-3 h-4 w-4" />
                       <Input
-                        className="pl-9"
+                        className="ps-9"
                         value={settings.bankDetails.upiId}
                         onChange={(e) =>
                           setSettings({
@@ -434,7 +434,7 @@ export default function VendorSettingsPage() {
                             bankDetails: { ...settings.bankDetails, upiId: e.target.value },
                           })
                         }
-                        placeholder="user@upi"
+                        placeholder={t("upiPlaceholder")}
                       />
                     </div>
                   </div>
@@ -442,11 +442,7 @@ export default function VendorSettingsPage() {
 
                 <div className="flex gap-3 rounded-lg border border-blue-100 bg-blue-50 p-4">
                   <AlertCircle className="h-5 w-5 shrink-0 text-blue-500" />
-                  <p className="text-xs text-blue-700">
-                    Ensure these details are absolutely correct. We won't be responsible for
-                    payments sent to the wrong account provided here. Changes here will reflect in
-                    all future payout requests.
-                  </p>
+                  <p className="text-xs text-blue-700">{t("bankSecurityNotice")}</p>
                 </div>
               </CardContent>
             </Card>
@@ -458,12 +454,12 @@ export default function VendorSettingsPage() {
             {saving ? (
               <>
                 {" "}
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...{" "}
+                <Loader2 className="me-2 h-4 w-4 animate-spin" /> {t("saving")}{" "}
               </>
             ) : (
               <>
                 {" "}
-                <Save className="mr-2 h-4 w-4" /> Save All Changes{" "}
+                <Save className="me-2 h-4 w-4" /> {t("saveAllChanges")}{" "}
               </>
             )}
           </Button>

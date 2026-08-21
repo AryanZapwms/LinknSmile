@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getCurrencySymbol } from "@/lib/currency";
 
 export default function RegisterAsSellerPage() {
   return (
@@ -44,7 +45,12 @@ export default function RegisterAsSellerPage() {
           {[
             { icon: "🛒", label: "Active Buyers", value: "10,000+", sub: "Growing every day" },
             { icon: "📦", label: "Orders Fulfilled", value: "50,000+", sub: "Across India" },
-            { icon: "💸", label: "Seller Payouts", value: "₹2Cr+", sub: "Paid out this year" },
+            {
+              icon: "💸",
+              label: "Seller Payouts",
+              value: `${getCurrencySymbol()}2Cr+`,
+              sub: "Paid out this year",
+            },
             { icon: "⭐", label: "Seller Rating", value: "4.8 / 5", sub: "Average satisfaction" },
           ].map(({ icon, label, value, sub }) => (
             <div key={label} className="flex items-center gap-4">

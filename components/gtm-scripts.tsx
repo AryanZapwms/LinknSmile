@@ -1,6 +1,7 @@
 // @ts-nocheck
 "use client";
 import { useEffect } from "react";
+import { GTM_ID, GOOGLE_ADS_ID, FB_PIXEL_ID } from "@/lib/site-config";
 
 export default function GTMScripts() {
   useEffect(() => {
@@ -14,12 +15,12 @@ export default function GTMScripts() {
       j.async = true;
       j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
       f.parentNode?.insertBefore(j, f);
-    })(window, document, "script", "dataLayer", "GTM-KTP32WN");
+    })(window, document, "script", "dataLayer", GTM_ID);
 
     // Google Analytics
     const gtagScript = document.createElement("script");
     gtagScript.async = true;
-    gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=AW-602275335";
+    gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=" + GOOGLE_ADS_ID;
     document.head.appendChild(gtagScript);
 
     window.dataLayer = window.dataLayer || [];
@@ -27,7 +28,7 @@ export default function GTMScripts() {
       window.dataLayer.push(args);
     }
     gtag("js", new Date());
-    gtag("config", "AW-602275335");
+    gtag("config", GOOGLE_ADS_ID);
 
     // Facebook Pixel
     !(function (f, b, e, v, n, t, s) {
@@ -46,7 +47,7 @@ export default function GTMScripts() {
       s = b.getElementsByTagName(e)[0];
       s.parentNode?.insertBefore(t, s);
     })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
-    fbq("init", "997663834042843");
+    fbq("init", FB_PIXEL_ID);
     fbq("track", "PageView");
   }, []);
 

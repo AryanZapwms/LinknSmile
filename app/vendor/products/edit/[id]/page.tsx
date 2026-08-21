@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { getCurrencySymbol } from "@/lib/currency";
 
 interface Category {
   _id: string;
@@ -54,6 +56,7 @@ interface Product {
 }
 
 export default function EditProductPage() {
+  const t = useTranslations("VendorEditProduct");
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
@@ -115,12 +118,12 @@ export default function EditProductPage() {
           suitableFor: prod.suitableFor?.join(", ") || "",
         });
       } else {
-        toast.error("Product not found");
+        toast.error(t("productNotFoundToast"));
         router.push("/vendor/products");
       }
     } catch (error) {
       console.error("Failed to fetch product:", error);
-      toast.error("Failed to load product");
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -171,11 +174,11 @@ export default function EditProductPage() {
           image: prev.image || data.urls[0],
           images: [...prev.images, ...data.urls],
         }));
-        toast.success("Images uploaded successfully");
+        toast.success(t("imagesUploadedSuccess"));
       }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to upload images");
+      toast.error(t("uploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -196,7 +199,7 @@ export default function EditProductPage() {
     e.preventDefault();
 
     if (!formData.name || !formData.slug || !formData.price || !formData.company) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("fillRequiredFields"));
       return;
     }
 
@@ -228,14 +231,14 @@ export default function EditProductPage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(data.message || "Product updated successfully!");
+        toast.success(data.message || t("updateSuccess"));
         router.push("/vendor/products");
       } else {
-        toast.error(data.message || "Failed to update product");
+        toast.error(data.message || t("updateFailed"));
       }
     } catch (error) {
       console.error("Update error:", error);
-      toast.error("Failed to update product");
+      toast.error(t("updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -260,11 +263,17 @@ export default function EditProductPage() {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>Product not found</AlertDescription>
+        <AlertTitle>{t("error")}</AlertTitle>
+        <AlertDescription>{t("productNotFound")}</AlertDescription>
       </Alert>
     );
   }
+
+  const statusLabels: Record<string, string> = {
+    approved: t("statusApproved"),
+    pending: t("statusPending"),
+    rejected: t("statusRejected"),
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -274,8 +283,8 @@ export default function EditProductPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold tracking-tight">Edit Product</h1>
-          <p className="text-muted-foreground">Update product details</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Badge
           variant={
@@ -286,7 +295,7 @@ export default function EditProductPage() {
                 : "destructive"
           }
         >
-          {product.approvalStatus}
+          {statusLabels[product.approvalStatus] || product.approvalStatus}
         </Badge>
       </div>
 
@@ -294,20 +303,17 @@ export default function EditProductPage() {
       {product.approvalStatus === "approved" && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Re-approval Required</AlertTitle>
-          <AlertDescription>
-            This product is currently approved. Making changes will require admin re-approval before
-            the changes are visible to customers.
-          </AlertDescription>
+          <AlertTitle>{t("reApprovalRequiredTitle")}</AlertTitle>
+          <AlertDescription>{t("reApprovalRequiredDesc")}</AlertDescription>
         </Alert>
       )}
 
       {product.approvalStatus === "rejected" && product.rejectionReason && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Product Rejected</AlertTitle>
+          <AlertTitle>{t("productRejectedTitle")}</AlertTitle>
           <AlertDescription>
-            <strong>Reason:</strong> {product.rejectionReason}
+            <strong>{t("reasonPrefix")}</strong> {product.rejectionReason}
           </AlertDescription>
         </Alert>
       )}
@@ -316,13 +322,13 @@ export default function EditProductPage() {
         {/* Basic Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-            <CardDescription>Essential product details</CardDescription>
+            <CardTitle>{t("basicInfo")}</CardTitle>
+            <CardDescription>{t("basicInfoDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="name">Product Name *</Label>
+                <Label htmlFor="name">{t("productName")}</Label>
                 <Input
                   id="name"
                   required
@@ -332,7 +338,7 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="slug">Slug *</Label>
+                <Label htmlFor="slug">{t("slug")}</Label>
                 <Input
                   id="slug"
                   required
@@ -342,13 +348,13 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="company">Brand *</Label>
+                <Label htmlFor="company">{t("brand")}</Label>
                 <Select
                   value={formData.company}
                   onValueChange={(value) => setFormData({ ...formData, company: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select brand" />
+                    <SelectValue placeholder={t("selectBrand")} />
                   </SelectTrigger>
                   <SelectContent>
                     {companies.map((company) => (
@@ -361,13 +367,13 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">{t("category")}</Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={t("selectCategory")} />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((category) => (
@@ -380,7 +386,7 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Price (₹) *</Label>
+                <Label htmlFor="price">{t("price", { symbol: getCurrencySymbol() })}</Label>
                 <Input
                   id="price"
                   type="number"
@@ -392,7 +398,9 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="discountPrice">Discount Price (₹)</Label>
+                <Label htmlFor="discountPrice">
+                  {t("discountPrice", { symbol: getCurrencySymbol() })}
+                </Label>
                 <Input
                   id="discountPrice"
                   type="number"
@@ -403,7 +411,7 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="stock">Stock Quantity</Label>
+                <Label htmlFor="stock">{t("stockQuantity")}</Label>
                 <Input
                   id="stock"
                   type="number"
@@ -413,7 +421,7 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="sku">SKU</Label>
+                <Label htmlFor="sku">{t("sku")}</Label>
                 <Input
                   id="sku"
                   value={formData.sku}
@@ -423,7 +431,7 @@ export default function EditProductPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("description")}</Label>
               <Textarea
                 id="description"
                 rows={4}
@@ -437,8 +445,8 @@ export default function EditProductPage() {
         {/* Images */}
         <Card>
           <CardHeader>
-            <CardTitle>Product Images</CardTitle>
-            <CardDescription>Upload product photos</CardDescription>
+            <CardTitle>{t("productImages")}</CardTitle>
+            <CardDescription>{t("productImagesDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -447,14 +455,12 @@ export default function EditProductPage() {
                   {uploading ? (
                     <div className="flex flex-col items-center justify-center">
                       <Loader2 className="text-primary mb-2 h-8 w-8 animate-spin" />
-                      <p className="text-primary font-medium">Uploading...</p>
+                      <p className="text-primary font-medium">{t("uploadingImages")}</p>
                     </div>
                   ) : (
                     <>
                       <Upload className="text-muted-foreground mx-auto mb-2 h-8 w-8" />
-                      <p className="text-muted-foreground text-sm">
-                        Click to upload or drag and drop
-                      </p>
+                      <p className="text-muted-foreground text-sm">{t("clickToUpload")}</p>
                     </>
                   )}
                 </div>
@@ -483,12 +489,14 @@ export default function EditProductPage() {
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
+                      className="absolute top-2 end-2 opacity-0 transition-opacity group-hover:opacity-100"
                       onClick={() => removeImage(index)}
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                    {index === 0 && <Badge className="absolute bottom-2 left-2">Main Image</Badge>}
+                    {index === 0 && (
+                      <Badge className="absolute bottom-2 start-2">{t("mainImage")}</Badge>
+                    )}
                   </div>
                 ))}
               </div>
@@ -499,11 +507,11 @@ export default function EditProductPage() {
         {/* Additional Details */}
         <Card>
           <CardHeader>
-            <CardTitle>Additional Details</CardTitle>
+            <CardTitle>{t("additionalDetails")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="ingredients">Ingredients (one per line)</Label>
+              <Label htmlFor="ingredients">{t("ingredients")}</Label>
               <Textarea
                 id="ingredients"
                 rows={4}
@@ -513,7 +521,7 @@ export default function EditProductPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="benefits">Benefits (one per line)</Label>
+              <Label htmlFor="benefits">{t("benefits")}</Label>
               <Textarea
                 id="benefits"
                 rows={4}
@@ -523,7 +531,7 @@ export default function EditProductPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="usage">How to Use</Label>
+              <Label htmlFor="usage">{t("howToUse")}</Label>
               <Textarea
                 id="usage"
                 rows={3}
@@ -533,7 +541,7 @@ export default function EditProductPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="suitableFor">Suitable For (comma-separated)</Label>
+              <Label htmlFor="suitableFor">{t("suitableFor")}</Label>
               <Input
                 id="suitableFor"
                 value={formData.suitableFor}
@@ -546,11 +554,11 @@ export default function EditProductPage() {
         {/* Submit */}
         <div className="flex gap-4">
           <Button type="submit" size="lg" disabled={saving || uploading}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {saving ? "Saving..." : "Save Changes"}
+            {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+            {saving ? t("saving") : t("saveChanges")}
           </Button>
           <Button type="button" variant="outline" size="lg" asChild>
-            <Link href="/vendor/products">Cancel</Link>
+            <Link href="/vendor/products">{t("cancel")}</Link>
           </Button>
         </div>
       </form>

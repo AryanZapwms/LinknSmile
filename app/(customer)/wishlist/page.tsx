@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2, Heart, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/currency";
 
 interface WishlistItem {
   _id: string;
@@ -121,7 +122,7 @@ export default function WishlistPage() {
                   {item.name}
                 </h3>
               </Link>
-              <p className="text-primary mt-2 text-xl font-bold">₹{item.price.toFixed(2)}</p>
+              <p className="text-primary mt-2 text-xl font-bold">{formatCurrency(item.price)}</p>
               <div className="mt-4 flex gap-2">
                 <Button asChild variant="outline" className="flex-1">
                   <Link href={`/products/${item.productId}`}>

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"; // 👈 prevents static export error
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connectDB();
 
-  const baseUrl = "https://instapeels.com/";
+  const baseUrl = process.env.NEXTAUTH_URL ?? "https://linkn-smile.vercel.app";
 
   const staticRoutes = [
     {

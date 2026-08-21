@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Package,
@@ -18,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/currency";
 
 interface Stats {
   totalProducts: number;
@@ -49,6 +51,7 @@ interface RecentOrder {
 }
 
 export default function VendorDashboard() {
+  const t = useTranslations("VendorDashboard");
   const [stats, setStats] = useState<Stats | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
@@ -83,11 +86,11 @@ export default function VendorDashboard() {
         setShop(data.shop);
         setRecentOrders(data.recentOrders || []);
       } else {
-        setError(data.message || "Failed to load dashboard data.");
+        setError(data.message || t("loadFailedGeneric"));
       }
     } catch (error) {
       console.error("Failed to fetch stats:", error);
-      setError("An unexpected error occurred while loading dashboard data.");
+      setError(t("loadFailedUnexpected"));
     } finally {
       setLoading(false);
     }
@@ -117,8 +120,8 @@ export default function VendorDashboard() {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error || "Failed to load dashboard data."}</AlertDescription>
+        <AlertTitle>{t("error")}</AlertTitle>
+        <AlertDescription>{error || t("loadFailedGeneric")}</AlertDescription>
       </Alert>
     );
   }
@@ -131,15 +134,22 @@ export default function VendorDashboard() {
       delivered: "default",
       cancelled: "destructive",
     };
-    return <Badge variant={variants[status] || "outline"}>{status}</Badge>;
+    const labels: Record<string, string> = {
+      pending: t("statusPending"),
+      processing: t("statusProcessing"),
+      shipped: t("statusShipped"),
+      delivered: t("statusDelivered"),
+      cancelled: t("statusCancelled"),
+    };
+    return <Badge variant={variants[status] || "outline"}>{labels[status] || status}</Badge>;
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Welcome back, {shop.name}!</h1>
-        <p className="text-muted-foreground">Here's what's happening with your shop today.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("welcomeBack", { name: shop.name })}</h1>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       {/* ── Bank details missing banner ────────────────────────────── */}
@@ -147,19 +157,16 @@ export default function VendorDashboard() {
         <Alert className="border-amber-300 bg-amber-50">
           <CreditCard className="h-4 w-4 text-amber-600" />
           <AlertTitle className="font-semibold text-amber-900">
-            Complete Your Bank Details to Enable Payouts
+            {t("bankDetailsBannerTitle")}
           </AlertTitle>
           <AlertDescription className="mt-1 flex flex-col gap-3 text-amber-800 sm:flex-row sm:items-center">
-            <span className="flex-1">
-              Your bank account information is missing. Without it, payout requests cannot be
-              processed and your earnings will remain on hold.
-            </span>
+            <span className="flex-1">{t("bankDetailsBannerDesc")}</span>
             <Button
               asChild
               size="sm"
               className="shrink-0 bg-amber-600 text-white hover:bg-amber-700"
             >
-              <Link href="/vendor/bank-details">Add Bank Details</Link>
+              <Link href="/vendor/bank-details">{t("addBankDetails")}</Link>
             </Button>
           </AlertDescription>
         </Alert>
@@ -169,21 +176,16 @@ export default function VendorDashboard() {
       {!shop.isApproved && (
         <Alert className="border-orange-200 bg-orange-50">
           <Clock className="h-4 w-4 text-orange-600" />
-          <AlertTitle className="text-orange-800">Shop Pending Approval</AlertTitle>
-          <AlertDescription className="text-orange-700">
-            Your shop is currently under review. You will be able to add and manage products once
-            your shop is approved by our admin team.
-          </AlertDescription>
+          <AlertTitle className="text-orange-800">{t("shopPendingTitle")}</AlertTitle>
+          <AlertDescription className="text-orange-700">{t("shopPendingDesc")}</AlertDescription>
         </Alert>
       )}
 
       {!shop.isActive && shop.isApproved && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Shop Inactive</AlertTitle>
-          <AlertDescription>
-            Your shop is currently inactive. Please contact support for more information.
-          </AlertDescription>
+          <AlertTitle>{t("shopInactiveTitle")}</AlertTitle>
+          <AlertDescription>{t("shopInactiveDesc")}</AlertDescription>
         </Alert>
       )}
 
@@ -191,7 +193,7 @@ export default function VendorDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("totalProducts")}</CardTitle>
             <Package className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -199,11 +201,11 @@ export default function VendorDashboard() {
             <div className="mt-2 flex gap-2 text-xs">
               <span className="flex items-center gap-1 text-green-600">
                 <CheckCircle className="h-3 w-3" />
-                {stats.approvedProducts} approved
+                {t("approvedCount", { count: stats.approvedProducts })}
               </span>
               <span className="flex items-center gap-1 text-purple-600">
                 <Clock className="h-3 w-3" />
-                {stats.pendingApproval} pending
+                {t("pendingCount", { count: stats.pendingApproval })}
               </span>
             </div>
           </CardContent>
@@ -211,36 +213,36 @@ export default function VendorDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("totalOrders")}</CardTitle>
             <ShoppingCart className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalOrders}</div>
-            <p className="text-muted-foreground mt-1 text-xs">All time orders</p>
+            <p className="text-muted-foreground mt-1 text-xs">{t("allTimeOrders")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("totalEarnings")}</CardTitle>
             <DollarSign className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{stats.totalEarnings.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalEarnings)}</div>
             <p className="text-muted-foreground mt-1 text-xs">
-              After {shop.commissionRate}% commission
+              {t("afterCommission", { rate: shop.commissionRate })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending Payouts</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("pendingPayouts")}</CardTitle>
             <TrendingUp className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{stats.pendingPayouts.toLocaleString()}</div>
-            <p className="text-muted-foreground mt-1 text-xs">Available to withdraw</p>
+            <div className="text-2xl font-bold">{formatCurrency(stats.pendingPayouts)}</div>
+            <p className="text-muted-foreground mt-1 text-xs">{t("availableToWithdraw")}</p>
           </CardContent>
         </Card>
       </div>
@@ -248,39 +250,41 @@ export default function VendorDashboard() {
       {/* Shop Info Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Shop Information</CardTitle>
+          <CardTitle>{t("shopInformation")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
           <div>
-            <p className="text-muted-foreground text-sm font-medium">Status</p>
+            <p className="text-muted-foreground text-sm font-medium">{t("status")}</p>
             <div className="mt-1 flex gap-2">
               {shop.isApproved ? (
                 <Badge variant="default" className="bg-purple-500">
-                  <CheckCircle className="mr-1 h-3 w-3" />
-                  Approved
+                  <CheckCircle className="me-1 h-3 w-3" />
+                  {t("approved")}
                 </Badge>
               ) : (
                 <Badge variant="outline">
-                  <Clock className="mr-1 h-3 w-3" />
-                  Pending
+                  <Clock className="me-1 h-3 w-3" />
+                  {t("pending")}
                 </Badge>
               )}
               {shop.isActive ? (
-                <Badge variant="default">Active</Badge>
+                <Badge variant="default">{t("active")}</Badge>
               ) : (
-                <Badge variant="destructive">Inactive</Badge>
+                <Badge variant="destructive">{t("inactive")}</Badge>
               )}
             </div>
           </div>
           <div>
-            <p className="text-muted-foreground text-sm font-medium">Commission Rate</p>
+            <p className="text-muted-foreground text-sm font-medium">{t("commissionRate")}</p>
             <p className="mt-1 text-2xl font-bold">{shop.commissionRate}%</p>
           </div>
           <div>
-            <p className="text-muted-foreground text-sm font-medium">Shop Rating</p>
+            <p className="text-muted-foreground text-sm font-medium">{t("shopRating")}</p>
             <div className="mt-1 flex items-center gap-1">
               <p className="text-2xl font-bold">{shop.ratings.average.toFixed(1)}</p>
-              <p className="text-muted-foreground text-sm">({shop.ratings.count} reviews)</p>
+              <p className="text-muted-foreground text-sm">
+                {t("reviewsCount", { count: shop.ratings.count })}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -289,14 +293,14 @@ export default function VendorDashboard() {
       {/* Recent Orders */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Orders</CardTitle>
+          <CardTitle>{t("recentOrders")}</CardTitle>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/vendor/orders">View All</Link>
+            <Link href="/vendor/orders">{t("viewAll")}</Link>
           </Button>
         </CardHeader>
         <CardContent>
           {recentOrders.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center">No orders yet</p>
+            <p className="text-muted-foreground py-8 text-center">{t("noOrdersYet")}</p>
           ) : (
             <div className="space-y-4">
               {recentOrders.map((order) => (
@@ -310,13 +314,13 @@ export default function VendorDashboard() {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="flex items-center gap-4 text-right">
+                  <div className="flex items-center gap-4 text-end">
                     <div>
-                      <p className="font-medium">₹{order.totalAmount.toLocaleString()}</p>
+                      <p className="font-medium">{formatCurrency(order.totalAmount)}</p>
                       {getStatusBadge(order.status)}
                     </div>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/vendor/orders/${order.id}`}>View</Link>
+                      <Link href={`/vendor/orders/${order.id}`}>{t("view")}</Link>
                     </Button>
                   </div>
                 </div>
@@ -338,11 +342,11 @@ export default function VendorDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                Add New Product
+                {t("addNewProduct")}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-sm">List a new product for sale</p>
+              <p className="text-muted-foreground text-sm">{t("addNewProductDesc")}</p>
             </CardContent>
           </Link>
         </Card>
@@ -357,11 +361,11 @@ export default function VendorDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                Manage Products
+                {t("manageProducts")}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-sm">View and edit your products</p>
+              <p className="text-muted-foreground text-sm">{t("manageProductsDesc")}</p>
             </CardContent>
           </Link>
         </Card>
@@ -371,11 +375,11 @@ export default function VendorDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Request Payout
+                {t("requestPayout")}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-sm">Withdraw your earnings</p>
+              <p className="text-muted-foreground text-sm">{t("requestPayoutDesc")}</p>
             </CardContent>
           </Link>
         </Card>
@@ -389,17 +393,17 @@ export default function VendorDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Bank Details
+                {t("bankDetails")}
                 {bankDetailsComplete === false && (
-                  <span className="ml-auto rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-normal text-amber-600">
-                    Incomplete
+                  <span className="ms-auto rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-normal text-amber-600">
+                    {t("incomplete")}
                   </span>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground text-sm">
-                {bankDetailsComplete ? "Manage payout account" : "Required for payouts"}
+                {bankDetailsComplete ? t("managePayoutAccount") : t("requiredForPayouts")}
               </p>
             </CardContent>
           </Link>

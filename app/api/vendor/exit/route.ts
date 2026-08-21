@@ -10,6 +10,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
+import { formatCurrency } from "@/lib/currency";
 
 export async function POST() {
 
@@ -88,7 +89,7 @@ export async function POST() {
       return withCORS(
         NextResponse.json(
           {
-            error: `Cannot exit while a payout request (₹${inFlightPayout.amount}) is being processed. Please wait for it to complete.`,
+            error: `Cannot exit while a payout request (${formatCurrency(inFlightPayout.amount)}) is being processed. Please wait for it to complete.`,
           },
           { status: 400 }
         )
@@ -103,7 +104,7 @@ export async function POST() {
         return withCORS(
           NextResponse.json(
             {
-              error: `You have ₹${settleableAmount} remaining balance. Please add bank account details in Settings so we can process your final settlement.`,
+              error: `You have ${formatCurrency(settleableAmount)} remaining balance. Please add bank account details in Settings so we can process your final settlement.`,
             },
             { status: 400 }
           )
@@ -162,7 +163,7 @@ export async function POST() {
         success: true,
         message:
           settleableAmount > 0
-            ? `Your account has been closed. Final settlement of ₹${settleableAmount.toFixed(2)} will be processed to your bank account within 3-5 business days.`
+            ? `Your account has been closed. Final settlement of ${formatCurrency(settleableAmount)} will be processed to your bank account within 3-5 business days.`
             : "Your account has been closed successfully.",
       })
     );

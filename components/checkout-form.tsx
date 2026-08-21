@@ -3,6 +3,7 @@
 
 import type React from "react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   MapPin,
@@ -16,6 +17,12 @@ import {
   ShieldCheck,
   Lock,
 } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
+import { ACTIVE_GATEWAY } from "@/lib/payments/types";
+
+// Optional, defaults to India — no-op for the current deployment if unset.
+// NEXT_PUBLIC_-prefixed since this is a "use client" component.
+const DEFAULT_COUNTRY = process.env.NEXT_PUBLIC_DEFAULT_COUNTRY || "India";
 
 interface CheckoutFormProps {
   totalAmount: number;
@@ -72,10 +79,21 @@ export function CheckoutForm({
     city: initialData?.city || "",
     state: initialData?.state || "",
     zipCode: initialData?.zipCode || "",
-    country: initialData?.country || "India",
+    country: initialData?.country || DEFAULT_COUNTRY,
   });
-  const [paymentMethod, setPaymentMethod] = useState(availablePaymentMethods[0] || "razorpay");
+  const [paymentMethod, setPaymentMethod] = useState(availablePaymentMethods[0] || "online");
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("CheckoutForm");
+
+  // "online" is a gateway-agnostic id — the actual gateway (Razorpay widget
+  // vs Tap redirect) is decided by ACTIVE_GATEWAY in app/checkout/page.tsx's
+  // handleCheckout, not by this component. Badges/copy below vary by gateway
+  // since Razorpay's India-specific rails (UPI/RuPay) don't apply to Tap's
+  // GCC deployments.
+  const onlinePaymentCopy =
+    ACTIVE_GATEWAY === "tap"
+      ? { description: t("payOnlineDescTap"), badges: ["VISA", "Mastercard", "mada"] }
+      : { description: t("payOnlineDescRazorpay"), badges: ["VISA", "UPI", "RuPay"] };
 
   const busy = isLoading || isSubmitting;
 
@@ -102,28 +120,28 @@ export function CheckoutForm({
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
             <MapPin className="h-3.5 w-3.5 text-amber-600" />
           </div>
-          <h2 className="text-sm font-bold text-stone-900">Delivery Address</h2>
+          <h2 className="text-sm font-bold text-stone-900">{t("deliveryAddress")}</h2>
         </div>
 
         <div className="space-y-4 p-5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Full Name" icon={User}>
+            <Field label={t("fullName")} icon={User}>
               <input
                 name="name"
                 value={formData.name}
                 onChange={handle}
-                placeholder="Aryan Gupta"
+                placeholder={t("fullNamePlaceholder")}
                 required
                 disabled={busy}
                 className={inputCls(!!formData.name)}
               />
             </Field>
-            <Field label="Phone Number" icon={Phone}>
+            <Field label={t("phoneNumber")} icon={Phone}>
               <input
                 name="phone"
                 value={formData.phone}
                 onChange={handle}
-                placeholder="+91 98765 43210"
+                placeholder={t("phoneNumberPlaceholder")}
                 required
                 disabled={busy}
                 className={inputCls(!!formData.phone)}
@@ -131,12 +149,12 @@ export function CheckoutForm({
             </Field>
           </div>
 
-          <Field label="Street Address" icon={MapPin}>
+          <Field label={t("streetAddress")} icon={MapPin}>
             <input
               name="street"
               value={formData.street}
               onChange={handle}
-              placeholder="Flat / House no., Street, Area"
+              placeholder={t("streetAddressPlaceholder")}
               required
               disabled={busy}
               className={inputCls(!!formData.street)}
@@ -144,23 +162,23 @@ export function CheckoutForm({
           </Field>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="City" icon={Building2}>
+            <Field label={t("city")} icon={Building2}>
               <input
                 name="city"
                 value={formData.city}
                 onChange={handle}
-                placeholder="Mumbai"
+                placeholder={t("cityPlaceholder")}
                 required
                 disabled={busy}
                 className={inputCls(!!formData.city)}
               />
             </Field>
-            <Field label="State" icon={Building2}>
+            <Field label={t("state")} icon={Building2}>
               <input
                 name="state"
                 value={formData.state}
                 onChange={handle}
-                placeholder="Maharashtra"
+                placeholder={t("statePlaceholder")}
                 required
                 disabled={busy}
                 className={inputCls(!!formData.state)}
@@ -169,23 +187,26 @@ export function CheckoutForm({
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="PIN Code" icon={Hash}>
+            <Field label={t("pinCode")} icon={Hash}>
               <input
                 name="zipCode"
                 value={formData.zipCode}
                 onChange={handle}
-                placeholder="400001"
+                placeholder={t("pinCodePlaceholder")}
                 required
                 disabled={busy}
                 className={inputCls(!!formData.zipCode)}
               />
             </Field>
-            <Field label="Country" icon={Globe}>
+            <Field label={t("country")} icon={Globe}>
               <input
                 name="country"
                 value={formData.country}
-                disabled
-                className="h-11 w-full cursor-not-allowed rounded-xl border-2 border-stone-100 bg-stone-50 px-4 text-sm text-stone-400"
+                onChange={handle}
+                placeholder={DEFAULT_COUNTRY}
+                required
+                disabled={busy}
+                className={inputCls(!!formData.country)}
               />
             </Field>
           </div>
@@ -198,32 +219,30 @@ export function CheckoutForm({
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
             <CreditCard className="h-3.5 w-3.5 text-amber-600" />
           </div>
-          <h2 className="text-sm font-bold text-stone-900">Payment Method</h2>
+          <h2 className="text-sm font-bold text-stone-900">{t("paymentMethod")}</h2>
         </div>
 
         <div className="p-5">
           <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-            {availablePaymentMethods.includes("razorpay") && (
+            {availablePaymentMethods.includes("online") && (
               <label
-                htmlFor="razorpay"
+                htmlFor="online"
                 className={`flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all duration-150 ${
-                  paymentMethod === "razorpay"
+                  paymentMethod === "online"
                     ? "border-amber-400 bg-amber-50/40"
                     : "border-stone-100 bg-white hover:border-stone-200"
                 }`}
               >
-                <RadioGroupItem value="razorpay" id="razorpay" className="shrink-0" />
+                <RadioGroupItem value="online" id="online" className="shrink-0" />
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50">
                   <CreditCard className="h-4.5 w-4.5 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-stone-900">Pay Online</p>
-                  <p className="mt-0.5 text-xs text-stone-400">
-                    Credit card, debit card, UPI, net banking
-                  </p>
+                  <p className="text-sm font-semibold text-stone-900">{t("payOnline")}</p>
+                  <p className="mt-0.5 text-xs text-stone-400">{onlinePaymentCopy.description}</p>
                 </div>
                 <div className="hidden items-center gap-1 sm:flex">
-                  {["VISA", "UPI", "RuPay"].map((m) => (
+                  {onlinePaymentCopy.badges.map((m) => (
                     <span
                       key={m}
                       className="rounded bg-stone-100 px-1.5 py-0.5 text-[9px] font-bold text-stone-400"
@@ -249,10 +268,8 @@ export function CheckoutForm({
                   <Banknote className="h-4.5 w-4.5 text-green-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-stone-900">Cash on Delivery</p>
-                  <p className="mt-0.5 text-xs text-stone-400">
-                    Pay when your order arrives at your door
-                  </p>
+                  <p className="text-sm font-semibold text-stone-900">{t("cashOnDelivery")}</p>
+                  <p className="mt-0.5 text-xs text-stone-400">{t("codDesc")}</p>
                 </div>
               </label>
             )}
@@ -287,12 +304,12 @@ export function CheckoutForm({
                 d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
               />
             </svg>
-            Processing…
+            {t("processing")}
           </>
         ) : (
           <>
             <Lock className="h-4 w-4" />
-            Place Order · ₹{Math.round(totalAmount).toLocaleString()}
+            {t("placeOrder", { amount: formatCurrency(totalAmount) })}
           </>
         )}
       </button>
@@ -300,7 +317,7 @@ export function CheckoutForm({
       {/* Security note */}
       <div className="flex items-center justify-center gap-2 text-xs text-stone-400">
         <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
-        Secured with 256-bit SSL encryption
+        {t("secureNote")}
       </div>
     </form>
   );

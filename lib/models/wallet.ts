@@ -1,5 +1,6 @@
 // lib/models/wallet.ts
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { CURRENCY_CODE } from "@/lib/currency";
 
 export interface IWallet extends Document {
   shopId: mongoose.Types.ObjectId; // Owner (Vendor)
@@ -24,7 +25,7 @@ const WalletSchema = new Schema<IWallet>(
       enum: ["VENDOR", "RESERVE", "PLATFORM_REVENUE", "SYSTEM_ASSET"],
       default: "VENDOR",
     },
-    currency: { type: String, default: "INR" },
+    currency: { type: String, default: CURRENCY_CODE },
     pendingBalance: { type: Number, default: 0 },
     withdrawableBalance: { type: Number, default: 0 },
     frozenBalance: { type: Number, default: 0 },

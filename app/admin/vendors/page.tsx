@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Eye, Edit, Settings } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 
 interface Vendor {
   _id: string;
@@ -118,7 +119,7 @@ export default function VendorsPage() {
                     </td>
                     <td className="px-4 py-3">{vendor.commissionRate}%</td>
                     <td className="px-4 py-3">
-                      ₹{vendor.stats?.totalRevenue.toLocaleString() || 0}
+                      {formatCurrency(vendor.stats?.totalRevenue || 0)}
                     </td>
                     <td className="px-4 py-3">
                       <Link href={`/admin/vendors/${vendor._id}`}>

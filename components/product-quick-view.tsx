@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatCurrency } from "@/lib/currency";
 
 interface Size {
   size: string;
@@ -61,6 +63,7 @@ interface ProductQuickViewProps {
 }
 
 export function ProductQuickView({ product, open, onOpenChange }: ProductQuickViewProps) {
+  const t = useTranslations("ProductQuickView");
   const { toast } = useToast();
   const { data: session } = useSession();
   const router = useRouter();
@@ -103,8 +106,8 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
   const handleAddToCart = () => {
     if (!session?.user) {
       toast({
-        title: "Sign in required",
-        description: "Please sign in to add products to your cart.",
+        title: t("signInRequiredTitle"),
+        description: t("signInRequiredDesc"),
         variant: "destructive",
       });
       onOpenChange(false);
@@ -113,16 +116,16 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
     }
     if (getTotalItems() >= 5) {
       toast({
-        title: "Cart limit reached",
-        description: "Maximum 5 products. Contact us for bulk orders.",
+        title: t("cartLimitTitle"),
+        description: t("cartLimitDesc"),
         variant: "destructive",
       });
       return;
     }
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
       toast({
-        title: "Select a size",
-        description: "Please pick a size before adding to cart.",
+        title: t("selectSizeTitle"),
+        description: t("selectSizeDesc"),
         variant: "destructive",
       });
       return;
@@ -141,7 +144,10 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
       shopName: product.shopName || "Linknsmile",
       commissionRate: product.commissionRate || 10,
     });
-    toast({ title: "Added to cart", description: `${product.name} has been added to your cart.` });
+    toast({
+      title: t("addedToCartTitle"),
+      description: t("addedToCartDesc", { name: product.name }),
+    });
     onOpenChange(false);
   };
 
@@ -169,15 +175,15 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
             </div>
 
             {discount > 0 && (
-              <div className="absolute top-4 left-4 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-bold tracking-wide text-amber-900">
-                {discount}% OFF
+              <div className="absolute top-4 start-4 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-bold tracking-wide text-amber-900">
+                {t("discountOff", { discount })}
               </div>
             )}
 
             {isOutOfStock && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px]">
                 <span className="rounded-full bg-stone-800 px-4 py-1.5 text-xs font-semibold text-white">
-                  Out of Stock
+                  {t("outOfStock")}
                 </span>
               </div>
             )}
@@ -191,7 +197,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
             </p>
 
             {/* Title */}
-            <DialogHeader className="mb-3 p-0 text-left">
+            <DialogHeader className="mb-3 p-0 text-start">
               <DialogTitle className="text-xl leading-snug font-bold text-stone-900">
                 {p.name}
               </DialogTitle>
@@ -203,22 +209,22 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
               ))}
-              <span className="ml-1 text-xs text-stone-400">4.5 · Verified reviews</span>
+              <span className="ms-1 text-xs text-stone-400">{t("ratingVerified")}</span>
             </div>
 
             {/* Price */}
             <div className="mb-4 flex items-end gap-3 border-b border-stone-100 pb-4">
               <span className="text-2xl font-black text-stone-900">
-                ₹{Math.round(displayPrice).toLocaleString()}
+                {formatCurrency(displayPrice)}
               </span>
               {currentDiscount && (
                 <span className="mb-0.5 text-sm text-stone-400 line-through">
-                  ₹{currentPrice.toLocaleString()}
+                  {formatCurrency(currentPrice)}
                 </span>
               )}
               {discount > 0 && (
                 <span className="mb-0.5 rounded-full border border-green-100 bg-green-50 px-2 py-0.5 text-xs font-bold text-green-700">
-                  {discount}% off
+                  {t("percentOffPill", { discount })}
                 </span>
               )}
             </div>
@@ -227,7 +233,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
             {product.sizes && product.sizes.length > 0 && (
               <div className="mb-4">
                 <p className="mb-2 text-xs font-semibold tracking-wider text-stone-500 uppercase">
-                  Select Size
+                  {t("selectSize")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {product.sizes.map((s, idx) => (
@@ -261,7 +267,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
                 }`}
               >
                 <ShoppingCart className="h-4 w-4" />
-                {loading ? "Loading…" : isOutOfStock ? "Out of Stock" : "Add to Cart"}
+                {loading ? t("loading") : isOutOfStock ? t("outOfStock") : t("addToCart")}
               </button>
 
               <Link
@@ -269,16 +275,16 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
                 onClick={() => onOpenChange(false)}
                 className="flex h-11 items-center gap-1.5 rounded-xl border-2 border-stone-200 px-4 text-xs font-semibold text-stone-600 transition-all hover:border-amber-300 hover:text-amber-700"
               >
-                Full page <ArrowUpRight className="h-3.5 w-3.5" />
+                {t("fullPage")} <ArrowUpRight className="h-3.5 w-3.5" />
               </Link>
             </div>
 
             {/* Trust pills */}
             <div className="mb-5 flex flex-wrap gap-2">
               {[
-                { icon: Truck, label: "Fast delivery" },
-                { icon: ShieldCheck, label: "Authentic" },
-                { icon: RotateCcw, label: "Easy return" },
+                { icon: Truck, label: t("trustFastDelivery") },
+                { icon: ShieldCheck, label: t("trustAuthentic") },
+                { icon: RotateCcw, label: t("trustEasyReturn") },
               ].map(({ icon: Icon, label }) => (
                 <div
                   key={label}
@@ -294,9 +300,9 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
             <Tabs defaultValue="description" className="w-full flex-1">
               <TabsList className="grid h-auto w-full grid-cols-3 rounded-xl bg-stone-100 p-1">
                 {[
-                  { value: "description", label: "Details" },
-                  { value: "ingredients", label: "Ingredients" },
-                  { value: "usage", label: "How to Use" },
+                  { value: "description", label: t("tabDetails") },
+                  { value: "ingredients", label: t("tabIngredients") },
+                  { value: "usage", label: t("tabUsage") },
                 ].map(({ value, label }) => (
                   <TabsTrigger
                     key={value}
@@ -311,7 +317,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
               <div className="mt-3 min-h-[80px]">
                 <TabsContent value="description" className="mt-0 space-y-3">
                   <p className="text-sm leading-relaxed text-stone-600">
-                    {p.description || "No description available for this product."}
+                    {p.description || t("noDescription")}
                   </p>
                   {p.benefits && p.benefits.length > 0 && (
                     <ul className="space-y-1.5">
@@ -339,14 +345,14 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
                         </span>
                       ))
                     ) : (
-                      <p className="text-sm text-stone-400 italic">No ingredients listed.</p>
+                      <p className="text-sm text-stone-400 italic">{t("noIngredients")}</p>
                     )}
                   </div>
                 </TabsContent>
 
                 <TabsContent value="usage" className="mt-0">
                   <p className="text-sm leading-relaxed text-stone-600">
-                    {p.usage || "No usage instructions provided."}
+                    {p.usage || t("noUsage")}
                   </p>
                 </TabsContent>
               </div>

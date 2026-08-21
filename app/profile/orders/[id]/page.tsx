@@ -18,9 +18,9 @@ import {
   Package,
   Truck,
 } from "lucide-react";
+import { formatCurrency, LOCALE } from "@/lib/currency";
 
-const currencyFormatter = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" });
-const numberFormatter = new Intl.NumberFormat("en-IN");
+const numberFormatter = new Intl.NumberFormat(LOCALE);
 
 const statusLabelMap: Record<string, string> = {
   pending: "Pending",
@@ -326,7 +326,7 @@ export default function OrderDetailsPage() {
                   {numberFormatter.format(itemCount)}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Subtotal {currencyFormatter.format(itemsSubtotal)}
+                  Subtotal {formatCurrency(itemsSubtotal)}
                 </p>
               </div>
               <div className="border-border rounded-lg border p-4">
@@ -335,7 +335,7 @@ export default function OrderDetailsPage() {
                   Payment
                 </div>
                 <p className="text-foreground mt-2 text-2xl font-bold">
-                  {currencyFormatter.format(order.totalAmount)}
+                  {formatCurrency(order.totalAmount)}
                 </p>
                 <p className="text-muted-foreground text-xs">
                   {(order.paymentStatus ?? "Unknown").toUpperCase()} ·{" "}
@@ -465,10 +465,10 @@ export default function OrderDetailsPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-foreground text-sm font-semibold">
-                        {currencyFormatter.format(price)}
+                        {formatCurrency(price)}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Subtotal {currencyFormatter.format(subtotal)}
+                        Subtotal {formatCurrency(subtotal)}
                       </p>
                     </div>
                   </div>
@@ -548,7 +548,7 @@ export default function OrderDetailsPage() {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Order total</span>
                 <span className="text-foreground font-semibold">
-                  {currencyFormatter.format(order.totalAmount)}
+                  {formatCurrency(order.totalAmount)}
                 </span>
               </div>
             </CardContent>

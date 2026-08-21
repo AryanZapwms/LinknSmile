@@ -1,15 +1,16 @@
 // lib/models/vendor-subscription-settings.ts
 import mongoose from "mongoose";
+import { CURRENCY_CODE } from "@/lib/currency";
 
 const vendorSubscriptionSettingsSchema = new mongoose.Schema(
   {
     annualFeeAmount: {
       type: Number,
-      default: 4999, // INR, admin-editable
+      default: 4999, // admin-editable; the raw number is not currency-aware — out of scope for this pass, see PROJECT_SOURCE_OF_TRUTH.md
     },
     currency: {
       type: String,
-      default: "INR",
+      default: CURRENCY_CODE,
     },
   },
   { timestamps: true }

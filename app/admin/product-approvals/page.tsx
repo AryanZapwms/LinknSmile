@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, XCircle, Eye, Clock, Package } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/currency";
 import Image from "next/image";
 
 interface Product {
@@ -273,7 +274,7 @@ export default function ProductApprovalsPage() {
                       <p className="font-medium">{product.shopId?.shopName || "Unknown"}</p>
                     </TableCell>
                     <TableCell className="border">{product.company?.name || "N/A"}</TableCell>
-                    <TableCell>₹{product.price}</TableCell>
+                    <TableCell>{formatCurrency(product.price)}</TableCell>
                     <TableCell className="border">
                       {new Date(product.submittedAt).toLocaleDateString()}
                     </TableCell>

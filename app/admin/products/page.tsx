@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, Edit2, Search, Eye } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 
 interface Product {
   _id: string;
@@ -191,10 +192,10 @@ export default function ProductsPage() {
                         </td>
 
                         <td className="px-2 py-3 align-top">
-                          <div className="font-bold">₹{product.discountPrice || product.price}</div>
+                          <div className="font-bold">{formatCurrency(product.discountPrice || product.price)}</div>
                           {product.discountPrice && (
                             <div className="text-muted-foreground text-xs line-through">
-                              ₹{product.price}
+                              {formatCurrency(product.price)}
                             </div>
                           )}
                         </td>

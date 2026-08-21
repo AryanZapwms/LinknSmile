@@ -348,7 +348,7 @@ export default function RegisterVendorPage() {
                           <Input
                             id="phone"
                             name="phone"
-                            placeholder="+91 00000 00000"
+                            placeholder="Phone number"
                             value={formData.phone}
                             onChange={handleChange}
                             required

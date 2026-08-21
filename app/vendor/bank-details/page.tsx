@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +71,7 @@ function Tooltip({ content, children }: TooltipProps) {
 }
 
 export default function VendorBankDetailsPage() {
+  const t = useTranslations("VendorBankDetails");
   const [form, setForm] = useState<BankDetails>(EMPTY_FORM);
   const [isComplete, setIsComplete] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -99,7 +101,7 @@ export default function VendorBankDetailsPage() {
         setIsComplete(data.isComplete ?? false);
       }
     } catch {
-      toast.error("Failed to load bank details");
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -109,34 +111,34 @@ export default function VendorBankDetailsPage() {
     const newErrors: Partial<Record<keyof BankDetails, string>> = {};
 
     if (!form.accountHolderName.trim())
-      newErrors.accountHolderName = "Account holder name is required";
+      newErrors.accountHolderName = t("accountHolderRequired");
 
-    if (!form.bankName.trim()) newErrors.bankName = "Bank name is required";
+    if (!form.bankName.trim()) newErrors.bankName = t("bankNameRequired");
 
     if (!form.accountNumber.trim()) {
-      newErrors.accountNumber = "Account number is required";
+      newErrors.accountNumber = t("accountNumberRequired");
     } else if (!/^\d{9,18}$/.test(form.accountNumber.trim())) {
-      newErrors.accountNumber = "Account number must be 9–18 digits";
+      newErrors.accountNumber = t("accountNumberInvalid");
     }
 
     const hasIfsc = form.ifscCode?.trim();
     const hasSwift = form.swiftCode?.trim();
 
     if (!hasIfsc && !hasSwift) {
-      newErrors.ifscCode = "Provide at least IFSC (domestic) or SWIFT (international)";
+      newErrors.ifscCode = t("ifscOrSwiftRequired");
     }
     if (hasIfsc && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(form.ifscCode.trim().toUpperCase())) {
-      newErrors.ifscCode = "Invalid format — e.g. HDFC0001234";
+      newErrors.ifscCode = t("ifscInvalid");
     }
     if (
       hasSwift &&
       !/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(form.swiftCode!.trim().toUpperCase())
     ) {
-      newErrors.swiftCode = "Invalid SWIFT/BIC — e.g. HDFCINBBXXX";
+      newErrors.swiftCode = t("swiftInvalid");
     }
 
     if (form.upiId?.trim() && !/^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$/.test(form.upiId.trim())) {
-      newErrors.upiId = "Invalid UPI ID — e.g. name@upi";
+      newErrors.upiId = t("upiInvalid");
     }
 
     setErrors(newErrors);
@@ -161,12 +163,12 @@ export default function VendorBankDetailsPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setIsComplete(true);
-        toast.success("Bank details saved successfully!");
+        toast.success(t("saveSuccess"));
       } else {
-        toast.error(data.message || "Failed to save bank details");
+        toast.error(data.message || t("saveFailed"));
       }
     } catch {
-      toast.error("Network error. Please try again.");
+      toast.error(t("networkError"));
     } finally {
       setSaving(false);
     }
@@ -194,20 +196,18 @@ export default function VendorBankDetailsPage() {
             <CreditCard className="text-primary h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Bank Details</h1>
-            <p className="text-muted-foreground text-sm">
-              Required for receiving payouts from your sales.
-            </p>
+            <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
+            <p className="text-muted-foreground text-sm">{t("subtitle")}</p>
           </div>
           {isComplete ? (
-            <Badge className="ml-auto gap-1 bg-green-500">
+            <Badge className="ms-auto gap-1 bg-green-500">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Payout Ready
+              {t("payoutReady")}
             </Badge>
           ) : (
-            <Badge variant="outline" className="ml-auto gap-1 border-orange-400 text-orange-600">
+            <Badge variant="outline" className="ms-auto gap-1 border-orange-400 text-orange-600">
               <AlertTriangle className="h-3.5 w-3.5" />
-              Incomplete
+              {t("incomplete")}
             </Badge>
           )}
         </div>
@@ -218,11 +218,8 @@ export default function VendorBankDetailsPage() {
         <div className="flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-orange-500" />
           <div>
-            <p className="text-sm font-medium text-orange-800">Bank details required for payouts</p>
-            <p className="mt-0.5 text-xs text-orange-700">
-              Without verified bank details, payout requests cannot be processed. Please complete
-              all required fields below.
-            </p>
+            <p className="text-sm font-medium text-orange-800">{t("incompleteWarningTitle")}</p>
+            <p className="mt-0.5 text-xs text-orange-700">{t("incompleteWarningDesc")}</p>
           </div>
         </div>
       )}
@@ -233,23 +230,21 @@ export default function VendorBankDetailsPage() {
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-base">
               <Building2 className="text-muted-foreground h-4 w-4" />
-              Account Information
+              {t("accountInfoTitle")}
             </CardTitle>
-            <CardDescription>
-              Enter your bank account details exactly as they appear in your bank records.
-            </CardDescription>
+            <CardDescription>{t("accountInfoDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-5 md:grid-cols-2">
             {/* Account Holder Name */}
             <div className="space-y-1.5 md:col-span-2">
               <label className="text-sm font-medium" htmlFor="acHolder">
-                Account Holder Name <span className="text-red-500">*</span>
+                {t("accountHolderName")} <span className="text-red-500">*</span>
               </label>
               <Input
                 id="acHolder"
                 value={form.accountHolderName}
                 onChange={(e) => setField("accountHolderName", e.target.value)}
-                placeholder="Full name as per bank records"
+                placeholder={t("accountHolderPlaceholder")}
                 className={
                   errors.accountHolderName ? "border-red-400 focus-visible:ring-red-400" : ""
                 }
@@ -257,21 +252,19 @@ export default function VendorBankDetailsPage() {
               {errors.accountHolderName && (
                 <p className="text-xs text-red-500">{errors.accountHolderName}</p>
               )}
-              <p className="text-muted-foreground text-xs">
-                Must exactly match the name registered with your bank.
-              </p>
+              <p className="text-muted-foreground text-xs">{t("accountHolderHint")}</p>
             </div>
 
             {/* Bank Name */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="bankName">
-                Bank Name <span className="text-red-500">*</span>
+                {t("bankName")} <span className="text-red-500">*</span>
               </label>
               <Input
                 id="bankName"
                 value={form.bankName}
                 onChange={(e) => setField("bankName", e.target.value)}
-                placeholder="e.g. HDFC Bank, SBI"
+                placeholder={t("bankNamePlaceholder")}
                 className={errors.bankName ? "border-red-400 focus-visible:ring-red-400" : ""}
               />
               {errors.bankName && <p className="text-xs text-red-500">{errors.bankName}</p>}
@@ -280,7 +273,7 @@ export default function VendorBankDetailsPage() {
             {/* Account Number */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="acNumber">
-                Account Number <span className="text-red-500">*</span>
+                {t("accountNumber")} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <Input
@@ -288,15 +281,15 @@ export default function VendorBankDetailsPage() {
                   type={showAccount ? "text" : "password"}
                   value={form.accountNumber}
                   onChange={(e) => setField("accountNumber", e.target.value.replace(/\D/g, ""))}
-                  placeholder="Digits only, 9–18 characters"
+                  placeholder={t("accountNumberPlaceholder")}
                   maxLength={18}
-                  className={`pr-10 ${errors.accountNumber ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+                  className={`pe-10 ${errors.accountNumber ? "border-red-400 focus-visible:ring-red-400" : ""}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowAccount((p) => !p)}
-                  className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
-                  aria-label={showAccount ? "Hide account number" : "Show account number"}
+                  className="text-muted-foreground hover:text-foreground absolute top-1/2 end-3 -translate-y-1/2"
+                  aria-label={showAccount ? t("hideAccountNumber") : t("showAccountNumber")}
                 >
                   {showAccount ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -306,7 +299,7 @@ export default function VendorBankDetailsPage() {
               )}
               {!showAccount && form.accountNumber && (
                 <p className="text-muted-foreground font-mono text-xs">
-                  Preview: {maskAccount(form.accountNumber)}
+                  {t("accountPreview", { masked: maskAccount(form.accountNumber) })}
                 </p>
               )}
             </div>
@@ -318,54 +311,53 @@ export default function VendorBankDetailsPage() {
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-base">
               <Globe className="text-muted-foreground h-4 w-4" />
-              Transfer Codes
+              {t("transferCodesTitle")}
             </CardTitle>
-            <CardDescription>
-              Provide IFSC for domestic (India) transfers and/or SWIFT/BIC for international
-              payouts.
-            </CardDescription>
+            <CardDescription>{t("transferCodesDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-5 md:grid-cols-2">
             {/* IFSC */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1 text-sm font-medium" htmlFor="ifsc">
-                IFSC Code
+                {t("ifscLabel")}
                 <span className="text-red-500">*</span>
-                <Tooltip content="Indian Financial System Code — 11-character code identifying your bank branch. Found on your cheque or passbook. Format: ABCD0123456 (4 letters, 0, 6 alphanumeric).">
-                  <HelpCircle className="text-muted-foreground ml-1 h-3.5 w-3.5" />
+                <Tooltip content={t("ifscTooltip")}>
+                  <HelpCircle className="text-muted-foreground ms-1 h-3.5 w-3.5" />
                 </Tooltip>
               </label>
               <Input
                 id="ifsc"
                 value={form.ifscCode}
                 onChange={(e) => setField("ifscCode", e.target.value.toUpperCase())}
-                placeholder="e.g. HDFC0001234"
+                placeholder={t("ifscPlaceholder")}
                 maxLength={11}
                 className={`font-mono tracking-wider ${errors.ifscCode ? "border-red-400 focus-visible:ring-red-400" : ""}`}
               />
               {errors.ifscCode && <p className="text-xs text-red-500">{errors.ifscCode}</p>}
-              <p className="text-muted-foreground text-xs">Required for Indian bank accounts.</p>
+              <p className="text-muted-foreground text-xs">{t("ifscHint")}</p>
             </div>
 
             {/* SWIFT */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-1 text-sm font-medium" htmlFor="swift">
-                SWIFT / BIC Code
-                <Tooltip content="Society for Worldwide Interbank Financial Telecommunication code — used for international wire transfers. 8 or 11 characters. Format: HDFCINBBXXX (bank code + country + location + branch).">
-                  <HelpCircle className="text-muted-foreground ml-1 h-3.5 w-3.5" />
+                {t("swiftLabel")}
+                <Tooltip content={t("swiftTooltip")}>
+                  <HelpCircle className="text-muted-foreground ms-1 h-3.5 w-3.5" />
                 </Tooltip>
-                <span className="text-muted-foreground ml-1 text-xs font-normal">(Optional)</span>
+                <span className="text-muted-foreground ms-1 text-xs font-normal">
+                  {t("optional")}
+                </span>
               </label>
               <Input
                 id="swift"
                 value={form.swiftCode}
                 onChange={(e) => setField("swiftCode", e.target.value.toUpperCase())}
-                placeholder="e.g. HDFCINBBXXX"
+                placeholder={t("swiftPlaceholder")}
                 maxLength={11}
                 className={`font-mono tracking-wider ${errors.swiftCode ? "border-red-400 focus-visible:ring-red-400" : ""}`}
               />
               {errors.swiftCode && <p className="text-xs text-red-500">{errors.swiftCode}</p>}
-              <p className="text-muted-foreground text-xs">Required for international payouts.</p>
+              <p className="text-muted-foreground text-xs">{t("swiftHint")}</p>
             </div>
           </CardContent>
         </Card>
@@ -375,24 +367,26 @@ export default function VendorBankDetailsPage() {
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldCheck className="text-muted-foreground h-4 w-4" />
-              Additional Payment Method
+              {t("additionalPaymentTitle")}
             </CardTitle>
-            <CardDescription>Optional — speeds up instant payouts via UPI.</CardDescription>
+            <CardDescription>{t("additionalPaymentDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="max-w-sm space-y-1.5">
               <label className="flex items-center gap-1 text-sm font-medium" htmlFor="upiId">
-                UPI ID
-                <Tooltip content="Unified Payments Interface ID — e.g. yourname@okaxis, yourphone@paytm. Used for instant domestic payouts.">
-                  <HelpCircle className="text-muted-foreground ml-1 h-3.5 w-3.5" />
+                {t("upiLabel")}
+                <Tooltip content={t("upiTooltip")}>
+                  <HelpCircle className="text-muted-foreground ms-1 h-3.5 w-3.5" />
                 </Tooltip>
-                <span className="text-muted-foreground ml-1 text-xs font-normal">(Optional)</span>
+                <span className="text-muted-foreground ms-1 text-xs font-normal">
+                  {t("optional")}
+                </span>
               </label>
               <Input
                 id="upiId"
                 value={form.upiId}
                 onChange={(e) => setField("upiId", e.target.value)}
-                placeholder="yourname@upi"
+                placeholder={t("upiPlaceholder")}
                 className={errors.upiId ? "border-red-400 focus-visible:ring-red-400" : ""}
               />
               {errors.upiId && <p className="text-xs text-red-500">{errors.upiId}</p>}
@@ -404,10 +398,7 @@ export default function VendorBankDetailsPage() {
         <div className="mb-6 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
           <Info className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
           <p className="text-xs leading-relaxed text-blue-700">
-            <strong>Important:</strong> Ensure all details are absolutely correct. We are not
-            responsible for payments sent to an incorrect account. Changes to bank details will
-            apply to all future payout requests. Your data is securely stored and only accessible by
-            you and our admin team.
+            {t.rich("securityNotice", { strong: (chunks) => <strong>{chunks}</strong> })}
           </p>
         </div>
 
@@ -416,13 +407,13 @@ export default function VendorBankDetailsPage() {
           <Button type="submit" size="lg" disabled={saving} className="min-w-[160px]">
             {saving ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving…
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                {t("saving")}
               </>
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" />
-                Save Bank Details
+                <Save className="me-2 h-4 w-4" />
+                {t("saveBankDetails")}
               </>
             )}
           </Button>

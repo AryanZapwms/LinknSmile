@@ -15,6 +15,7 @@ import mastercardImage from "./assets/mastercard.png";
 import amexImage from "./assets/amex.png";
 import onlineBankingImage from "./assets/onlinebanking.png";
 import varifiedIcon from "./assets/verified-icon.png";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 type FeatureProps = {
   title: string;
@@ -99,6 +100,8 @@ const paymentLogos = [
 ];
 
 export default function WhyChoose() {
+  const { supportPhone } = usePlatformSettings();
+
   return (
     <section className="py-2">
       {/* Section label */}
@@ -166,7 +169,7 @@ export default function WhyChoose() {
             <p className="text-xs text-stone-500">Our team is here to help you</p>
           </div>
           <a
-            href="tel:8355991099"
+            href={`tel:${supportPhone.replace(/\s/g, "")}`}
             className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-white px-5 py-2 text-sm font-semibold text-amber-700 shadow-sm transition-all duration-150 hover:border-amber-300 hover:bg-amber-50"
           >
             Contact Us

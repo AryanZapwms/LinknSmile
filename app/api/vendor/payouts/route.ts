@@ -12,6 +12,7 @@ import Shop from "@/lib/models/shop";
 import mongoose from "mongoose";
 import crypto from "crypto";
 import { sendEmail, getPayoutRequestedEmail } from "@/lib/email";
+import { formatCurrency } from "@/lib/currency";
 
 export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -132,7 +133,7 @@ export async function POST(req: NextRequest) {
       return withCORS(
         NextResponse.json(
           {
-            message: `Minimum withdrawal amount is ₹${threshold}`,
+            message: `Minimum withdrawal amount is ${formatCurrency(threshold)}`,
           },
           { status: 400 }
         )
@@ -144,7 +145,7 @@ export async function POST(req: NextRequest) {
       return withCORS(
         NextResponse.json(
           {
-            message: `Insufficient withdrawable balance. Available: ₹${wallet.withdrawableBalance.toFixed(2)}`,
+            message: `Insufficient withdrawable balance. Available: ${formatCurrency(wallet.withdrawableBalance)}`,
           },
           { status: 400 }
         )
@@ -160,7 +161,7 @@ export async function POST(req: NextRequest) {
       return withCORS(
         NextResponse.json(
           {
-            message: `You already have a payout request in progress (₹${inFlight.amount}). Please wait for it to complete.`,
+            message: `You already have a payout request in progress (${formatCurrency(inFlight.amount)}). Please wait for it to complete.`,
           },
           { status: 400 }
         )
@@ -237,7 +238,7 @@ export async function POST(req: NextRequest) {
     try {
       await sendEmail({
         to: process.env.GMAIL_EMAIL!,
-        subject: `New Payout Request: ₹${amount} from ${shop.shopName}`,
+        subject: `New Payout Request: ${formatCurrency(amount)} from ${shop.shopName}`,
         html: getPayoutRequestedEmail({
           shopName: shop.shopName,
           amount,
