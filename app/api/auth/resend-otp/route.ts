@@ -7,6 +7,8 @@ import { generateNumericOtp, hashOtp } from "@/lib/otp";
 import { sendOtpEmail } from "@/lib/EmailOtp";
 import { type NextRequest, NextResponse } from "next/server";
 import { otpLimiter } from "@/lib/rate-limit";
+import { LOCALE_COOKIE } from "@/i18n/request";
+import { resolveLocaleFromCookieValue } from "@/lib/i18n-config";
 
 const RESEND_MIN_MS = 30 * 1000;
 const MAX_PER_DAY = 10;
@@ -90,7 +92,8 @@ export async function POST(request: NextRequest) {
       pendingRole: latestOtp.pendingRole,
     });
 
-    await sendOtpEmail(normalizedEmail, latestOtp.pendingName, otpPlain);
+    const locale = resolveLocaleFromCookieValue(request.cookies.get(LOCALE_COOKIE)?.value);
+    await sendOtpEmail(normalizedEmail, latestOtp.pendingName, otpPlain, locale);
 
     return withCORS(NextResponse.json({ message: "OTP resent" }, { status: 200 }));
   } catch (error) {

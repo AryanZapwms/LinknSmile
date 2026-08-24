@@ -8,6 +8,8 @@ import { registerSchema } from "@/lib/validation";
 import { type NextRequest, NextResponse } from "next/server";
 import { sendOtpEmail } from "@/lib/EmailOtp";
 import { generateNumericOtp, hashOtp } from "@/lib/otp";
+import { LOCALE_COOKIE } from "@/i18n/request";
+import { resolveLocaleFromCookieValue } from "@/lib/i18n-config";
 
 export async function POST(request: NextRequest) {
   if (request.method === "OPTIONS") {
@@ -51,7 +53,8 @@ export async function POST(request: NextRequest) {
       pendingRole: "user",
     });
 
-    await sendOtpEmail(normalizedEmail, validation.data.name.trim(), otpPlain);
+    const locale = resolveLocaleFromCookieValue(request.cookies.get(LOCALE_COOKIE)?.value);
+    await sendOtpEmail(normalizedEmail, validation.data.name.trim(), otpPlain, locale);
 
     return withCORS(
       NextResponse.json(

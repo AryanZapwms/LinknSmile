@@ -15,6 +15,7 @@ import {
   getVendorSubscriptionPaymentEmail,
   getAdminVendorSubscriptionPaidEmail,
 } from "@/lib/email";
+import { resolveEmailLocale } from "@/lib/email-locale";
 import type { GatewayInfo } from "@/lib/order-fulfillment";
 
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
@@ -98,7 +99,7 @@ export async function fulfillSubscriptionPayment(
   // don't make the vendor wait for the next cron run.
   await Product.updateMany({ shopId, hiddenBySubscription: true }, { hiddenBySubscription: false });
 
-  const shop = await Shop.findById(shopId).populate("ownerId", "name email").lean<any>();
+  const shop = await Shop.findById(shopId).populate("ownerId", "name email locale").lean<any>();
   const ownerEmail = shop?.ownerId?.email;
   const ownerName = shop?.ownerId?.name || "Vendor";
   const shopName = shop?.shopName || "Your shop";
@@ -108,11 +109,12 @@ export async function fulfillSubscriptionPayment(
       await sendEmail({
         to: ownerEmail,
         subject: `Subscription Confirmed - ${shopName}`,
-        html: getVendorSubscriptionPaymentEmail({
+        html: await getVendorSubscriptionPaymentEmail({
           vendorName: ownerName,
           shopName,
           amount: subscription.amount,
           expiryDate,
+          locale: resolveEmailLocale(shop?.ownerId?.locale),
         }),
       });
     }

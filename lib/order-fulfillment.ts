@@ -13,8 +13,10 @@
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
 import { Cart } from "@/lib/models/cart";
+import { User } from "@/lib/models/user";
 import Shop from "@/lib/models/shop";
 import { sendEmail, getOrderConfirmationEmail, getAdminOrderNotificationEmail } from "@/lib/email";
+import { resolveEmailLocale } from "@/lib/email-locale";
 import { computeOrderPricing, PricingError, type CartItemInput } from "@/lib/pricing";
 import { formatCurrency, LOCALE } from "@/lib/currency";
 import { safeDecrementStock } from "@/lib/stock-safe-decrement";
@@ -194,16 +196,19 @@ export async function fulfillPaidOrder(
       shopName: item.shopName,
     }));
 
+    const buyer = await User.findById(userId).select("locale").lean<{ locale?: string }>();
+
     await sendEmail({
       to: userEmail!,
       subject: `Order Confirmation - ${order.orderNumber}`,
-      html: getOrderConfirmationEmail({
+      html: await getOrderConfirmationEmail({
         orderId: order.orderNumber,
         customerName: userName || "Customer",
         items: itemsData,
         total: order.totalAmount,
         orderDate,
         paymentStatus: "completed",
+        locale: resolveEmailLocale(buyer?.locale),
       }),
     });
 

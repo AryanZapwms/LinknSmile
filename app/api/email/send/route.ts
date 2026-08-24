@@ -1,8 +1,11 @@
 import { withCORS } from "@/lib/cors";
 import { sendEmail, getOrderConfirmationEmail } from "@/lib/email";
+import { resolveEmailLocale } from "@/lib/email-locale";
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { connectDB } from "@/lib/db";
+import { User } from "@/lib/models/user";
 
 export async function POST(request: NextRequest) {
   if (request.method === "OPTIONS") {
@@ -20,11 +23,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { type, to, subject, data } = body;
 
+    await connectDB();
+    const requester = await User.findById(session.user.id).select("locale").lean<{
+      locale?: string;
+    }>();
+    const locale = resolveEmailLocale(requester?.locale);
+
     let html = "";
 
     switch (type) {
       case "order-confirmation":
-        html = getOrderConfirmationEmail(data);
+        html = await getOrderConfirmationEmail({ ...data, locale });
         break;
       default:
         return withCORS(NextResponse.json({ error: "Invalid email type" }, { status: 400 }));

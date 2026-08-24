@@ -4,6 +4,7 @@ import Shop from "@/lib/models/shop";
 import { VendorSubscription } from "@/lib/models/vendor-subscription";
 import { AuditLog } from "@/lib/models/audit-log";
 import { sendEmail, getVendorSubscriptionCancelledEmail } from "@/lib/email";
+import { resolveEmailLocale } from "@/lib/email-locale";
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -109,15 +110,18 @@ export async function PATCH(
       });
 
       try {
-        const shop = await Shop.findById(shopId).populate("ownerId", "name email").lean<any>();
+        const shop = await Shop.findById(shopId)
+          .populate("ownerId", "name email locale")
+          .lean<any>();
         if (shop?.ownerId?.email) {
           await sendEmail({
             to: shop.ownerId.email,
             subject: `Subscription Cancelled - ${shop.shopName}`,
-            html: getVendorSubscriptionCancelledEmail({
+            html: await getVendorSubscriptionCancelledEmail({
               vendorName: shop.ownerId.name || "Vendor",
               shopName: shop.shopName,
               cancellationReason: reason.trim(),
+              locale: resolveEmailLocale(shop.ownerId.locale),
             }),
           });
         }

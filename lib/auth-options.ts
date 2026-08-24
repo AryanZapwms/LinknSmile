@@ -1,9 +1,12 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { verifyPassword } from "@/lib/auth";
+import { LOCALE_COOKIE } from "@/i18n/request";
+import { resolveLocaleFromCookieValue } from "@/lib/i18n-config";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -63,12 +66,15 @@ export const authOptions: NextAuthOptions = {
         const email = user.email.toLowerCase();
         let dbUser = await User.findOne({ email });
         if (!dbUser) {
+          const store = await cookies();
+          const locale = resolveLocaleFromCookieValue(store.get(LOCALE_COOKIE)?.value);
           dbUser = await User.create({
             email,
             name: user.name || "User",
             role: "user",
             isVerified: true,
             isActive: true,
+            locale,
           });
         }
         token.id = dbUser._id.toString();

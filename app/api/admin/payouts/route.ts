@@ -8,6 +8,7 @@ import { Order } from "@/lib/models/order";
 import Shop from "@/lib/models/shop";
 import { LedgerService } from "@/lib/services/ledger-service";
 import { sendEmail, getPayoutStatusEmail } from "@/lib/email";
+import { resolveEmailLocale } from "@/lib/email-locale";
 import { sendPushNotificationToVendor } from "@/lib/services/push-notification";
 import { formatCurrency } from "@/lib/currency";
 
@@ -176,12 +177,13 @@ export async function PUT(req: NextRequest) {
         await sendEmail({
           to: (vendorShop.ownerId as any).email,
           subject: `Payout Update: ${nextStatus}`,
-          html: getPayoutStatusEmail({
+          html: await getPayoutStatusEmail({
             shopName: vendorShop.shopName,
             amount: payout.amount,
             status: nextStatus.toLowerCase(),
             transactionId,
             failureReason,
+            locale: resolveEmailLocale((vendorShop.ownerId as any).locale),
           }),
         });
       }

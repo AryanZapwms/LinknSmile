@@ -36,6 +36,16 @@ export function isRtlLocale(locale: string): boolean {
   return RTL_LOCALES.has(locale);
 }
 
+/** Resolves a raw NEXT_LOCALE cookie value to a locale this deployment
+ *  actually supports, falling back to DEFAULT_LOCALE for anything else
+ *  (unset, or a stale value from before the deployment's secondary locale
+ *  was set/changed). Shared by i18n/request.ts (per-request UI locale) and
+ *  every place that captures/reads a locale outside of React (registration,
+ *  email sending) — one resolution rule, not reimplemented per call site. */
+export function resolveLocaleFromCookieValue(value: string | undefined | null): string {
+  return value && SUPPORTED_LOCALES.includes(value) ? value : DEFAULT_LOCALE;
+}
+
 /** Human-readable label for the locale switcher UI. */
 export const LOCALE_LABELS: Record<string, string> = {
   en: "English",

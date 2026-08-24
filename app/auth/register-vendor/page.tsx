@@ -4,6 +4,7 @@ import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ import Image from "next/image";
 import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 
 export default function RegisterVendorPage() {
+  const t = useTranslations("RegisterVendorPage");
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -44,7 +46,7 @@ export default function RegisterVendorPage() {
     try {
       await signIn("google", { callbackUrl: "/vendor-apply" });
     } catch {
-      setError("Unable to sign in with Google. Please try again.");
+      setError(t("googleSignInFailed"));
       setGoogleLoading(false);
     }
   };
@@ -72,7 +74,7 @@ export default function RegisterVendorPage() {
   const nextStep = () => {
     if (step === 1) {
       if (!formData.name || !formData.email || !formData.phone) {
-        setError("Please fill in all personal information fields.");
+        setError(t("fillPersonalFields"));
         return;
       }
     }
@@ -84,7 +86,7 @@ export default function RegisterVendorPage() {
         !formData.state ||
         !formData.pincode
       ) {
-        setError("Please fill in all required shop and address fields.");
+        setError(t("fillShopFields"));
         return;
       }
     }
@@ -99,12 +101,12 @@ export default function RegisterVendorPage() {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match!");
+      setError(t("passwordsDontMatch"));
       return;
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(t("passwordTooShort"));
       return;
     }
 
@@ -120,7 +122,7 @@ export default function RegisterVendorPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || data.error || "Registration failed");
+        setError(data.message || data.error || t("registrationFailed"));
         return;
       }
 
@@ -129,7 +131,7 @@ export default function RegisterVendorPage() {
         router.push(`/auth/verify-otp?email=${formData.email}`);
       }, 2000);
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError(t("genericError"));
     } finally {
       setLoading(false);
     }
@@ -144,10 +146,8 @@ export default function RegisterVendorPage() {
               <CheckCircle2 className="h-12 w-12 text-green-600" />
             </div>
             <div className="space-y-2">
-              <h2 className="text-gradient text-3xl font-bold">Application Received!</h2>
-              <p className="text-muted-foreground text-lg">
-                Redirecting you to verify your email...
-              </p>
+              <h2 className="text-gradient text-3xl font-bold">{t("applicationReceived")}</h2>
+              <p className="text-muted-foreground text-lg">{t("redirectingVerify")}</p>
             </div>
           </CardContent>
         </Card>
@@ -176,31 +176,28 @@ export default function RegisterVendorPage() {
 
               <div className="space-y-4">
                 <h1 className="text-gradient text-5xl leading-tight font-bold">
-                  Grow Your Business
+                  {t("growBusiness")}
                 </h1>
-                <h2 className="text-foreground text-3xl font-bold">As a linknsmile Vendor</h2>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  Join our premium marketplace and connect with thousands of customers looking for
-                  professional skincare solutions.
-                </p>
+                <h2 className="text-foreground text-3xl font-bold">{t("asVendor")}</h2>
+                <p className="text-muted-foreground text-lg leading-relaxed">{t("heroDesc")}</p>
               </div>
 
               <div className="grid gap-6">
                 {[
                   {
                     icon: Building2,
-                    title: "Market Growth",
-                    desc: "Access a rapidly expanding customer base",
+                    title: t("marketGrowth"),
+                    desc: t("marketGrowthDesc"),
                   },
                   {
                     icon: ShieldCheck,
-                    title: "Quality Partners",
-                    desc: "Join an elite community of verified vendors",
+                    title: t("qualityPartners"),
+                    desc: t("qualityPartnersDesc"),
                   },
                   {
                     icon: Sparkles,
-                    title: "Premium Support",
-                    desc: "Dedicated assistance for your shop management",
+                    title: t("premiumSupport"),
+                    desc: t("premiumSupportDesc"),
                   },
                 ].map((item, i) => (
                   <div key={i} className="group flex items-start gap-4">
@@ -224,11 +221,18 @@ export default function RegisterVendorPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <CardTitle className="text-gradient text-2xl font-bold">
-                      Vendor Application
+                      {t("vendorApplication")}
                     </CardTitle>
                     <CardDescription className="text-muted-foreground font-medium">
-                      Step {step} of 3:{" "}
-                      {step === 1 ? "Personal Info" : step === 2 ? "Shop Details" : "Security"}
+                      {t("stepOf", {
+                        step,
+                        stepName:
+                          step === 1
+                            ? t("stepPersonalInfo")
+                            : step === 2
+                              ? t("stepShopDetails")
+                              : t("stepSecurity"),
+                      })}
                     </CardDescription>
                   </div>
                   <div className="flex gap-1.5">
@@ -254,7 +258,7 @@ export default function RegisterVendorPage() {
                       className="bg-error-50/90 dark:bg-error-500/10 border-error-200 animate-scale-in border-2"
                     >
                       <AlertCircle className="h-5 w-5" />
-                      <AlertDescription className="ml-2 font-medium whitespace-pre-wrap">
+                      <AlertDescription className="ms-2 font-medium whitespace-pre-wrap">
                         {typeof error === "string" ? error : JSON.stringify(error)}
                       </AlertDescription>
                     </Alert>
@@ -291,15 +295,13 @@ export default function RegisterVendorPage() {
                               />
                             </svg>
                           )}
-                          {googleLoading ? "Redirecting…" : "Continue with Google"}
+                          {googleLoading ? t("redirecting") : t("continueWithGoogle")}
                         </button>
-                        <p className="text-center text-xs text-stone-400">
-                          Signs you in instantly, then takes you straight to shop details
-                        </p>
+                        <p className="text-center text-xs text-stone-400">{t("googleHint")}</p>
                         <div className="flex items-center gap-3">
                           <div className="h-px flex-1 bg-stone-100" />
                           <span className="text-xs font-medium text-stone-400">
-                            or fill in manually
+                            {t("orFillManually")}
                           </span>
                           <div className="h-px flex-1 bg-stone-100" />
                         </div>
@@ -308,12 +310,12 @@ export default function RegisterVendorPage() {
                             htmlFor="name"
                             className="flex items-center gap-2 text-sm font-bold"
                           >
-                            <User className="text-primary-500 h-4 w-4" /> Full Name *
+                            <User className="text-primary-500 h-4 w-4" /> {t("fullName")}
                           </Label>
                           <Input
                             id="name"
                             name="name"
-                            placeholder="John Doe"
+                            placeholder={t("fullNamePlaceholder")}
                             value={formData.name}
                             onChange={handleChange}
                             required
@@ -325,13 +327,13 @@ export default function RegisterVendorPage() {
                             htmlFor="email"
                             className="flex items-center gap-2 text-sm font-bold"
                           >
-                            <Mail className="text-primary-500 h-4 w-4" /> Email Address *
+                            <Mail className="text-primary-500 h-4 w-4" /> {t("emailAddress")}
                           </Label>
                           <Input
                             id="email"
                             name="email"
                             type="email"
-                            placeholder="vendor@linknsmile.com"
+                            placeholder={t("emailPlaceholder")}
                             value={formData.email}
                             onChange={handleChange}
                             required
@@ -343,15 +345,16 @@ export default function RegisterVendorPage() {
                             htmlFor="phone"
                             className="flex items-center gap-2 text-sm font-bold"
                           >
-                            <Phone className="text-primary-500 h-4 w-4" /> Phone Number *
+                            <Phone className="text-primary-500 h-4 w-4" /> {t("phoneNumber")}
                           </Label>
                           <Input
                             id="phone"
                             name="phone"
-                            placeholder="Phone number"
+                            placeholder={t("phoneNumberPlaceholder")}
                             value={formData.phone}
                             onChange={handleChange}
                             required
+                            dir="ltr"
                             className="focus:ring-primary-500/20 h-12 rounded-xl border-2 focus:ring-2"
                           />
                         </div>
@@ -365,12 +368,12 @@ export default function RegisterVendorPage() {
                             htmlFor="shopName"
                             className="flex items-center gap-2 text-sm font-bold"
                           >
-                            <Store className="text-primary-500 h-4 w-4" /> Shop Name *
+                            <Store className="text-primary-500 h-4 w-4" /> {t("shopName")}
                           </Label>
                           <Input
                             id="shopName"
                             name="shopName"
-                            placeholder="linknsmile Exclusive"
+                            placeholder={t("shopNamePlaceholder")}
                             value={formData.shopName}
                             onChange={handleChange}
                             required
@@ -382,12 +385,12 @@ export default function RegisterVendorPage() {
                             htmlFor="street"
                             className="flex items-center gap-2 text-sm font-bold"
                           >
-                            <MapPin className="text-primary-500 h-4 w-4" /> Street Address *
+                            <MapPin className="text-primary-500 h-4 w-4" /> {t("streetAddress")}
                           </Label>
                           <Input
                             id="street"
                             name="street"
-                            placeholder="123 Main St"
+                            placeholder={t("streetAddressPlaceholder")}
                             value={formData.street}
                             onChange={handleChange}
                             required
@@ -397,12 +400,12 @@ export default function RegisterVendorPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="city" className="text-sm font-bold">
-                              City *
+                              {t("city")}
                             </Label>
                             <Input
                               id="city"
                               name="city"
-                              placeholder="Mumbai"
+                              placeholder={t("cityPlaceholder")}
                               value={formData.city}
                               onChange={handleChange}
                               required
@@ -411,12 +414,12 @@ export default function RegisterVendorPage() {
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="state" className="text-sm font-bold">
-                              State *
+                              {t("state")}
                             </Label>
                             <Input
                               id="state"
                               name="state"
-                              placeholder="Maharashtra"
+                              placeholder={t("statePlaceholder")}
                               value={formData.state}
                               onChange={handleChange}
                               required
@@ -426,12 +429,12 @@ export default function RegisterVendorPage() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="pincode" className="text-sm font-bold">
-                            Pincode *
+                            {t("pincode")}
                           </Label>
                           <Input
                             id="pincode"
                             name="pincode"
-                            placeholder="400001"
+                            placeholder={t("pincodePlaceholder")}
                             value={formData.pincode}
                             onChange={handleChange}
                             required
@@ -444,12 +447,12 @@ export default function RegisterVendorPage() {
                               htmlFor="gstNumber"
                               className="flex items-center gap-2 text-sm font-bold"
                             >
-                              <FileText className="h-3 w-3" /> GST (Opt)
+                              <FileText className="h-3 w-3" /> {t("gstLabel")}
                             </Label>
                             <Input
                               id="gstNumber"
                               name="gstNumber"
-                              placeholder="GST-123"
+                              placeholder={t("gstPlaceholder")}
                               value={formData.gstNumber}
                               onChange={handleChange}
                               className="focus:ring-primary-500/20 h-11 rounded-xl border-2 focus:ring-2"
@@ -460,12 +463,12 @@ export default function RegisterVendorPage() {
                               htmlFor="panNumber"
                               className="flex items-center gap-2 text-sm font-bold"
                             >
-                              <FileText className="h-3 w-3" /> PAN (Opt)
+                              <FileText className="h-3 w-3" /> {t("panLabel")}
                             </Label>
                             <Input
                               id="panNumber"
                               name="panNumber"
-                              placeholder="PAN-123"
+                              placeholder={t("panPlaceholder")}
                               value={formData.panNumber}
                               onChange={handleChange}
                               className="focus:ring-primary-500/20 h-11 rounded-xl border-2 focus:ring-2"
@@ -482,7 +485,7 @@ export default function RegisterVendorPage() {
                             htmlFor="password"
                             className="flex items-center gap-2 text-sm font-bold"
                           >
-                            <Lock className="text-primary-500 h-4 w-4" /> Password *
+                            <Lock className="text-primary-500 h-4 w-4" /> {t("passwordLabel")}
                           </Label>
                           <Input
                             id="password"
@@ -500,7 +503,8 @@ export default function RegisterVendorPage() {
                             htmlFor="confirmPassword"
                             className="flex items-center gap-2 text-sm font-bold"
                           >
-                            <Lock className="text-primary-500 h-4 w-4" /> Confirm Password *
+                            <Lock className="text-primary-500 h-4 w-4" />{" "}
+                            {t("confirmPasswordLabel")}
                           </Label>
                           <Input
                             id="confirmPassword"
@@ -514,8 +518,7 @@ export default function RegisterVendorPage() {
                           />
                         </div>
                         <div className="bg-primary-50/50 border-primary-100 text-primary-700 rounded-xl border p-4 pt-4 text-sm italic">
-                          By submitting this application, you agree to our Vendor Terms and
-                          Conditions. Our team will review your application within 24-48 hours.
+                          {t("termsNotice")}
                         </div>
                       </div>
                     )}
@@ -529,7 +532,7 @@ export default function RegisterVendorPage() {
                         onClick={prevStep}
                         className="h-12 flex-1 rounded-xl border-2 font-bold"
                       >
-                        <ChevronLeft className="mr-2 h-5 w-5" /> Back
+                        <ChevronLeft className="me-2 h-5 w-5 rtl:rotate-180" /> {t("back")}
                       </Button>
                     )}
                     {step < 3 ? (
@@ -538,7 +541,7 @@ export default function RegisterVendorPage() {
                         onClick={nextStep}
                         className="hover:shadow-glow h-12 flex-1 rounded-xl bg-purple-500 font-bold text-white transition-all hover:bg-purple-600"
                       >
-                        Continue <ChevronRight className="ml-2 h-5 w-5" />
+                        {t("continueBtn")} <ChevronRight className="ms-2 h-5 w-5 rtl:rotate-180" />
                       </Button>
                     ) : (
                       <Button
@@ -547,11 +550,11 @@ export default function RegisterVendorPage() {
                         className="hover:shadow-glow h-12 flex-1 rounded-xl bg-purple-600 font-bold text-white transition-all hover:bg-purple-700"
                       >
                         {loading ? (
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          <Loader2 className="me-2 h-5 w-5 animate-spin" />
                         ) : (
-                          <ShieldCheck className="mr-2 h-5 w-5" />
+                          <ShieldCheck className="me-2 h-5 w-5" />
                         )}
-                        {loading ? "Registering..." : "Submit Application"}
+                        {loading ? t("registering") : t("submitApplication")}
                       </Button>
                     )}
                   </div>
@@ -559,9 +562,9 @@ export default function RegisterVendorPage() {
 
                 <div className="mt-8 space-y-4 text-center">
                   <p className="text-muted-foreground text-sm">
-                    Already have a vendor account?{" "}
+                    {t("alreadyVendor")}{" "}
                     <Link href="/auth/login" className="text-primary-600 font-bold hover:underline">
-                      Login here
+                      {t("loginHere")}
                     </Link>
                   </p>
                 </div>

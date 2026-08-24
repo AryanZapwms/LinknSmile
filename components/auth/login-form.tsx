@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import {
@@ -22,6 +23,7 @@ import {
 import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 
 export function LoginForm() {
+  const t = useTranslations("LoginForm");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -45,11 +47,11 @@ export function LoginForm() {
 
   const validateEmail = (v: string) => {
     if (!v) {
-      setEmailError("Email is required");
+      setEmailError(t("emailRequired"));
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
-      setEmailError("Enter a valid email address");
+      setEmailError(t("emailInvalid"));
       return false;
     }
     setEmailError("");
@@ -57,11 +59,11 @@ export function LoginForm() {
   };
   const validatePassword = (v: string) => {
     if (!v) {
-      setPasswordError("Password is required");
+      setPasswordError(t("passwordRequired"));
       return false;
     }
     if (v.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
+      setPasswordError(t("passwordTooShort"));
       return false;
     }
     setPasswordError("");
@@ -77,9 +79,7 @@ export function LoginForm() {
       const result = await signIn("credentials", { email, password, redirect: false });
       if (result?.error) {
         setError(
-          result.error === "CredentialsSignin"
-            ? "Invalid email or password. Please try again."
-            : result.error
+          result.error === "CredentialsSignin" ? t("invalidCredentials") : result.error
         );
         return;
       }
@@ -88,7 +88,7 @@ export function LoginForm() {
         await update();
       }
     } catch {
-      setError("An unexpected error occurred. Please try again.");
+      setError(t("unexpectedError"));
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +100,7 @@ export function LoginForm() {
     try {
       await signIn("google");
     } catch {
-      setError("Unable to sign in with Google. Please try again.");
+      setError(t("googleSignInFailed"));
       setIsGoogleLoading(false);
     }
   }
@@ -110,7 +110,7 @@ export function LoginForm() {
       <div className="w-full max-w-5xl">
         <div className="grid items-center gap-10 lg:grid-cols-2">
           {/* ── Left: brand panel ── */}
-          <div className="hidden flex-col justify-center space-y-8 border-r border-stone-200 pr-8 lg:flex">
+          <div className="hidden flex-col justify-center space-y-8 border-e border-stone-200 pe-8 lg:flex">
             <div className="relative h-28 w-full max-w-[300px]">
               <Image
                 src={LinkAndSmileLogo}
@@ -123,18 +123,16 @@ export function LoginForm() {
 
             <div>
               <h1 className="mb-3 text-4xl leading-tight font-bold text-stone-900">
-                Welcome back.
+                {t("welcomeBack")}
               </h1>
-              <p className="text-base leading-relaxed text-stone-500">
-                Your favourite local brands are waiting. Sign in to continue your journey.
-              </p>
+              <p className="text-base leading-relaxed text-stone-500">{t("welcomeBackDesc")}</p>
             </div>
 
             <div className="space-y-3">
               {[
-                { label: "Verified local sellers", sub: "Every vendor is reviewed and approved" },
-                { label: "Secure checkout", sub: "Industry-standard encryption on every order" },
-                { label: "Easy returns", sub: "7-day hassle-free return policy" },
+                { label: t("trustVerifiedSellers"), sub: t("trustVerifiedSellersDesc") },
+                { label: t("trustSecureCheckout"), sub: t("trustSecureCheckoutDesc") },
+                { label: t("trustEasyReturns"), sub: t("trustEasyReturnsDesc") },
               ].map(({ label, sub }) => (
                 <div key={label} className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
@@ -162,10 +160,8 @@ export function LoginForm() {
                     className="object-contain object-left"
                   />
                 </div>
-                <h2 className="text-xl font-bold text-stone-900">Sign in</h2>
-                <p className="mt-0.5 text-sm text-stone-400">
-                  Enter your credentials to access your account
-                </p>
+                <h2 className="text-xl font-bold text-stone-900">{t("signIn")}</h2>
+                <p className="mt-0.5 text-sm text-stone-400">{t("signInDesc")}</p>
               </div>
 
               <div className="px-7 py-6">
@@ -184,13 +180,13 @@ export function LoginForm() {
                       htmlFor="email"
                       className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-stone-500 uppercase"
                     >
-                      <Mail className="h-3.5 w-3.5 text-amber-500" /> Email address
+                      <Mail className="h-3.5 w-3.5 text-amber-500" /> {t("emailAddress")}
                     </label>
                     <div className="relative">
                       <Input
                         id="email"
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder={t("emailPlaceholder")}
                         value={email}
                         onChange={(e) => {
                           setEmail(e.target.value);
@@ -198,7 +194,7 @@ export function LoginForm() {
                         }}
                         onBlur={() => validateEmail(email)}
                         disabled={isSubmitting}
-                        className={`h-11 rounded-xl border-2 pr-9 text-sm transition-colors ${
+                        className={`h-11 rounded-xl border-2 pe-9 text-sm transition-colors ${
                           emailError
                             ? "border-red-300 bg-red-50 focus:border-red-400"
                             : email && !emailError
@@ -207,7 +203,7 @@ export function LoginForm() {
                         }`}
                       />
                       {email && !emailError && (
-                        <CheckCircle2 className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-green-500" />
+                        <CheckCircle2 className="absolute top-1/2 end-3 h-4 w-4 -translate-y-1/2 text-green-500" />
                       )}
                     </div>
                     {emailError && (
@@ -224,13 +220,13 @@ export function LoginForm() {
                       htmlFor="password"
                       className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-stone-500 uppercase"
                     >
-                      <Lock className="h-3.5 w-3.5 text-amber-500" /> Password
+                      <Lock className="h-3.5 w-3.5 text-amber-500" /> {t("password")}
                     </label>
                     <div className="relative">
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
+                        placeholder={t("passwordPlaceholder")}
                         value={password}
                         onChange={(e) => {
                           setPassword(e.target.value);
@@ -238,7 +234,7 @@ export function LoginForm() {
                         }}
                         onBlur={() => validatePassword(password)}
                         disabled={isSubmitting}
-                        className={`h-11 rounded-xl border-2 pr-10 text-sm transition-colors ${
+                        className={`h-11 rounded-xl border-2 pe-10 text-sm transition-colors ${
                           passwordError
                             ? "border-red-300 bg-red-50 focus:border-red-400"
                             : password && !passwordError
@@ -250,7 +246,7 @@ export function LoginForm() {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={isSubmitting}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 text-stone-400 transition-colors hover:text-stone-600"
+                        className="absolute top-1/2 end-3 -translate-y-1/2 text-stone-400 transition-colors hover:text-stone-600"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -275,7 +271,7 @@ export function LoginForm() {
                       disabled={isLoading}
                       className="text-xs font-semibold text-amber-600 transition-colors hover:text-amber-700"
                     >
-                      Forgot password?
+                      {t("forgotPassword")}
                     </button>
                   </div>
 
@@ -288,12 +284,12 @@ export function LoginForm() {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        {isRedirecting ? "Redirecting…" : "Signing in…"}
+                        {isRedirecting ? t("redirecting") : t("signingIn")}
                       </>
                     ) : (
                       <>
                         <ShieldCheck className="h-4 w-4" />
-                        Sign In
+                        {t("signInButton")}
                       </>
                     )}
                   </button>
@@ -302,7 +298,7 @@ export function LoginForm() {
                 {/* Google sign-in */}
                 <div className="my-5 flex items-center gap-3">
                   <div className="h-px flex-1 bg-stone-100" />
-                  <span className="text-xs font-medium text-stone-400">or</span>
+                  <span className="text-xs font-medium text-stone-400">{t("or")}</span>
                   <div className="h-px flex-1 bg-stone-100" />
                 </div>
                 <button
@@ -333,13 +329,15 @@ export function LoginForm() {
                       />
                     </svg>
                   )}
-                  {isGoogleLoading ? "Redirecting…" : "Continue with Google"}
+                  {isGoogleLoading ? t("redirecting") : t("continueWithGoogle")}
                 </button>
 
                 {/* Divider */}
                 <div className="my-5 flex items-center gap-3">
                   <div className="h-px flex-1 bg-stone-100" />
-                  <span className="text-xs font-medium text-stone-400">New to Linknsmile?</span>
+                  <span className="text-xs font-medium text-stone-400">
+                    {t("newToLinknsmile")}
+                  </span>
                   <div className="h-px flex-1 bg-stone-100" />
                 </div>
 
@@ -352,7 +350,7 @@ export function LoginForm() {
                     className="group flex items-center justify-center gap-2 rounded-xl border-2 border-stone-200 py-3 text-sm font-semibold text-stone-600 transition-all duration-200 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
                   >
                     <User className="h-4 w-4 transition-transform group-hover:scale-110" />
-                    Customer
+                    {t("customer")}
                   </button>
                   <button
                     type="button"
@@ -361,7 +359,7 @@ export function LoginForm() {
                     className="group flex items-center justify-center gap-2 rounded-xl border-2 border-stone-200 py-3 text-sm font-semibold text-stone-600 transition-all duration-200 hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
                   >
                     <Store className="h-4 w-4 transition-transform group-hover:scale-110" />
-                    Vendor
+                    {t("vendor")}
                   </button>
                 </div>
               </div>
@@ -370,7 +368,7 @@ export function LoginForm() {
             {/* Under-card note */}
             <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-stone-400">
               <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
-              Protected by industry-standard encryption
+              {t("protectedByEncryption")}
             </p>
           </div>
         </div>

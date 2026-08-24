@@ -130,7 +130,7 @@ export default function VendorReviewsPage() {
           prev.map((r) => (r.id === reviewId ? { ...r, reply: data.review.reply } : r))
         );
       } else {
-        throw new Error(data.error || "Failed to post reply");
+        throw new Error(data.error || t("replyFailedGeneric"));
       }
     } catch (error: any) {
       toast({

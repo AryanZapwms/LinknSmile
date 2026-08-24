@@ -16,14 +16,13 @@
 // locale with no message catalog.
 import { cookies } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/lib/i18n-config";
+import { resolveLocaleFromCookieValue } from "@/lib/i18n-config";
 
 export const LOCALE_COOKIE = "NEXT_LOCALE";
 
 export default getRequestConfig(async () => {
   const store = await cookies();
-  const requested = store.get(LOCALE_COOKIE)?.value;
-  const locale = requested && SUPPORTED_LOCALES.includes(requested) ? requested : DEFAULT_LOCALE;
+  const locale = resolveLocaleFromCookieValue(store.get(LOCALE_COOKIE)?.value);
 
   return {
     locale,

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +22,7 @@ interface WishlistItem {
 }
 
 export default function WishlistPage() {
+  const t = useTranslations("WishlistPage");
   const { data: session, status } = useSession();
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ export default function WishlistPage() {
       setItems(data);
     } catch (error) {
       console.error("Wishlist fetch error:", error);
-      toast.error("Could not load wishlist");
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -53,9 +55,9 @@ export default function WishlistPage() {
       const res = await fetch(`/api/wishlist/${productId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to remove");
       setItems((prev) => prev.filter((item) => item.productId !== productId));
-      toast.success("Removed from wishlist");
+      toast.success(t("removedSuccess"));
     } catch (error) {
-      toast.error("Could not remove item");
+      toast.error(t("removeFailed"));
     }
   };
 
