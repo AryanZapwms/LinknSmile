@@ -12,6 +12,7 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 const tabs = [
   { id: "ordering", label: "Ordering", icon: ShoppingBag },
@@ -21,6 +22,7 @@ const tabs = [
 
 export default function OrdersReturns() {
   const [activeTab, setActiveTab] = useState("ordering");
+  const { supportEmail, supportPhone } = usePlatformSettings();
 
   return (
     <section className="min-h-screen bg-gradient-to-b from-neutral-50 to-white">
@@ -294,7 +296,7 @@ export default function OrdersReturns() {
                   <div>
                     <h4 className="mb-1 font-semibold text-neutral-900">Contact Us</h4>
                     <p className="text-neutral-700">
-                      Email care@instapeels.com to start your return request
+                      Email {supportEmail} to start your return request
                     </p>
                   </div>
                 </div>
@@ -356,14 +358,14 @@ export default function OrdersReturns() {
           </div>
           <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
             <a
-              href="mailto:care@instapeels.com"
+              href={`mailto:${supportEmail}`}
               className="flex items-center justify-center gap-3 rounded-xl bg-[#B18D0C] px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#8A6A09] hover:shadow-xl"
             >
               <Mail className="h-5 w-5" />
               Email Support
             </a>
             <a
-              href="tel:+918355991099"
+              href={`tel:${supportPhone.replace(/\s/g, "")}`}
               className="flex items-center justify-center gap-3 rounded-xl bg-neutral-900 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:bg-neutral-800 hover:shadow-xl"
             >
               <Phone className="h-5 w-5" />

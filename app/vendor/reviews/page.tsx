@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ interface ReviewSummary {
 }
 
 export default function VendorReviewsPage() {
+  const t = useTranslations("VendorReviews");
   const { toast } = useToast();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [summary, setSummary] = useState<ReviewSummary | null>(null);
@@ -74,16 +76,16 @@ export default function VendorReviewsPage() {
         setReplyMessages(initialReplies);
       } else {
         toast({
-          title: "Error",
-          description: data.error || "Failed to load reviews",
+          title: t("error"),
+          description: data.error || t("loadFailed"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
       toast({
-        title: "Error",
-        description: "Something went wrong while loading reviews",
+        title: t("error"),
+        description: t("loadFailedUnexpected"),
         variant: "destructive",
       });
     } finally {
@@ -102,8 +104,8 @@ export default function VendorReviewsPage() {
     const message = replyMessages[reviewId]?.trim();
     if (!message) {
       toast({
-        title: "Error",
-        description: "Please enter a reply message",
+        title: t("error"),
+        description: t("replyMessageRequired"),
         variant: "destructive",
       });
       return;
@@ -120,19 +122,19 @@ export default function VendorReviewsPage() {
       const data = await res.json();
       if (data.success) {
         toast({
-          title: "Success",
-          description: "Your reply has been posted",
+          title: t("success"),
+          description: t("replyPosted"),
         });
 
         setReviews((prev) =>
           prev.map((r) => (r.id === reviewId ? { ...r, reply: data.review.reply } : r))
         );
       } else {
-        throw new Error(data.error || "Failed to post reply");
+        throw new Error(data.error || t("replyFailedGeneric"));
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t("error"),
         description: error.message,
         variant: "destructive",
       });
@@ -163,15 +165,15 @@ export default function VendorReviewsPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Product Reviews</h1>
-        <p className="text-muted-foreground">Manage and respond to feedback from your customers.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       {summary && summary.total > 0 ? (
         <div className="grid gap-4 md:grid-cols-4">
           <Card className="md:col-span-1">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("averageRating")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
@@ -185,7 +187,9 @@ export default function VendorReviewsPage() {
                       />
                     ))}
                   </div>
-                  <span className="text-muted-foreground text-xs">{summary.total} reviews</span>
+                  <span className="text-muted-foreground text-xs">
+                    {t("reviewsCount", { count: summary.total })}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -193,7 +197,7 @@ export default function VendorReviewsPage() {
 
           <Card className="md:col-span-3">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Rating Distribution</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("ratingDistribution")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -206,7 +210,7 @@ export default function VendorReviewsPage() {
                         style={{ width: `${ratingPercentage(rating)}%` }}
                       />
                     </div>
-                    <span className="text-muted-foreground w-8 text-right text-xs">
+                    <span className="text-muted-foreground w-8 text-end text-xs">
                       {ratingPercentage(rating)}%
                     </span>
                   </div>
@@ -220,31 +224,27 @@ export default function VendorReviewsPage() {
           <CardContent className="py-10 text-center">
             <div className="flex flex-col items-center gap-2">
               <MessageSquare className="text-muted-foreground h-10 w-10" />
-              <h3 className="text-lg font-medium">No reviews yet</h3>
-              <p className="text-muted-foreground text-sm">
-                Customer reviews will appear here once they start rating your products.
-              </p>
+              <h3 className="text-lg font-medium">{t("noReviewsYetTitle")}</h3>
+              <p className="text-muted-foreground text-sm">{t("noReviewsYetDesc")}</p>
             </div>
           </CardContent>
         </Card>
       )}
 
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Recent Reviews</h2>
+        <h2 className="text-xl font-semibold">{t("recentReviews")}</h2>
         {reviews.length === 0 ? (
-          <p className="text-muted-foreground py-10 text-center">
-            You haven't received any reviews yet.
-          </p>
+          <p className="text-muted-foreground py-10 text-center">{t("noReviewsReceived")}</p>
         ) : (
           <div className="grid gap-4">
             {reviews.map((review) => (
               <Card key={review.id} className="overflow-hidden">
                 <CardContent className="p-0">
                   <div className="grid md:grid-cols-[240px_1fr]">
-                    <div className="bg-muted/30 space-y-4 border-r p-4">
+                    <div className="bg-muted/30 space-y-4 border-e p-4">
                       <div className="space-y-1">
                         <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                          Product
+                          {t("colProduct")}
                         </Label>
                         <div className="flex items-start gap-2">
                           <div className="h-8 w-8 shrink-0 overflow-hidden rounded border bg-white">
@@ -269,7 +269,7 @@ export default function VendorReviewsPage() {
 
                       <div className="space-y-1">
                         <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                          Customer
+                          {t("colCustomer")}
                         </Label>
                         <div className="flex items-center gap-2">
                           <User className="text-muted-foreground h-3 w-3" />
@@ -280,14 +280,14 @@ export default function VendorReviewsPage() {
                             variant="outline"
                             className="h-5 border-green-100 bg-green-50 px-1.5 text-[10px] text-green-700"
                           >
-                            <CheckCircle2 className="mr-1 h-2.5 w-2.5" /> Verified Buyer
+                            <CheckCircle2 className="me-1 h-2.5 w-2.5" /> {t("verifiedBuyer")}
                           </Badge>
                         )}
                       </div>
 
                       <div className="space-y-1">
                         <Label className="text-muted-foreground text-[10px] font-bold uppercase">
-                          Date
+                          {t("colDate")}
                         </Label>
                         <div className="text-muted-foreground flex items-center gap-2 text-xs">
                           <Clock className="h-3 w-3" />
@@ -317,7 +317,11 @@ export default function VendorReviewsPage() {
                                   : "bg-yellow-100 text-yellow-700"
                             }`}
                           >
-                            {review.status}
+                            {review.status === "APPROVED"
+                              ? t("statusApproved")
+                              : review.status === "REJECTED"
+                                ? t("statusRejected")
+                                : t("statusPending")}
                           </Badge>
                         </div>
                         <p className="text-sm leading-relaxed">{review.comment}</p>
@@ -326,7 +330,9 @@ export default function VendorReviewsPage() {
                       {review.reply ? (
                         <div className="rounded-lg border border-purple-100 bg-purple-50/50 p-3">
                           <div className="mb-1 flex items-center justify-between">
-                            <span className="text-xs font-bold text-purple-700">Your Response</span>
+                            <span className="text-xs font-bold text-purple-700">
+                              {t("yourResponse")}
+                            </span>
                             <span className="text-[10px] text-purple-600">
                               {new Date(review.reply.repliedAt).toLocaleDateString()}
                             </span>
@@ -336,7 +342,7 @@ export default function VendorReviewsPage() {
                       ) : (
                         <div className="space-y-2 border-t pt-2">
                           <Textarea
-                            placeholder="Write a response to this customer..."
+                            placeholder={t("replyPlaceholder")}
                             className="min-h-[60px] resize-none text-xs"
                             value={replyMessages[review.id] || ""}
                             onChange={(e) => handleReplyChange(review.id, e.target.value)}
@@ -350,7 +356,7 @@ export default function VendorReviewsPage() {
                               }
                               onClick={() => handleReplySubmit(review.id)}
                             >
-                              Post Response
+                              {t("postResponse")}
                             </Button>
                           </div>
                         </div>

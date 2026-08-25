@@ -22,6 +22,9 @@ import {
   Image as ImageIcon,
   DollarSign,
   CreditCard,
+  GalleryHorizontal,
+  Star,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +43,13 @@ const navItems: NavItem[] = [
   { href: "/admin/users", label: "Users", icon: <Users className="h-5 w-5" /> },
   { href: "/admin/promos", label: "Promo Bar", icon: <Megaphone className="h-5 w-5" /> },
   {
+    href: "/admin/home-banner",
+    label: "Home Banner",
+    icon: <GalleryHorizontal className="h-5 w-5" />,
+  },
+  { href: "/admin/hero-products", label: "Hero Products", icon: <Star className="h-5 w-5" /> },
+  { href: "/admin/blogs", label: "Blogs", icon: <BookOpen className="h-5 w-5" /> },
+  {
     href: "/admin/product-approvals",
     label: "Product Approvals",
     icon: <Package className="h-5 w-5" />,
@@ -54,6 +64,11 @@ const navItems: NavItem[] = [
   { href: "/admin/wallet", label: "Finance", icon: <DollarSign className="h-5 w-5" /> },
   { href: "/admin/payouts", label: "Vendor Payouts", icon: <DollarSign className="h-5 w-5" /> },
   { href: "/admin/settings", label: "Payment Settings", icon: <Settings className="h-5 w-5" /> },
+  {
+    href: "/admin/platform-settings",
+    label: "Platform Settings",
+    icon: <Settings2 className="h-5 w-5" />,
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

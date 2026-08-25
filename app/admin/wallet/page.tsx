@@ -30,6 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
 interface WalletData {
   success: boolean;
@@ -49,13 +50,6 @@ interface WalletData {
 }
 
 const COLORS = ["#7c3aed", "#10b981", "#f59e0b", "#ef4444"];
-
-const formatINR = (value: number) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
 
 export default function AdminWalletOverview() {
   const [data, setData] = useState<WalletData | null>(null);
@@ -132,7 +126,7 @@ export default function AdminWalletOverview() {
             <DollarSign className="absolute right-4 h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatINR(overview.platformRevenue)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(overview.platformRevenue)}</div>
             <p className="mt-1 flex items-center gap-1 text-[10px] text-purple-600">
               <ArrowUpRight className="h-3 w-3" /> All-time commissions
             </p>
@@ -147,7 +141,7 @@ export default function AdminWalletOverview() {
             <WalletIcon className="absolute right-4 h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatINR(overview.totalVendorLiability)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(overview.totalVendorLiability)}</div>
             <p className="mt-1 text-[10px] text-blue-600">
               Total held for {overview.vendorCount} vendors
             </p>
@@ -163,7 +157,7 @@ export default function AdminWalletOverview() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatINR(overview.totalWithdrawableLiability)}
+              {formatCurrency(overview.totalWithdrawableLiability)}
             </div>
             <p className="mt-1 text-[10px] text-orange-600">Ready for payout</p>
           </CardContent>
@@ -177,7 +171,7 @@ export default function AdminWalletOverview() {
             <ShieldAlert className="absolute right-4 h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatINR(overview.totalFrozenAmount)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(overview.totalFrozenAmount)}</div>
             <p className="mt-1 text-[10px] text-red-600">
               {overview.frozenWallets} wallets flagged
             </p>
@@ -208,7 +202,7 @@ export default function AdminWalletOverview() {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: any) => formatINR(value ?? 0)} />
+                <Tooltip formatter={(value: any) => formatCurrency(value ?? 0)} />
                 <Legend />
               </RechartsPieChart>
             </ResponsiveContainer>
@@ -226,8 +220,8 @@ export default function AdminWalletOverview() {
               <BarChart data={payoutChartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" />
-                <YAxis tickFormatter={(v) => `₹${v / 1000}k`} />
-                <Tooltip formatter={(value: any) => formatINR(value ?? 0)} />
+                <YAxis tickFormatter={(v) => `${getCurrencySymbol()}${v / 1000}k`} />
+                <Tooltip formatter={(value: any) => formatCurrency(value ?? 0)} />
                 <Bar dataKey="amount" fill="#7c3aed" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -267,7 +261,7 @@ export default function AdminWalletOverview() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold">{formatINR(payout.amount)}</p>
+                    <p className="text-sm font-bold">{formatCurrency(payout.amount)}</p>
                     <Badge variant="outline" className="h-5 text-[10px] leading-tight capitalize">
                       {payout.status.toLowerCase()}
                     </Badge>

@@ -7,6 +7,7 @@ import Shop from "@/lib/models/shop";
 import { sendEmail } from "@/lib/email";
 import { Product } from "@/lib/models/product";
 import { Order } from "@/lib/models/order";
+import { Coupon } from "@/lib/models/coupon";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -142,6 +143,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .populate("shopId", "shopName ownerId")
       .lean() as any;
     const orders = await Order.find({ vendorId: id }).lean() as any;
+    // Read-only admin visibility (§ requirement) — this shop's coupons,
+    // newest first. Vendor CRUD for these lives under app/api/vendor/coupons*.
+    const coupons = await Coupon.find({ shopId: id }).sort({ createdAt: -1 }).lean();
 
     const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0);
 
@@ -157,6 +161,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         },
         products,
         orders,
+        coupons,
       })
     );
   } catch (error: any) {

@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   Receipt,
 } from "lucide-react";
+import { formatCurrency, LOCALE } from "@/lib/currency";
 
 interface OrderItem {
   product?: {
@@ -283,7 +284,7 @@ export default function OrdersPage() {
               const productImage = firstItem?.product?.image;
               const productName = firstItem?.product?.name ?? "Product";
               const createdAt = order.createdAt
-                ? new Date(order.createdAt).toLocaleDateString("en-IN", {
+                ? new Date(order.createdAt).toLocaleDateString(LOCALE, {
                     day: "numeric",
                     month: "short",
                     year: "numeric",
@@ -366,7 +367,7 @@ export default function OrdersPage() {
                         <div className="flex flex-shrink-0 items-center gap-2">
                           <div className="text-right">
                             <p className="text-foreground font-bold">
-                              ₹{Number(order.totalAmount ?? 0).toLocaleString("en-IN")}
+                              {formatCurrency(Number(order.totalAmount ?? 0))}
                             </p>
                             <p className="text-muted-foreground text-xs">
                               {items.length} item{items.length !== 1 ? "s" : ""}

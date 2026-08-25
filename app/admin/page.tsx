@@ -36,6 +36,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import { formatCurrency, CURRENCY_CODE, LOCALE } from "@/lib/currency";
 
 type AnalyticsResponse = {
   overview: {
@@ -149,20 +150,18 @@ type AnalyticsResponse = {
   customerRangeStats: Array<{ userId: string; orders: number; revenue: number }>;
 };
 
-const currencyFormatter = new Intl.NumberFormat("en-IN", {
+// Compact formatter for chart axis ticks (e.g. "₹5K" instead of "₹5,000") —
+// kept separate from formatCurrency() since axis space doesn't fit full
+// formatting, but still driven by the shared CURRENCY_CODE/LOCALE so it
+// stays correct for other country deployments.
+const compactCurrencyFormatter = new Intl.NumberFormat(LOCALE, {
   style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
-
-const compactCurrencyFormatter = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
+  currency: CURRENCY_CODE,
   notation: "compact",
   maximumFractionDigits: 1,
 });
 
-const numberFormatter = new Intl.NumberFormat("en-IN");
+const numberFormatter = new Intl.NumberFormat(LOCALE);
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -364,7 +363,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {currencyFormatter.format(analytics.overview.totalRevenue)}
+                {formatCurrency(analytics.overview.totalRevenue)}
               </div>
               <p className="text-muted-foreground text-xs">Completed payments</p>
             </CardContent>
@@ -413,7 +412,7 @@ export default function AdminDashboard() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis tickFormatter={(value) => compactCurrencyFormatter.format(value)} />
-                    <Tooltip formatter={(value: number) => currencyFormatter.format(value)} />
+                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
                     <Area
                       type="monotone"
                       dataKey="revenue"
@@ -441,7 +440,7 @@ export default function AdminDashboard() {
                         {numberFormatter.format(category.units)} units
                       </p>
                     </div>
-                    <div className="font-medium">{currencyFormatter.format(category.revenue)}</div>
+                    <div className="font-medium">{formatCurrency(category.revenue)}</div>
                   </div>
                 ))}
               </div>
@@ -467,7 +466,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium">
-                        {currencyFormatter.format(product.revenue)}
+                        {formatCurrency(product.revenue)}
                       </p>
                       {product.averageRating && (
                         <div className="flex items-center justify-end text-xs text-yellow-500">

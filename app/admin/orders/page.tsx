@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Eye, MapPin, CreditCard, Package } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 
 interface OrderItem {
   product?: {
@@ -210,7 +211,7 @@ export default function AdminOrdersPage() {
                           <Badge variant="outline">{order.items?.length || 0} items</Badge>
                         </td>
                         <td className="px-4 py-3 font-semibold">
-                          ₹{(order.totalAmount || 0).toFixed(2)}
+                          {formatCurrency(order.totalAmount || 0)}
                         </td>
                         <td className="px-4 py-3">
                           <Select
@@ -337,10 +338,10 @@ export default function AdminOrdersPage() {
 
                       <div className="mt-2 flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          Qty: {item.quantity} × ₹{(item.price || 0).toFixed(2)}
+                          Qty: {item.quantity} × {formatCurrency(item.price || 0)}
                         </span>
                         <span className="font-medium">
-                          ₹{((item.quantity || 0) * (item.price || 0)).toFixed(2)}
+                          {formatCurrency((item.quantity || 0) * (item.price || 0))}
                         </span>
                       </div>
                     </div>
@@ -409,7 +410,7 @@ export default function AdminOrdersPage() {
                   <div>
                     <p className="text-muted-foreground text-xs">Amount</p>
                     <p className="text-lg font-medium">
-                      ₹{(selectedOrder.totalAmount || 0).toFixed(2)}
+                      {formatCurrency(selectedOrder.totalAmount || 0)}
                     </p>
                   </div>
                   <div>

@@ -1,5 +1,15 @@
 // email.tsx
 import nodemailer from "nodemailer";
+import { formatCurrency, LOCALE } from "@/lib/currency";
+import { getEmailTranslator, isRtlLocale, resolveEmailLocale } from "@/lib/email-locale";
+
+// Single source of truth for absolute links/domain text in these email
+// templates — mirrors the exact pattern already used in app/robots.ts and
+// app/sitemap.ts, so this file, robots.txt, and sitemap.xml all agree on
+// the same domain instead of each hardcoding their own.
+const SITE_URL = process.env.NEXTAUTH_URL ?? "https://linkn-smile.vercel.app";
+const SITE_HOST = SITE_URL.replace(/^https?:\/\//, "");
+
 let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter() {
@@ -47,7 +57,7 @@ export async function sendEmail({
     }
 
     await emailTransporter.sendMail({
-      from: `"LinkNSmile" <${process.env.GMAIL_EMAIL}>`,
+      from: `"Linknsmile" <${process.env.GMAIL_EMAIL}>`,
       to,
       subject,
       html,
@@ -61,18 +71,24 @@ export async function sendEmail({
   }
 }
 
-export function getWelcomeEmail(name: string) {
+export async function getWelcomeEmail(name: string, locale?: string) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailWelcome");
+  const isRtl = isRtlLocale(resolvedLocale);
+  const dir = isRtl ? "rtl" : "ltr";
+  const startSide = isRtl ? "right" : "left";
+
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${resolvedLocale}" dir="${dir}">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            line-height: 1.6; 
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
             color: #2c3e50;
             background-color: #f8f9fa;
           }
@@ -80,17 +96,17 @@ export function getWelcomeEmail(name: string) {
             background-color: #f8f9fa;
             padding: 20px;
           }
-          .container { 
-            max-width: 600px; 
-            margin: 0 auto; 
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
             background-color: #ffffff;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
           }
-          .header { 
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); 
-            color: white; 
+          .header {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
             padding: 40px 30px;
             text-align: center;
           }
@@ -110,7 +126,7 @@ export function getWelcomeEmail(name: string) {
             font-size: 14px;
             opacity: 0.95;
           }
-          .content { 
+          .content {
             padding: 40px 30px;
           }
           .greeting {
@@ -130,7 +146,7 @@ export function getWelcomeEmail(name: string) {
           }
           .features {
             background: linear-gradient(to bottom, #faf7f2 0%, #ffffff 100%);
-            border-left: 4px solid #7c3aed;
+            border-${startSide}: 4px solid #7c3aed;
             padding: 20px;
             margin: 25px 0;
             border-radius: 6px;
@@ -143,11 +159,11 @@ export function getWelcomeEmail(name: string) {
           }
           .features ul {
             list-style: none;
-            padding-left: 0;
+            padding-${startSide}: 0;
           }
           .features li {
             padding: 8px 0;
-            padding-left: 25px;
+            padding-${startSide}: 25px;
             position: relative;
             font-size: 14px;
             color: #34495e;
@@ -155,7 +171,7 @@ export function getWelcomeEmail(name: string) {
           .features li:before {
             content: "✓";
             position: absolute;
-            left: 0;
+            ${startSide}: 0;
             color: #7c3aed;
             font-weight: bold;
             font-size: 16px;
@@ -220,61 +236,61 @@ export function getWelcomeEmail(name: string) {
           <div class="container">
             <!-- Header -->
             <div class="header">
-             <img src="https://linknsmile.com/companylogo.jpg" alt="LinkNSmile Logo" class="logo">
-             <h1>Welcome to LinkNSmile!</h1>
-<p>India's Trusted Marketplace</p>
+             <img src="${SITE_URL}/companylogo.jpg" alt="Linknsmile Logo" class="logo">
+             <h1>${t("title")}</h1>
+<p>${t("tagline")}</p>
             </div>
 
             <!-- Content -->
             <div class="content">
-              <p class="greeting">Hello <strong>${name}</strong>,</p>
-              
+              <p class="greeting">${t("greeting", { name: `<strong>${name}</strong>` })}</p>
+
               <p class="text-block">
-                Thank you for creating an account with us! We're thrilled to welcome you to the LinkNSmile family.
+                ${t("intro")}
               </p>
 
               <div class="features">
-                <h3>What You Can Do Now:</h3>
+                <h3>${t("featuresTitle")}</h3>
                 <ul>
-                  <li>Browse our curated collection of premium skincare products</li>
-                  <li>Receive personalized product recommendations</li>
-                  <li>Track your orders in real-time</li>
-                  <li>Save your favorite products for quick checkout</li>
-                  <li>Enjoy exclusive member-only deals and early access to new launches</li>
-                  <li>Get skincare tips and professional advice</li>
+                  <li>${t("feature1")}</li>
+                  <li>${t("feature2")}</li>
+                  <li>${t("feature3")}</li>
+                  <li>${t("feature4")}</li>
+                  <li>${t("feature5")}</li>
+                  <li>${t("feature6")}</li>
                 </ul>
               </div>
 
               <div style="text-align: center;">
-                <a href="https://linknsmile.com/products" class="cta-button">Start Shopping Now</a>
+                <a href="${SITE_URL}/products" class="cta-button">${t("ctaButton")}</a>
               </div>
 
               <p class="text-block">
-                At Instapeels, we're committed to providing you with the highest quality skincare products backed by science and expertise. Our team is dedicated to helping you achieve your best skin.
+                ${t("body1")}
               </p>
 
               <p class="text-block">
-                If you have any questions or need assistance, our dedicated support team is here to help. Don't hesitate to reach out!
+                ${t("body2")}
               </p>
 
               <p class="text-block">
-                Welcome aboard! Happy skincare journey! 🌿
+                ${t("signoff")}
               </p>
             </div>
 
             <!-- Footer -->
             <div class="footer">
               <div class="footer-links">
-                <a href="https://instapeels.com">Home</a>
-                <a href="https://instapeels.com/shop">Shop</a>
-                <a href="https://instapeels.com/blog">Blog</a>
-                <a href="https://instapeels.com/profile">Account</a>
+                <a href="${SITE_URL}">${t("footerHome")}</a>
+                <a href="${SITE_URL}/shop">${t("footerShop")}</a>
+                <a href="${SITE_URL}/blog">${t("footerBlog")}</a>
+                <a href="${SITE_URL}/profile">${t("footerAccount")}</a>
               </div>
               <div class="footer-text">
-                <p><strong>LinkNSmile</strong></p>
-<p>Net & Work Builds Up Net-Worth</p>
-<p>📧 support@linknsmile.com | 🌐 www.linknsmile.com</p>
-<p>&copy; 2026 LinkNSmile. All rights reserved.</p>
+                <p><strong>Linknsmile</strong></p>
+<p>${t("footerTagline")}</p>
+<p>📧 support@linknsmile.com | 🌐 ${SITE_HOST}</p>
+<p dir="ltr">${t("footerCopyright")}</p>
               </div>
             </div>
           </div>
@@ -284,13 +300,14 @@ export function getWelcomeEmail(name: string) {
   `;
 }
 
-export function getOrderConfirmationEmail({
+export async function getOrderConfirmationEmail({
   customerName,
   orderId,
   items,
   total,
   orderDate,
   paymentStatus = "pending",
+  locale,
 }: {
   customerName: string;
   orderId: string;
@@ -309,7 +326,15 @@ export function getOrderConfirmationEmail({
   total: number;
   orderDate?: string;
   paymentStatus?: string;
+  locale?: string;
 }) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailOrderConfirmation");
+  const isRtl = isRtlLocale(resolvedLocale);
+  const dir = isRtl ? "rtl" : "ltr";
+  const startSide = isRtl ? "right" : "left";
+  const endSide = isRtl ? "left" : "right";
+
   const itemsHtml = (items || [])
     .map(
       (item) => `
@@ -319,7 +344,7 @@ export function getOrderConfirmationEmail({
           ${
             item.selectedSize
               ? `<div style="color: #7f8c8d; font-size: 13px; margin-top: 5px;">
-                  Size: ${item.selectedSize.size} (${item.selectedSize.quantity}${item.selectedSize.unit})
+                  ${t("sizeLabel", { size: item.selectedSize.size, quantity: item.selectedSize.quantity, unit: item.selectedSize.unit })}
                 </div>`
               : ""
           }
@@ -327,8 +352,8 @@ export function getOrderConfirmationEmail({
         <td style="padding: 15px; border-bottom: 1px solid #ecf0f1; text-align: center; color: #34495e;">
           ${item.quantity}
         </td>
-        <td style="padding: 15px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">
-          ₹${(item.price * item.quantity).toFixed(2)}
+        <td style="padding: 15px; border-bottom: 1px solid #ecf0f1; text-align: ${endSide}; color: #7c3aed; font-weight: 600;">
+          ${formatCurrency(item.price * item.quantity)}
         </td>
       </tr>
     `
@@ -339,15 +364,15 @@ export function getOrderConfirmationEmail({
 
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${resolvedLocale}" dir="${dir}">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            line-height: 1.6; 
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
             color: #2c3e50;
             background-color: #f8f9fa;
           }
@@ -355,17 +380,17 @@ export function getOrderConfirmationEmail({
             background-color: #f8f9fa;
             padding: 20px;
           }
-          .container { 
-            max-width: 600px; 
-            margin: 0 auto; 
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
             background-color: #ffffff;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
           }
-          .header { 
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); 
-            color: white; 
+          .header {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
             padding: 40px 30px;
             text-align: center;
           }
@@ -385,7 +410,7 @@ export function getOrderConfirmationEmail({
             font-size: 14px;
             opacity: 0.95;
           }
-          .content { 
+          .content {
             padding: 40px 30px;
           }
           .greeting {
@@ -416,7 +441,7 @@ export function getOrderConfirmationEmail({
           .order-info {
             background: linear-gradient(to bottom, #faf7f2 0%, #ffffff 100%);
             border: 1px solid #f5e6d3;
-            border-left: 4px solid #7c3aed;
+            border-${startSide}: 4px solid #7c3aed;
             padding: 20px;
             margin: 20px 0;
             border-radius: 6px;
@@ -451,7 +476,7 @@ export function getOrderConfirmationEmail({
           }
           .items-table thead th {
             padding: 15px;
-            text-align: left;
+            text-align: ${startSide};
             color: #7c3aed;
             font-weight: 700;
             font-size: 13px;
@@ -484,7 +509,7 @@ export function getOrderConfirmationEmail({
           }
           .shipping-info {
             background: #e8f4f8;
-            border-left: 4px solid #3498db;
+            border-${startSide}: 4px solid #3498db;
             padding: 15px;
             margin: 20px 0;
             border-radius: 6px;
@@ -548,47 +573,47 @@ export function getOrderConfirmationEmail({
           <div class="container">
             <!-- Header -->
             <div class="header">
-              <img src="https://instapeels.com/companylogo.jpg" alt="Instapeels Logo" class="logo">
-              <h1>Order Confirmation</h1>
-              <p>Your order has been received!</p>
+              <img src="${SITE_URL}/companylogo.jpg" alt="Linknsmile Logo" class="logo">
+              <h1>${t("title")}</h1>
+              <p>${t("tagline")}</p>
             </div>
 
             <!-- Content -->
             <div class="content">
-              <p class="greeting">Hello <strong>${customerName}</strong>,</p>
-              
-              <div class="status-badge">✓ Order Confirmed</div>
+              <p class="greeting">${t("greeting", { name: `<strong>${customerName}</strong>` })}</p>
+
+              <div class="status-badge">${t("statusBadge")}</div>
 
               <p class="text-block">
-                Thank you for your order! We've received it and it's now being processed. You'll receive a tracking number via email once your items ship.
+                ${t("intro")}
               </p>
 
               <!-- Order Information -->
               <div class="order-info">
                 <div class="order-info-row">
-                  <span class="order-info-label">Order ID</span>
+                  <span class="order-info-label">${t("orderIdLabel")}</span>
                   <span class="order-info-value">${orderId}</span>
                 </div>
                 <div class="order-info-row">
-                  <span class="order-info-label">Order Date</span>
-                  <span class="order-info-value">${orderDate || new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</span>
+                  <span class="order-info-label">${t("orderDateLabel")}</span>
+                  <span class="order-info-value" dir="ltr">${orderDate || new Date().toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</span>
                 </div>
                 <div class="order-info-row">
-                  <span class="order-info-label">Payment Status</span>
+                  <span class="order-info-label">${t("paymentStatusLabel")}</span>
                   <span class="order-info-value" style="color: ${paymentStatus === "completed" ? "#27ae60" : "#f39c12"}; font-weight: 700;">
-                    ${paymentStatus === "completed" ? "✓ Payment Received" : "⏱ Pending - Pay on Delivery"}
+                    ${paymentStatus === "completed" ? t("paymentReceived") : t("paymentPending")}
                   </span>
                 </div>
               </div>
 
               <!-- Items Table -->
-              <h3 style="color: #2c3e50; font-size: 16px; margin-bottom: 15px; font-weight: 600;">Order Items</h3>
+              <h3 style="color: #2c3e50; font-size: 16px; margin-bottom: 15px; font-weight: 600;">${t("orderItemsTitle")}</h3>
               <table class="items-table">
                 <thead>
                   <tr>
-                    <th>Product</th>
-                    <th style="text-align: center;">Quantity</th>
-                    <th style="text-align: right;">Price</th>
+                    <th>${t("colProduct")}</th>
+                    <th style="text-align: center;">${t("colQuantity")}</th>
+                    <th style="text-align: ${endSide};">${t("colPrice")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -599,56 +624,56 @@ export function getOrderConfirmationEmail({
               <!-- Price Summary -->
               <div class="price-summary">
                 <div class="price-row">
-                  <span>Subtotal</span>
-                  <span>₹${itemsSubtotal.toFixed(2)}</span>
+                  <span>${t("subtotal")}</span>
+                  <span>${formatCurrency(itemsSubtotal)}</span>
                 </div>
                 <div class="price-row">
-                  <span>Shipping</span>
-                  <span>Free</span>
+                  <span>${t("shipping")}</span>
+                  <span>${t("free")}</span>
                 </div>
                 <div class="price-row total">
-                  <span>Total Amount</span>
-                  <span>₹${total.toFixed(2)}</span>
+                  <span>${t("totalAmount")}</span>
+                  <span>${formatCurrency(total)}</span>
                 </div>
               </div>
 
               <!-- Shipping Information -->
               <div class="shipping-info">
-                <h4>📦 What Happens Next?</h4>
-                <p>✓ Your order is being packed with care</p>
-                <p>✓ We'll send you a tracking number within 24 hours</p>
-                <p>✓ Expected delivery: 3-5 business days</p>
+                <h4>${t("whatsNextTitle")}</h4>
+                <p>${t("whatsNext1")}</p>
+                <p>${t("whatsNext2")}</p>
+                <p>${t("whatsNext3")}</p>
               </div>
 
               <div style="text-align: center;">
-                <a href="https://instapeels.com/profile/orders" class="cta-button">Track Your Order</a>
+                <a href="${SITE_URL}/profile/orders" class="cta-button">${t("ctaButton")}</a>
               </div>
 
               <p class="text-block">
-                If you have any questions about your order or our products, our customer support team is here to help. We're committed to ensuring you have the best experience with Instapeels.
+                ${t("closing")}
               </p>
             </div>
 
             <!-- Footer -->
             <div class="footer">
               <div class="footer-links">
-                <a href="https://instapeels.com">Home</a>
-                <a href="https://instapeels.com/shop">Shop</a>
-                <a href="https://instapeels.com/blog">Blog</a>
-                <a href="https://instapeels.com/profile/orders">Orders</a>
+                <a href="${SITE_URL}">${t("footerHome")}</a>
+                <a href="${SITE_URL}/shop">${t("footerShop")}</a>
+                <a href="${SITE_URL}/blog">${t("footerBlog")}</a>
+                <a href="${SITE_URL}/profile/orders">${t("footerOrders")}</a>
               </div>
               <div class="footer-text">
-                <p><strong>Instapeels</strong></p>
-                <p>Premium Skincare for Everyone</p>
+                <p><strong>Linknsmile</strong></p>
+                <p>${t("footerTagline")}</p>
                 <p style="margin-top: 10px; color: #95a5a6;">
-                  📧 care@instapeels.com | 🌐 www.instapeels.com
+                  📧 care@linknsmile.com | 🌐 ${SITE_HOST}
                 </p>
-                <p style="margin-top: 15px; color: #bdc3c7;">
-                  &copy; 2025 Instapeels.com. All rights reserved.
+                <p style="margin-top: 15px; color: #bdc3c7;" dir="ltr">
+                  ${t("footerCopyright")}
                 </p>
               </div>
               <div class="support-text">
-                If you need any assistance, please don't hesitate to reach out to our support team.
+                ${t("supportText")}
               </div>
             </div>
           </div>
@@ -658,13 +683,14 @@ export function getOrderConfirmationEmail({
   `;
 }
 
-export function getOrderStatusUpdateEmail({
+export async function getOrderStatusUpdateEmail({
   customerName,
   orderId,
   orderStatus,
   items,
   paymentStatus,
   totalAmount,
+  locale,
 }: {
   customerName: string;
   orderId: string;
@@ -683,7 +709,15 @@ export function getOrderStatusUpdateEmail({
   }>;
   paymentStatus: string;
   totalAmount: number;
+  locale?: string;
 }) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailOrderStatusUpdate");
+  const isRtl = isRtlLocale(resolvedLocale);
+  const dir = isRtl ? "rtl" : "ltr";
+  const startSide = isRtl ? "right" : "left";
+  const endSide = isRtl ? "left" : "right";
+
   const itemsHtml = (items || [])
     .map(
       (item) => `
@@ -693,13 +727,13 @@ export function getOrderStatusUpdateEmail({
           ${
             item.selectedSize
               ? `<div style="color: #7f8c8d; font-size: 13px; margin-top: 5px;">
-                  Size: ${item.selectedSize.size} (${item.selectedSize.quantity}${item.selectedSize.unit})
+                  ${t("sizeLabel", { size: item.selectedSize.size, quantity: item.selectedSize.quantity, unit: item.selectedSize.unit })}
                 </div>`
               : ""
           }
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: center; color: #34495e;">${item.quantity}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">₹${(item.price * item.quantity).toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: ${endSide}; color: #7c3aed; font-weight: 600;">${formatCurrency(item.price * item.quantity)}</td>
       </tr>
     `
     )
@@ -714,30 +748,37 @@ export function getOrderStatusUpdateEmail({
   };
 
   const statusBgColor = statusColors[orderStatus] || "#95a5a6";
+  const statusBadgeLabels: { [key: string]: string } = {
+    pending: t("badgePending"),
+    processing: t("badgeProcessing"),
+    shipped: t("badgeShipped"),
+    delivered: t("badgeDelivered"),
+    cancelled: t("badgeCancelled"),
+  };
   const statusMessage: { [key: string]: string } = {
-    pending: "Your order is pending and will be processed soon.",
-    processing: "Your order is being packed and will ship soon.",
-    shipped: "Your order has been shipped! Track it now.",
-    delivered: "Your order has been delivered. Thank you for your purchase!",
-    cancelled: "Your order has been cancelled.",
+    pending: t("statusPending"),
+    processing: t("statusProcessing"),
+    shipped: t("statusShipped"),
+    delivered: t("statusDelivered"),
+    cancelled: t("statusCancelled"),
   };
 
   const paymentInfo =
     paymentStatus === "completed"
-      ? `<p style="color: #27ae60; font-weight: 600;">✓ Payment Received: ₹${totalAmount.toFixed(2)}</p>`
-      : `<p style="color: #f39c12; font-weight: 600;">⏱ Amount to Pay on Delivery: ₹${totalAmount.toFixed(2)}</p>`;
+      ? `<p style="color: #27ae60; font-weight: 600;">${t("paymentReceived", { amount: formatCurrency(totalAmount) })}</p>`
+      : `<p style="color: #f39c12; font-weight: 600;">${t("paymentPending", { amount: formatCurrency(totalAmount) })}</p>`;
 
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${resolvedLocale}" dir="${dir}">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            line-height: 1.6; 
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
             color: #2c3e50;
             background-color: #f8f9fa;
           }
@@ -745,17 +786,17 @@ export function getOrderStatusUpdateEmail({
             background-color: #f8f9fa;
             padding: 20px;
           }
-          .container { 
-            max-width: 600px; 
-            margin: 0 auto; 
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
             background-color: #ffffff;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
           }
-          .header { 
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); 
-            color: white; 
+          .header {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
             padding: 40px 30px;
             text-align: center;
           }
@@ -775,7 +816,7 @@ export function getOrderStatusUpdateEmail({
             font-size: 14px;
             opacity: 0.95;
           }
-          .content { 
+          .content {
             padding: 40px 30px;
           }
           .greeting {
@@ -796,7 +837,6 @@ export function getOrderStatusUpdateEmail({
             font-size: 14px;
             font-weight: 600;
             margin: 15px 0;
-            text-transform: capitalize;
           }
           .text-block {
             margin-bottom: 20px;
@@ -806,7 +846,7 @@ export function getOrderStatusUpdateEmail({
           }
           .order-details {
             background: #faf7f2;
-            border-left: 4px solid #7c3aed;
+            border-${startSide}: 4px solid #7c3aed;
             padding: 20px;
             margin: 20px 0;
             border-radius: 6px;
@@ -835,7 +875,7 @@ export function getOrderStatusUpdateEmail({
           }
           .items-table thead th {
             padding: 12px;
-            text-align: left;
+            text-align: ${startSide};
             color: #7c3aed;
             font-weight: 700;
             font-size: 12px;
@@ -843,7 +883,7 @@ export function getOrderStatusUpdateEmail({
           }
           .payment-status {
             background: #f0f7ff;
-            border-left: 4px solid #3498db;
+            border-${startSide}: 4px solid #3498db;
             padding: 15px;
             margin: 20px 0;
             border-radius: 6px;
@@ -887,51 +927,51 @@ export function getOrderStatusUpdateEmail({
           <div class="container">
             <!-- Header -->
             <div class="header">
-              <img src="https://instapeels.com/companylogo.jpg" alt="Instapeels Logo" class="logo">
-              <h1>Order Update</h1>
-              <p>Your order status has been updated</p>
+              <img src="${SITE_URL}/companylogo.jpg" alt="Linknsmile Logo" class="logo">
+              <h1>${t("title")}</h1>
+              <p>${t("tagline")}</p>
             </div>
 
             <!-- Content -->
             <div class="content">
-              <p class="greeting">Hello <strong>${customerName}</strong>,</p>
-              
+              <p class="greeting">${t("greeting", { name: `<strong>${customerName}</strong>` })}</p>
+
               <p class="text-block">
-                We're excited to share an update on your order!
+                ${t("intro")}
               </p>
 
               <div style="text-align: center;">
-                <span class="status-badge">${orderStatus.toUpperCase()}</span>
+                <span class="status-badge">${statusBadgeLabels[orderStatus] || orderStatus}</span>
               </div>
 
               <p class="text-block" style="margin-top: 20px;">
-                ${statusMessage[orderStatus] || "Your order status has been updated."}
+                ${statusMessage[orderStatus] || t("statusGeneric")}
               </p>
 
               <!-- Order Details -->
               <div class="order-details">
                 <div class="detail-row">
-                  <span class="detail-label">Order ID:</span>
+                  <span class="detail-label">${t("orderIdLabel")}</span>
                   <span class="detail-value">${orderId}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Status:</span>
-                  <span class="detail-value" style="text-transform: capitalize; color: ${statusBgColor}; font-weight: 600;">${orderStatus}</span>
+                  <span class="detail-label">${t("statusLabel")}</span>
+                  <span class="detail-value" style="color: ${statusBgColor}; font-weight: 600;">${statusBadgeLabels[orderStatus] || orderStatus}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Total Amount:</span>
-                  <span class="detail-value">₹${totalAmount.toFixed(2)}</span>
+                  <span class="detail-label">${t("totalAmountLabel")}</span>
+                  <span class="detail-value">${formatCurrency(totalAmount)}</span>
                 </div>
               </div>
 
               <!-- Items -->
-              <h3 style="color: #2c3e50; font-size: 16px; margin-bottom: 15px; font-weight: 600; margin-top: 30px;">Order Items</h3>
+              <h3 style="color: #2c3e50; font-size: 16px; margin-bottom: 15px; font-weight: 600; margin-top: 30px;">${t("orderItemsTitle")}</h3>
               <table class="items-table">
                 <thead>
                   <tr>
-                    <th>Product</th>
-                    <th style="text-align: center;">Qty</th>
-                    <th style="text-align: right;">Price</th>
+                    <th>${t("colProduct")}</th>
+                    <th style="text-align: center;">${t("colQuantity")}</th>
+                    <th style="text-align: ${endSide};">${t("colPrice")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -945,30 +985,30 @@ export function getOrderStatusUpdateEmail({
               </div>
 
               <div style="text-align: center;">
-                <a href="https://instapeels.com/profile/orders" class="cta-button">Track Your Order</a>
+                <a href="${SITE_URL}/profile/orders" class="cta-button">${t("ctaButton")}</a>
               </div>
 
               <p class="text-block">
-                If you have any questions about your order, please don't hesitate to contact us. We're here to help!
+                ${t("closing")}
               </p>
             </div>
 
             <!-- Footer -->
             <div class="footer">
               <div class="footer-links">
-                <a href="https://instapeels.com">Home</a>
-                <a href="https://instapeels.com/shop">Shop</a>
-                <a href="https://instapeels.com/blog">Blog</a>
-                <a href="https://instapeels.com/profile/orders">Orders</a>
+                <a href="${SITE_URL}">${t("footerHome")}</a>
+                <a href="${SITE_URL}/shop">${t("footerShop")}</a>
+                <a href="${SITE_URL}/blog">${t("footerBlog")}</a>
+                <a href="${SITE_URL}/profile/orders">${t("footerOrders")}</a>
               </div>
               <div class="footer-text">
-                <p><strong>Instapeels</strong></p>
-                <p>Premium Skincare for Everyone</p>
+                <p><strong>Linknsmile</strong></p>
+                <p>${t("footerTagline")}</p>
                 <p style="margin-top: 10px; color: #95a5a6;">
-                  📧 care@instapeels.com | 🌐 www.instapeels.com
+                  📧 care@linknsmile.com | 🌐 ${SITE_HOST}
                 </p>
-                <p style="margin-top: 15px; color: #bdc3c7;">
-                  &copy; 2025 Instapeels.com. All rights reserved.
+                <p style="margin-top: 15px; color: #bdc3c7;" dir="ltr">
+                  ${t("footerCopyright")}
                 </p>
               </div>
             </div>
@@ -1036,7 +1076,7 @@ export function getAdminOrderNotificationEmail({
           }
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: center; color: #34495e;">${item.quantity}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">₹${(item.price * item.quantity).toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #ecf0f1; text-align: right; color: #7c3aed; font-weight: 600;">${formatCurrency(item.price * item.quantity)}</td>
       </tr>
     `
     )
@@ -1226,7 +1266,7 @@ export function getAdminOrderNotificationEmail({
             <!-- Alert Header -->
             <div class="alert-header">
               <h1>🚨 NEW ORDER RECEIVED</h1>
-              <p>Order ID: ${orderId} | ${orderDate || new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
+              <p>Order ID: ${orderId} | ${orderDate || new Date().toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</p>
             </div>
 
             <!-- Content -->
@@ -1277,7 +1317,7 @@ export function getAdminOrderNotificationEmail({
               <div class="total-section">
                 <div class="total-row">
                   <span>Subtotal:</span>
-                  <span>₹${itemsSubtotal.toFixed(2)}</span>
+                  <span>${formatCurrency(itemsSubtotal)}</span>
                 </div>
                 <div class="total-row">
                   <span>Shipping:</span>
@@ -1285,7 +1325,7 @@ export function getAdminOrderNotificationEmail({
                 </div>
                 <div class="total-row grand-total">
                   <span>TOTAL AMOUNT:</span>
-                  <span>₹${totalAmount.toFixed(2)}</span>
+                  <span>${formatCurrency(totalAmount)}</span>
                 </div>
               </div>
 
@@ -1305,10 +1345,10 @@ export function getAdminOrderNotificationEmail({
 
             <!-- Footer -->
             <div class="footer">
-              <p><strong>Instapeels Order Management System</strong></p>
+              <p><strong>Linknsmile Order Management System</strong></p>
               <p>This is an automated admin notification. Please process this order accordingly.</p>
               <p style="margin-top: 10px; border-top: 1px solid #ecf0f1; padding-top: 10px;">
-                &copy; 2025 Instapeels.com. All rights reserved.
+                &copy; 2025 Linknsmile. All rights reserved.
               </p>
             </div>
           </div>
@@ -1338,11 +1378,11 @@ export function getPayoutRequestedEmail({
             <p>Admin,</p>
             <p>A new payout request has been submitted by <strong>${shopName}</strong>.</p>
             <div style="background:#f9f9f9;padding:15px;border-radius:5px;margin:15px 0;">
-              <p><strong>Amount:</strong> ₹${amount.toLocaleString()}</p>
+              <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
               <p><strong>Request ID:</strong> ${requestId}</p>
             </div>
             <p>Please review and process this request in the admin panel.</p>
-            <div style="text-align:center;"><a href="https://linknsmile.com/admin/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Request</a></div>
+            <div style="text-align:center;"><a href="${SITE_URL}/admin/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Request</a></div>
           </div>
           <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
@@ -1351,44 +1391,50 @@ export function getPayoutRequestedEmail({
   `;
 }
 
-export function getPayoutStatusEmail({
+export async function getPayoutStatusEmail({
   shopName,
   amount,
   status,
   transactionId,
   failureReason,
+  locale,
 }: {
   shopName: string;
   amount: number;
   status: string;
   transactionId?: string;
   failureReason?: string;
+  locale?: string;
 }) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailPayoutStatus");
+  const dir = isRtlLocale(resolvedLocale) ? "rtl" : "ltr";
+
   const statusColors: any = { processing: "#3498db", completed: "#27ae60", failed: "#e74c3c" };
   const statusTitles: any = {
-    processing: "Payout Approved",
-    completed: "Payout Completed",
-    failed: "Payout Rejected",
+    processing: t("titleApproved"),
+    completed: t("titleCompleted"),
+    failed: t("titleRejected"),
   };
 
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${resolvedLocale}" dir="${dir}">
       <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:${statusColors[status] || "#7c3aed"};color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
       <body>
         <div class="container">
-          <div class="header"><h1>${statusTitles[status] || "Payout Update"}</h1></div>
+          <div class="header"><h1>${statusTitles[status] || t("titleGeneric")}</h1></div>
           <div class="content">
-            <p>Hello ${shopName},</p>
-            <p>Your payout request for <strong>₹${amount.toLocaleString()}</strong> has been updated to <strong>${status}</strong>.</p>
-            
-            ${transactionId ? `<p><strong>Transaction ID:</strong> ${transactionId}</p>` : ""}
-            ${failureReason ? `<p style="color:#e74c3c"><strong>Reason:</strong> ${failureReason}</p>` : ""}
-            
-            <p>You can track all your payouts in your dashboard.</p>
-            <div style="text-align:center;"><a href="https://linknsmile.com/vendor/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Check Dashboard</a></div>
+            <p>${t("greeting", { shopName })}</p>
+            <p>${t("body", { amount: `<strong>${formatCurrency(amount)}</strong>`, status: `<strong>${status}</strong>` })}</p>
+
+            ${transactionId ? `<p><strong>${t("transactionIdLabel")}</strong> ${transactionId}</p>` : ""}
+            ${failureReason ? `<p style="color:#e74c3c"><strong>${t("reasonLabel")}</strong> ${failureReason}</p>` : ""}
+
+            <p>${t("trackNote")}</p>
+            <div style="text-align:center;"><a href="${SITE_URL}/vendor/payouts" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">${t("ctaButton")}</a></div>
           </div>
-          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
+          <div class="footer"><p dir="ltr">${t("footerCopyright")}</p></div>
         </div>
       </body>
     </html>
@@ -1397,42 +1443,53 @@ export function getPayoutStatusEmail({
 
 // ── Vendor annual subscription emails ──────────────────────────────────
 
-const SUBSCRIPTION_SUPPORT_NOTE = `
+function subscriptionSupportNoteHtml(supportNoteText: string) {
+  return `
   <p style="font-size:13px;color:#888;border-top:1px solid #eee;padding-top:12px;margin-top:20px;">
-    This subscription fee is non-refundable. For billing queries, contact
-    <a href="mailto:support@linknsmile.com">support@linknsmile.com</a>.
+    ${supportNoteText}
   </p>
 `;
+}
 
-export function getVendorSubscriptionPaymentEmail({
+export async function getVendorSubscriptionPaymentEmail({
   vendorName,
   shopName,
   amount,
   expiryDate,
+  locale,
 }: {
   vendorName: string;
   shopName: string;
   amount: number;
   expiryDate: Date;
+  locale?: string;
 }) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailVendorSubscriptionPayment");
+  const dir = isRtlLocale(resolvedLocale) ? "rtl" : "ltr";
+
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${resolvedLocale}" dir="${dir}">
       <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#16a34a;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
       <body>
         <div class="container">
-          <div class="header"><h1>Subscription Confirmed</h1></div>
+          <div class="header"><h1>${t("title")}</h1></div>
           <div class="content">
-            <p>Hello ${vendorName},</p>
-            <p>Your annual subscription for <strong>${shopName}</strong> is now active.</p>
+            <p>${t("greeting", { vendorName })}</p>
+            <p>${t("body", { shopName: `<strong>${shopName}</strong>` })}</p>
             <div style="background:#f9f9f9;padding:15px;border-radius:5px;margin:15px 0;">
-              <p><strong>Amount paid:</strong> ₹${amount.toLocaleString()}</p>
-              <p><strong>Valid until:</strong> ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
+              <p><strong>${t("amountPaidLabel")}</strong> ${formatCurrency(amount)}</p>
+              <p><strong>${t("validUntilLabel")}</strong> <span dir="ltr">${expiryDate.toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</span></p>
             </div>
-            <p>Your vendor dashboard and storefront listings are fully active.</p>
-            ${SUBSCRIPTION_SUPPORT_NOTE}
+            <p>${t("closing")}</p>
+            ${subscriptionSupportNoteHtml(
+              t.rich("supportNote", {
+                a: (chunks) => `<a href="mailto:support@linknsmile.com">${chunks}</a>`,
+              }) as string
+            )}
           </div>
-          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
+          <div class="footer"><p dir="ltr">${t("footerCopyright")}</p></div>
         </div>
       </body>
     </html>
@@ -1463,10 +1520,10 @@ export function getAdminVendorSubscriptionPaidEmail({
             <p>Admin,</p>
             <p><strong>${shopName}</strong> (${ownerName}, ${ownerEmail}) just paid their annual subscription.</p>
             <div style="background:#f9f9f9;padding:15px;border-radius:5px;margin:15px 0;">
-              <p><strong>Amount:</strong> ₹${amount.toLocaleString()}</p>
-              <p><strong>Valid until:</strong> ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}</p>
+              <p><strong>Amount:</strong> ${formatCurrency(amount)}</p>
+              <p><strong>Valid until:</strong> ${expiryDate.toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</p>
             </div>
-            <div style="text-align:center;"><a href="https://linknsmile.com/admin/vendors/subscriptions" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Subscriptions</a></div>
+            <div style="text-align:center;"><a href="${SITE_URL}/admin/vendors/subscriptions" style="background:#7c3aed;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">View Subscriptions</a></div>
           </div>
           <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
         </div>
@@ -1475,98 +1532,137 @@ export function getAdminVendorSubscriptionPaidEmail({
   `;
 }
 
-export function getVendorSubscriptionExpiryReminderEmail({
+export async function getVendorSubscriptionExpiryReminderEmail({
   vendorName,
   shopName,
   expiryDate,
   daysRemaining,
+  locale,
 }: {
   vendorName: string;
   shopName: string;
   expiryDate: Date;
   daysRemaining: number;
+  locale?: string;
 }) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailVendorSubscriptionExpiryReminder");
+  const dir = isRtlLocale(resolvedLocale) ? "rtl" : "ltr";
+
   const inGrace = daysRemaining <= 0;
-  const title = inGrace ? "Your subscription has expired" : "Your subscription is expiring soon";
+  const title = inGrace ? t("titleExpired") : t("titleExpiringSoon");
+  const formattedExpiryDate = `<span dir="ltr">${expiryDate.toLocaleDateString(LOCALE, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })}</span>`;
   const bodyLine = inGrace
-    ? `Your subscription expired on ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}. You have ${7 + daysRemaining} day(s) left of dashboard access before it is blocked.`
-    : `Your subscription for <strong>${shopName}</strong> expires in ${daysRemaining} day(s), on ${expiryDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })}.`;
+    ? t("bodyExpired", { expiryDate: formattedExpiryDate, daysLeft: 7 + daysRemaining })
+    : t("bodyExpiringSoon", {
+        shopName: `<strong>${shopName}</strong>`,
+        daysRemaining,
+        expiryDate: formattedExpiryDate,
+      });
 
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${resolvedLocale}" dir="${dir}">
       <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#f59e0b;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
       <body>
         <div class="container">
           <div class="header"><h1>${title}</h1></div>
           <div class="content">
-            <p>Hello ${vendorName},</p>
+            <p>${t("greeting", { vendorName })}</p>
             <p>${bodyLine}</p>
-            <p>Renew now to avoid losing access to your vendor dashboard.</p>
-            <div style="text-align:center;"><a href="https://linknsmile.com/vendor/settings" style="background:#f59e0b;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Subscription</a></div>
-            ${SUBSCRIPTION_SUPPORT_NOTE}
+            <p>${t("closing")}</p>
+            <div style="text-align:center;"><a href="${SITE_URL}/vendor/settings" style="background:#f59e0b;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">${t("ctaButton")}</a></div>
+            ${subscriptionSupportNoteHtml(
+              t.rich("supportNote", {
+                a: (chunks) => `<a href="mailto:support@linknsmile.com">${chunks}</a>`,
+              }) as string
+            )}
           </div>
-          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
+          <div class="footer"><p dir="ltr">${t("footerCopyright")}</p></div>
         </div>
       </body>
     </html>
   `;
 }
 
-export function getVendorSubscriptionCancelledEmail({
+export async function getVendorSubscriptionCancelledEmail({
   vendorName,
   shopName,
   cancellationReason,
+  locale,
 }: {
   vendorName: string;
   shopName: string;
   cancellationReason?: string;
+  locale?: string;
 }) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailVendorSubscriptionCancelled");
+  const dir = isRtlLocale(resolvedLocale) ? "rtl" : "ltr";
+
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${resolvedLocale}" dir="${dir}">
       <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#e74c3c;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
       <body>
         <div class="container">
-          <div class="header"><h1>Subscription Cancelled</h1></div>
+          <div class="header"><h1>${t("title")}</h1></div>
           <div class="content">
-            <p>Hello ${vendorName},</p>
-            <p>Your subscription for <strong>${shopName}</strong> has been cancelled by Linknsmile admin, and your vendor dashboard access has ended immediately.</p>
-            ${cancellationReason ? `<p><strong>Reason given:</strong> ${cancellationReason}</p>` : ""}
-            <p>Your product listings will remain visible on the storefront for 30 days from your original expiry date, after which they will be hidden (your data is kept, not deleted).</p>
-            ${SUBSCRIPTION_SUPPORT_NOTE}
+            <p>${t("greeting", { vendorName })}</p>
+            <p>${t("body", { shopName: `<strong>${shopName}</strong>` })}</p>
+            ${cancellationReason ? `<p><strong>${t("reasonLabel")}</strong> ${cancellationReason}</p>` : ""}
+            <p>${t("closing")}</p>
+            ${subscriptionSupportNoteHtml(
+              t.rich("supportNote", {
+                a: (chunks) => `<a href="mailto:support@linknsmile.com">${chunks}</a>`,
+              }) as string
+            )}
           </div>
-          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
+          <div class="footer"><p dir="ltr">${t("footerCopyright")}</p></div>
         </div>
       </body>
     </html>
   `;
 }
 
-export function getVendorSubscriptionStorefrontWarningEmail({
+export async function getVendorSubscriptionStorefrontWarningEmail({
   vendorName,
   shopName,
   hideDate,
+  locale,
 }: {
   vendorName: string;
   shopName: string;
   hideDate: Date;
+  locale?: string;
 }) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailVendorSubscriptionStorefrontWarning");
+  const dir = isRtlLocale(resolvedLocale) ? "rtl" : "ltr";
+
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="${resolvedLocale}" dir="${dir}">
       <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#e74c3c;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
       <body>
         <div class="container">
-          <div class="header"><h1>Final Warning: Products Coming Down</h1></div>
+          <div class="header"><h1>${t("title")}</h1></div>
           <div class="content">
-            <p>Hello ${vendorName},</p>
-            <p>Your <strong>${shopName}</strong> products will be removed from the Linknsmile storefront on ${hideDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })} because your subscription has not been renewed.</p>
-            <p>Your product data will be kept and will automatically reappear as soon as you renew — even after this date.</p>
-            <div style="text-align:center;"><a href="https://linknsmile.com/vendor/settings" style="background:#e74c3c;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Renew Now</a></div>
-            ${SUBSCRIPTION_SUPPORT_NOTE}
+            <p>${t("greeting", { vendorName })}</p>
+            <p>${t("body", { shopName: `<strong>${shopName}</strong>`, hideDate: `<span dir="ltr">${hideDate.toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</span>` })}</p>
+            <p>${t("closing")}</p>
+            <div style="text-align:center;"><a href="${SITE_URL}/vendor/settings" style="background:#e74c3c;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">${t("ctaButton")}</a></div>
+            ${subscriptionSupportNoteHtml(
+              t.rich("supportNote", {
+                a: (chunks) => `<a href="mailto:support@linknsmile.com">${chunks}</a>`,
+              }) as string
+            )}
           </div>
-          <div class="footer"><p>&copy; 2026 Linknsmile</p></div>
+          <div class="footer"><p dir="ltr">${t("footerCopyright")}</p></div>
         </div>
       </body>
     </html>

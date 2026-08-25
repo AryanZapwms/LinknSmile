@@ -11,6 +11,7 @@ interface CarouselImage {
   url: string;
   title?: string;
   description?: string;
+  href?: string | null;
 }
 
 interface HomeCarouselProps {
@@ -55,8 +56,13 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
   if (!carouselImages || carouselImages.length === 0) return null;
 
   const handleImageClick = (index: number) => {
-    if (index === 0) router.push("/shop/instapeels");
-    else if (index === 1) router.push("/shop/dermaflay");
+    const href = carouselImages[index]?.href;
+    if (!href) return;
+    if (href.startsWith("http")) {
+      window.open(href, "_blank", "noopener,noreferrer");
+    } else {
+      router.push(href);
+    }
   };
 
   const currentImage = carouselImages[currentIndex];

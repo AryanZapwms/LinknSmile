@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import FavouriteButton from "@/components/FavouriteButton";
 import {
   Star,
@@ -29,6 +30,8 @@ import { ProductCard } from "@/components/product-card";
 import { getCachedSync, fetchWithCache, invalidateCache } from "@/lib/cacheClient";
 import { trackViewContent, trackAddToCart } from "@/lib/facebook-pixel";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/currency";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 /* ─── Cache ────────────────── */
 const TTL = 1000 * 60 * 5;
@@ -168,6 +171,8 @@ const ProductDetailPage = memo(function ProductDetailPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { toast } = useToast();
+  const t = useTranslations("ProductDetail");
+  const { supportPhone } = usePlatformSettings();
   const addItem = useCartStore((s) => s.addItem);
   const getTotalItems = useCartStore((s) => s.getTotalItems);
 
@@ -279,7 +284,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product) return;
     if (status !== "authenticated") {
-      toast({ title: "Login required", variant: "destructive" });
+      toast({ title: t("loginRequired"), variant: "destructive" });
       router.push(`/auth/login?callback=/products/${id}`);
       return;
     }
@@ -288,12 +293,12 @@ const ProductDetailPage = memo(function ProductDetailPage() {
       return;
     }
     if (product.sizes?.length && !selectedSize) {
-      toast({ title: "Size required", variant: "destructive" });
+      toast({ title: t("sizeRequired"), variant: "destructive" });
       return;
     }
     const stockCheck = selectedSize ? selectedSize.stock : product.stock;
     if (stockCheck === 0) {
-      toast({ title: "Out of stock", variant: "destructive" });
+      toast({ title: t("outOfStockToast"), variant: "destructive" });
       return;
     }
     const p = product as any;
@@ -319,8 +324,10 @@ const ProductDetailPage = memo(function ProductDetailPage() {
       quantity
     );
     toast({
-      title: "Added to cart",
-      description: `${quantity} × ${product.name}${selectedSize ? ` (${selectedSize.size})` : ""}`,
+      title: t("addedToCartTitle"),
+      description: selectedSize
+        ? t("addedToCartDescWithSize", { qty: quantity, name: product.name, size: selectedSize.size })
+        : t("addedToCartDesc", { qty: quantity, name: product.name }),
     });
     setQuantity(1);
   };
@@ -328,11 +335,11 @@ const ProductDetailPage = memo(function ProductDetailPage() {
   const handleSubmitReview = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!id || !session?.user?.id) {
-      toast({ title: "Login required", variant: "destructive" });
+      toast({ title: t("loginRequired"), variant: "destructive" });
       return;
     }
     if (!ratingInput || !comment.trim() || !userName.trim()) {
-      toast({ title: "Please fill all fields", variant: "destructive" });
+      toast({ title: t("fillAllFields"), variant: "destructive" });
       return;
     }
     setSubmitting(true);
@@ -344,7 +351,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        toast({ title: "Failed", description: err.error, variant: "destructive" });
+        toast({ title: t("failed"), description: err.error, variant: "destructive" });
         return;
       }
       const data = await res.json();
@@ -357,9 +364,9 @@ const ProductDetailPage = memo(function ProductDetailPage() {
       setRatingInput(0);
       setHoverRating(0);
       setComment("");
-      toast({ title: "Review submitted!" });
+      toast({ title: t("reviewSubmitted") });
     } catch {
-      toast({ title: "Failed", variant: "destructive" });
+      toast({ title: t("failed"), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -413,7 +420,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
   if (!product)
     return (
       <main className="flex min-h-screen items-center justify-center bg-white">
-        <p className="text-stone-400">Product not found</p>
+        <p className="text-stone-400">{t("productNotFound")}</p>
       </main>
     );
 
@@ -432,13 +439,13 @@ const ProductDetailPage = memo(function ProductDetailPage() {
         {/* Breadcrumb */}
         <nav className="mb-8 flex items-center gap-1.5 text-xs text-stone-400">
           <Link href="/" className="transition-colors hover:text-stone-600">
-            Home
+            {t("home")}
           </Link>
-          <ChevronRight className="h-3 w-3" />
+          <ChevronRight className="h-3 w-3 rtl:rotate-180" />
           <Link href="/products" className="transition-colors hover:text-stone-600">
-            Products
+            {t("products")}
           </Link>
-          <ChevronRight className="h-3 w-3" />
+          <ChevronRight className="h-3 w-3 rtl:rotate-180" />
           <span className="line-clamp-1 text-stone-600">{product.name}</span>
         </nav>
 
@@ -464,16 +471,16 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-stone-300">
-                  No image
+                  {t("noImage")}
                 </div>
               )}
 
               {discount > 0 && (
-                <div className="absolute top-3 left-3 z-10 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white">
-                  {discount}% OFF
+                <div className="absolute top-3 start-3 z-10 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white">
+                  {t("discountOff", { discount })}
                 </div>
               )}
-              <button className="absolute right-3 bottom-3 rounded-xl bg-white/80 p-2 text-stone-600 backdrop-blur-sm transition-colors hover:bg-white">
+              <button className="absolute end-3 bottom-3 rounded-xl bg-white/80 p-2 text-stone-600 backdrop-blur-sm transition-colors hover:bg-white">
                 <ZoomIn className="h-4 w-4" />
               </button>
             </div>
@@ -504,7 +511,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                 <span className="text-sm font-semibold text-stone-700">
                   {summary.averageRating.toFixed(1)}
                 </span>
-                <span className="text-sm text-stone-400">({summary.total} reviews)</span>
+                <span className="text-sm text-stone-400">{t("reviewsCount", { count: summary.total })}</span>
               </div>
             </div>
 
@@ -512,21 +519,21 @@ const ProductDetailPage = memo(function ProductDetailPage() {
             <div className="flex items-end gap-4 border-y border-stone-100 py-4">
               <div>
                 <p className="text-4xl font-black text-stone-900">
-                  ₹{displayPrice.toLocaleString()}
+                  {formatCurrency(displayPrice)}
                 </p>
                 {currentDiscountPrice && (
                   <p className="mt-0.5 text-sm text-stone-400 line-through">
-                    MRP ₹{currentPrice.toLocaleString()}
+                    {t("mrp", { price: formatCurrency(currentPrice) })}
                   </p>
                 )}
               </div>
               {discount > 0 && (
                 <span className="mb-1 inline-flex items-center rounded-full border border-green-100 bg-green-50 px-3 py-1 text-sm font-bold text-green-700">
-                  {discount}% off
+                  {t("percentOff", { discount })}
                 </span>
               )}
-              <span className="mb-1 ml-auto rounded-lg border border-stone-100 bg-stone-50 px-2 py-1 text-xs text-stone-400">
-                Incl. all taxes
+              <span className="mb-1 ms-auto rounded-lg border border-stone-100 bg-stone-50 px-2 py-1 text-xs text-stone-400">
+                {t("inclAllTaxes")}
               </span>
             </div>
 
@@ -542,7 +549,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                   onClick={() => setExpanded(!expanded)}
                   className="mt-1 text-xs font-semibold text-amber-600 transition-colors hover:text-amber-700"
                 >
-                  {expanded ? "Show less" : "Read more"}
+                  {expanded ? t("showLess") : t("readMore")}
                 </button>
               </div>
             )}
@@ -551,7 +558,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
             {hasSizes && (
               <div>
                 <label className="mb-2 block text-sm font-semibold text-stone-700">
-                  Select Size
+                  {t("selectSize")}
                 </label>
                 <select
                   value={selectedSize ? `${selectedSize.size}-${selectedSize.quantity}` : ""}
@@ -567,11 +574,11 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                   }}
                   className="w-full cursor-pointer rounded-xl border-2 border-stone-200 bg-white px-4 py-3 text-sm font-medium text-stone-800 transition-colors focus:border-amber-400 focus:outline-none"
                 >
-                  <option value="">Choose a size…</option>
+                  <option value="">{t("chooseSizePlaceholder")}</option>
                   {product.sizes!.map((s, i) => (
                     <option key={i} value={`${s.size}-${s.quantity}`} disabled={s.stock === 0}>
                       {s.size} ({s.quantity}
-                      {s.unit}) — ₹{s.discountPrice ?? s.price}
+                      {s.unit}) — {formatCurrency(s.discountPrice ?? s.price)}
                     </option>
                   ))}
                 </select>
@@ -595,7 +602,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                   onClick={() => {
                     const max = selectedSize?.stock ?? product.stock;
                     if (quantity < max) setQuantity(quantity + 1);
-                    else toast({ title: `Only ${max} in stock`, variant: "destructive" });
+                    else toast({ title: t("onlyInStock", { max }), variant: "destructive" });
                   }}
                   className="px-3 py-3 text-stone-600 transition-colors hover:bg-stone-50"
                 >
@@ -613,7 +620,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                     : "bg-stone-900 text-white hover:bg-stone-800 hover:shadow-lg active:scale-[0.98]"
                 }`}
               >
-                {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+                {isOutOfStock ? t("outOfStock") : t("addToCart")}
               </button>
 
               {/* Wishlist */}
@@ -627,20 +634,20 @@ const ProductDetailPage = memo(function ProductDetailPage() {
               {[
                 {
                   icon: Truck,
-                  label: "Fast Delivery",
-                  sub: "3–5 days",
+                  label: t("trustFastDelivery"),
+                  sub: t("trustFastDeliverySub"),
                   color: "text-green-600 bg-green-50",
                 },
                 {
                   icon: ShieldCheck,
-                  label: "Authentic",
-                  sub: "Verified seller",
+                  label: t("trustAuthentic"),
+                  sub: t("trustAuthenticSub"),
                   color: "text-blue-600 bg-blue-50",
                 },
                 {
                   icon: PackageCheck,
-                  label: "Easy Return",
-                  sub: "7-day policy",
+                  label: t("trustEasyReturn"),
+                  sub: t("trustEasyReturnSub"),
                   color: "text-amber-600 bg-amber-50",
                 },
               ].map(({ icon: Icon, label, sub, color }) => (
@@ -667,7 +674,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                     </div>
                     <div>
                       <p className="text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                        Sold by
+                        {t("soldBy")}
                       </p>
                       <p className="text-sm font-semibold text-stone-800">
                         {(product.shopId as any).shopName}
@@ -682,7 +689,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                     </div>
                     <div>
                       <p className="text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                        Brand
+                        {t("brand")}
                       </p>
                       <Link
                         href={`/shop/${product.company.slug}`}
@@ -700,13 +707,17 @@ const ProductDetailPage = memo(function ProductDetailPage() {
             <div className="pt-2">
               <Tabs defaultValue="ingredients">
                 <TabsList className="grid h-auto w-full grid-cols-3 rounded-xl bg-stone-100 p-1">
-                  {["ingredients", "benefits", "usage"].map((t) => (
+                  {["ingredients", "benefits", "usage"].map((tabKey) => (
                     <TabsTrigger
-                      key={t}
-                      value={t}
+                      key={tabKey}
+                      value={tabKey}
                       className="rounded-lg py-2 text-xs font-semibold text-stone-500 capitalize transition-all data-[state=active]:bg-white data-[state=active]:text-stone-900 data-[state=active]:shadow-sm"
                     >
-                      {t === "usage" ? "How to Use" : t.charAt(0).toUpperCase() + t.slice(1)}
+                      {tabKey === "ingredients"
+                        ? t("tabIngredients")
+                        : tabKey === "benefits"
+                          ? t("tabBenefits")
+                          : t("tabUsage")}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -722,7 +733,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                         </span>
                       ))}
                       {!product.ingredients?.length && (
-                        <p className="text-sm text-stone-400 italic">No ingredients listed.</p>
+                        <p className="text-sm text-stone-400 italic">{t("noIngredients")}</p>
                       )}
                     </div>
                   </TabsContent>
@@ -737,13 +748,13 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                         </li>
                       ))}
                       {!product.benefits?.length && (
-                        <p className="text-sm text-stone-400 italic">No benefits listed.</p>
+                        <p className="text-sm text-stone-400 italic">{t("noBenefits")}</p>
                       )}
                     </ul>
                   </TabsContent>
                   <TabsContent value="usage" className="mt-0">
                     <p className="text-sm leading-relaxed text-stone-600">
-                      {product.usage || "No usage instructions provided."}
+                      {product.usage || t("noUsage")}
                     </p>
                   </TabsContent>
                 </div>
@@ -755,7 +766,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
         {/* Reviews */}
         <section className="mb-16 border-t border-stone-100 pt-12">
           <div className="mb-8 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-stone-900">Customer Reviews</h2>
+            <h2 className="text-xl font-bold text-stone-900">{t("customerReviews")}</h2>
             {summary.total > 0 && (
               <div className="flex items-center gap-2">
                 <Stars rating={summary.averageRating} />
@@ -770,9 +781,9 @@ const ProductDetailPage = memo(function ProductDetailPage() {
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
             {/* Review list */}
             <div className="space-y-4">
-              {reviewsLoading && <div className="text-sm text-stone-400">Loading reviews…</div>}
+              {reviewsLoading && <div className="text-sm text-stone-400">{t("loadingReviews")}</div>}
               {!reviewsLoading && reviews.length === 0 && (
-                <p className="text-sm text-stone-400 italic">No reviews yet. Be the first!</p>
+                <p className="text-sm text-stone-400 italic">{t("noReviewsYet")}</p>
               )}
               {reviews.slice(0, 5).map((r) => (
                 <div key={r.id} className="rounded-2xl border border-stone-100 bg-stone-50 p-4">
@@ -782,15 +793,15 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                         {r.userName?.[0]?.toUpperCase() || "U"}
                       </div>
                       <span className="text-sm font-semibold text-stone-800">
-                        {r.userName || "Anonymous"}
+                        {r.userName || t("anonymous")}
                       </span>
                     </div>
                     <Stars rating={r.rating} />
                   </div>
                   <p className="text-sm leading-relaxed text-stone-600">{r.comment}</p>
                   {r.reply && (
-                    <div className="mt-3 border-l-2 border-amber-200 pl-3">
-                      <p className="mb-0.5 text-xs font-semibold text-amber-700">Seller reply</p>
+                    <div className="mt-3 border-s-2 border-amber-200 ps-3">
+                      <p className="mb-0.5 text-xs font-semibold text-amber-700">{t("sellerReply")}</p>
                       <p className="text-xs text-stone-500">{r.reply.message}</p>
                     </div>
                   )}
@@ -800,15 +811,15 @@ const ProductDetailPage = memo(function ProductDetailPage() {
 
             {/* Write review */}
             <div>
-              <h3 className="mb-4 text-base font-bold text-stone-900">Write a Review</h3>
+              <h3 className="mb-4 text-base font-bold text-stone-900">{t("writeReview")}</h3>
               {status !== "authenticated" ? (
                 <div className="rounded-2xl border border-stone-100 bg-stone-50 p-6 text-center">
-                  <p className="mb-4 text-sm text-stone-500">Sign in to leave a review</p>
+                  <p className="mb-4 text-sm text-stone-500">{t("signInToReview")}</p>
                   <button
                     onClick={() => router.push(`/auth/login?callback=/products/${id}`)}
                     className="rounded-xl bg-stone-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-stone-800"
                   >
-                    Sign In
+                    {t("signIn")}
                   </button>
                 </div>
               ) : (
@@ -816,7 +827,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                   {/* Stars */}
                   <div>
                     <label className="mb-2 block text-xs font-semibold tracking-wider text-stone-500 uppercase">
-                      Your Rating
+                      {t("yourRating")}
                     </label>
                     <div className="flex gap-1">
                       {([1, 2, 3, 4, 5] as RatingKey[]).map((s) => (
@@ -838,7 +849,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Share your experience…"
+                    placeholder={t("shareExperience")}
                     rows={3}
                     className="w-full resize-none rounded-xl border-2 border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 transition-colors focus:border-amber-400 focus:outline-none"
                   />
@@ -846,13 +857,13 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                     <input
                       value={userName}
                       onChange={(e) => setUserName(e.target.value)}
-                      placeholder="Your name"
+                      placeholder={t("yourName")}
                       className="rounded-xl border-2 border-stone-200 px-3 py-2.5 text-sm transition-colors focus:border-amber-400 focus:outline-none"
                     />
                     <input
                       value={userEmail}
                       onChange={(e) => setUserEmail(e.target.value)}
-                      placeholder="Email"
+                      placeholder={t("email")}
                       type="email"
                       className="rounded-xl border-2 border-stone-200 px-3 py-2.5 text-sm transition-colors focus:border-amber-400 focus:outline-none"
                     />
@@ -862,7 +873,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                     disabled={submitting}
                     className="w-full rounded-xl bg-stone-900 py-2.5 text-sm font-bold text-white transition-colors hover:bg-stone-800 disabled:opacity-50"
                   >
-                    {submitting ? "Submitting…" : "Submit Review"}
+                    {submitting ? t("submitting") : t("submitReview")}
                   </button>
                 </form>
               )}
@@ -874,12 +885,12 @@ const ProductDetailPage = memo(function ProductDetailPage() {
         {suggested.length > 0 && (
           <section className="border-t border-stone-100 pt-12">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-stone-900">You May Also Like</h2>
+              <h2 className="text-xl font-bold text-stone-900">{t("youMayAlsoLike")}</h2>
               <Link
                 href="/products"
                 className="flex items-center gap-1 text-sm font-medium text-amber-600 transition-colors hover:text-amber-700"
               >
-                View all <ChevronRight className="h-4 w-4" />
+                {t("viewAll")} <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -905,7 +916,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
         <DialogContent className="h-[90vh] max-w-4xl overflow-hidden rounded-2xl border-none bg-black/95 p-0">
           <button
             onClick={() => setShowImageModal(false)}
-            className="absolute top-4 right-4 z-50 rounded-full bg-black/50 p-2 text-white/70 hover:text-white"
+            className="absolute top-4 end-4 z-50 rounded-full bg-black/50 p-2 text-white/70 hover:text-white"
           >
             <X className="h-5 w-5" />
           </button>
@@ -938,13 +949,11 @@ const ProductDetailPage = memo(function ProductDetailPage() {
       <Dialog open={showBulkModal} onOpenChange={setShowBulkModal}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">Need a bulk order?</DialogTitle>
+            <DialogTitle className="text-base font-bold">{t("bulkOrderTitle")}</DialogTitle>
           </DialogHeader>
-          <p className="mb-4 text-sm text-stone-500">
-            You've reached the 5-item cart limit. Contact us for bulk orders.
-          </p>
+          <p className="mb-4 text-sm text-stone-500">{t("bulkOrderDesc")}</p>
           <div className="mb-4 space-y-2">
-            {["+91 9820623835", "+91 8355991099"].map((n) => (
+            {["+91 9820623835", supportPhone].map((n) => (
               <a
                 key={n}
                 href={`tel:${n.replace(/\s/g, "")}`}
@@ -961,7 +970,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
               className="flex-1 rounded-xl"
               onClick={() => setShowBulkModal(false)}
             >
-              Continue
+              {t("continue")}
             </Button>
             <Button
               className="flex-1 rounded-xl bg-stone-900 hover:bg-stone-800"
@@ -969,7 +978,7 @@ const ProductDetailPage = memo(function ProductDetailPage() {
                 window.location.href = "tel:+919820623835";
               }}
             >
-              Call Now
+              {t("callNow")}
             </Button>
           </div>
         </DialogContent>

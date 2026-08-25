@@ -6,6 +6,8 @@ import { Otp } from "@/lib/models/otp";
 import { hashOtp, isExpired } from "@/lib/otp";
 import Shop from "@/lib/models/shop";
 import { sendEmail, getWelcomeEmail } from "@/lib/email";
+import { LOCALE_COOKIE } from "@/i18n/request";
+import { resolveLocaleFromCookieValue } from "@/lib/i18n-config";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -55,6 +57,8 @@ export async function POST(request: NextRequest) {
       return withCORS(NextResponse.json({ error: "Registration data missing" }, { status: 500 }));
     }
 
+    const locale = resolveLocaleFromCookieValue(request.cookies.get(LOCALE_COOKIE)?.value);
+
     let user = await User.findOne({ email: normalizedEmail });
 
     if (user) {
@@ -63,6 +67,7 @@ export async function POST(request: NextRequest) {
       user.role = otpDoc.pendingRole || user.role;
       user.isVerified = true;
       user.phone = otpDoc.pendingPhone || user.phone;
+      user.locale = locale;
       user.markModified("password");
       await user.save();
     } else {
@@ -73,6 +78,7 @@ export async function POST(request: NextRequest) {
         role: otpDoc.pendingRole || "user",
         phone: otpDoc.pendingPhone,
         isVerified: true,
+        locale,
       });
     }
 
@@ -121,7 +127,7 @@ export async function POST(request: NextRequest) {
     await sendEmail({
       to: normalizedEmail,
       subject: "Welcome to linknsmile",
-      html: getWelcomeEmail(user.name),
+      html: await getWelcomeEmail(user.name, user.locale),
     });
 
     return withCORS(NextResponse.json({ message: "Email verified" }, { status: 200 }));

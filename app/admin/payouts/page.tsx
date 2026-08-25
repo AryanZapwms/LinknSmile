@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { formatCurrency } from "@/lib/currency";
 
 interface PayoutRequest {
   _id: string;
@@ -185,7 +186,7 @@ export default function AdminPayoutsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.pendingCount}</div>
             <p className="text-muted-foreground mt-1 text-xs">
-              ₹{stats.pendingAmount.toLocaleString()} total
+              {formatCurrency(stats.pendingAmount)} total
             </p>
           </CardContent>
         </Card>
@@ -198,7 +199,7 @@ export default function AdminPayoutsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{stats.totalPaid.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalPaid)}</div>
             <p className="text-muted-foreground mt-1 text-xs">Lifecycle total</p>
           </CardContent>
         </Card>
@@ -280,7 +281,7 @@ export default function AdminPayoutsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-base font-bold">
-                      ₹{payout.amount.toLocaleString()}
+                      {formatCurrency(payout.amount)}
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1 text-xs">
@@ -374,8 +375,8 @@ export default function AdminPayoutsPage() {
           <DialogHeader>
             <DialogTitle>Complete Payout</DialogTitle>
             <DialogDescription>
-              Enter the transaction ID after performing the bank transfer to ₹
-              {selectedPayout?.amount.toLocaleString()}.
+              Enter the transaction ID after performing the bank transfer to{" "}
+              {formatCurrency(selectedPayout?.amount ?? 0)}.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

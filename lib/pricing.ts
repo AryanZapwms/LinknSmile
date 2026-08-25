@@ -1,4 +1,5 @@
 import { Product } from "@/lib/models/product";
+import { PlatformSettings } from "@/lib/models/platform-settings";
 
 export class PricingError extends Error {
   status: number;
@@ -8,7 +9,7 @@ export class PricingError extends Error {
   }
 }
 
-interface CartItemInput {
+export interface CartItemInput {
   product: string;
   quantity: number;
   selectedSize?: { size: string; quantity: number } | null;
@@ -25,6 +26,14 @@ export interface ProcessedItem {
   platformCommission: number;
   vendorEarnings: number;
   commissionRate: number;
+  // Only set when a vendor coupon discounted this item — see lib/coupon-pricing.ts.
+  discountAmount?: number;
+}
+
+export interface AppliedCoupon {
+  code: string;
+  shopId: string;
+  discountAmount: number;
 }
 
 export interface VendorPayout {
@@ -37,10 +46,34 @@ export interface VendorPayout {
 export interface PricingResult {
   processedItems: ProcessedItem[];
   vendorPayouts: Record<string, VendorPayout>;
+  // Final chargeable amount: item subtotal, minus any coupon discount,
+  // plus tax — see the tax step at the end of computeOrderPricing.
   totalAmount: number;
+  // Only set when a coupon was requested and successfully applied.
+  appliedCoupon?: AppliedCoupon;
+  // Snapshot of PlatformSettings.taxRatePercent at computation time, and
+  // the tax amount actually charged (0 for deployments with no tax, e.g.
+  // India today) — always present, unlike appliedCoupon which is genuinely
+  // optional. Never trust a client-sent value for either; both are
+  // recomputed server-side on every call, same as everything else here.
+  taxRatePercent: number;
+  taxAmount: number;
 }
 
-export async function computeOrderPricing(items: CartItemInput[]): Promise<PricingResult> {
+export interface PricingOptions {
+  // Vendor-scoped coupon code, if the caller wants one applied. Omitting
+  // this (or leaving it undefined) is the only way to guarantee
+  // byte-identical output to before coupons existed.
+  couponCode?: string;
+  // Needed to enforce a coupon's perUserLimit. Optional because some
+  // callers (e.g. a guest-cart preview) may not have a user yet.
+  userId?: string;
+}
+
+export async function computeOrderPricing(
+  items: CartItemInput[],
+  options?: PricingOptions
+): Promise<PricingResult> {
   if (!Array.isArray(items) || items.length === 0) {
     throw new PricingError("No items provided", 400);
   }
@@ -137,5 +170,38 @@ export async function computeOrderPricing(items: CartItemInput[]): Promise<Prici
     });
   }
 
-  return { processedItems, vendorPayouts, totalAmount };
+  // Every existing call site (no couponCode) took this same path before tax
+  // existed — the per-item loop above is still byte-for-byte unchanged.
+  let preTaxResult: { processedItems: ProcessedItem[]; vendorPayouts: Record<string, VendorPayout>; totalAmount: number; appliedCoupon?: AppliedCoupon };
+  if (!options?.couponCode) {
+    preTaxResult = { processedItems, vendorPayouts, totalAmount };
+  } else {
+    const { validateAndApplyCoupon } = await import("@/lib/coupon-pricing");
+    preTaxResult = await validateAndApplyCoupon({
+      processedItems,
+      vendorPayouts,
+      totalAmount,
+      couponCode: options.couponCode,
+      userId: options.userId,
+    });
+  }
+
+  // Tax step — additive on top of the (possibly coupon-discounted)
+  // subtotal, applied uniformly regardless of which branch above ran.
+  // Does NOT touch processedItems/vendorPayouts, so vendor commission and
+  // payout math stays computed on the pre-tax amount, exactly as before
+  // this existed — confirmed money model, see PROJECT_SOURCE_OF_TRUTH.md
+  // §4.17. Rate is per-deployment (separate DB per country, see §2), so
+  // there's no per-item/per-vendor tax-rate concept, just one settings doc.
+  const settings = await PlatformSettings.findOne().lean<{ taxRatePercent?: number }>();
+  const taxRatePercent = settings?.taxRatePercent ?? 0;
+  const taxAmount = Math.round((preTaxResult.totalAmount * taxRatePercent) / 100 * 100) / 100;
+  const grandTotal = Math.round((preTaxResult.totalAmount + taxAmount) * 100) / 100;
+
+  return {
+    ...preTaxResult,
+    totalAmount: grandTotal,
+    taxRatePercent,
+    taxAmount,
+  };
 }

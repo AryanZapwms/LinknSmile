@@ -2,37 +2,44 @@
 
 import React from "react";
 import { Package, RefreshCw, Shield, AlertCircle, CheckCircle, Mail } from "lucide-react";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
-const policySteps = [
-  {
-    step: 1,
-    title: "3-Day Return Window",
-    icon: Package,
-    description:
-      "You have 3 days after receiving your item to request a return. This ensures you have time to inspect our chemical peel products upon arrival.",
-  },
-  {
-    step: 2,
-    title: "Product Condition",
-    icon: Shield,
-    description:
-      "Items must be in the same condition as received - unopened, unused, with tags, and in original packaging. You'll need the receipt or proof of purchase.",
-  },
-  {
-    step: 3,
-    title: "Return Request",
-    icon: Mail,
-    description:
-      "Contact us at care@instapeels.com to initiate a return. We'll send you a return shipping label and instructions on where to send your package.",
-  },
-  {
-    step: 4,
-    title: "Refund Processing",
-    icon: RefreshCw,
-    description:
-      "Once we receive and inspect your return, we'll notify you about refund approval. Approved refunds are processed to your original payment method.",
-  },
-];
+// A function, not a module-level constant — step 3's description needs the
+// admin-editable supportEmail, only available inside the component via
+// usePlatformSettings(). Also fixes a pre-existing bug found in passing:
+// this previously pointed at the legacy pre-rebrand "care@instapeels.com"
+// domain, not linknsmile.com.
+function getPolicySteps(supportEmail: string) {
+  return [
+    {
+      step: 1,
+      title: "3-Day Return Window",
+      icon: Package,
+      description:
+        "You have 3 days after receiving your item to request a return. This ensures you have time to inspect our chemical peel products upon arrival.",
+    },
+    {
+      step: 2,
+      title: "Product Condition",
+      icon: Shield,
+      description:
+        "Items must be in the same condition as received - unopened, unused, with tags, and in original packaging. You'll need the receipt or proof of purchase.",
+    },
+    {
+      step: 3,
+      title: "Return Request",
+      icon: Mail,
+      description: `Contact us at ${supportEmail} to initiate a return. We'll send you a return shipping label and instructions on where to send your package.`,
+    },
+    {
+      step: 4,
+      title: "Refund Processing",
+      icon: RefreshCw,
+      description:
+        "Once we receive and inspect your return, we'll notify you about refund approval. Approved refunds are processed to your original payment method.",
+    },
+  ];
+}
 
 const keyPoints = [
   {
@@ -58,6 +65,9 @@ const keyPoints = [
 ];
 
 export default function RefundPolicy() {
+  const { supportEmail, supportPhone } = usePlatformSettings();
+  const policySteps = getPolicySteps(supportEmail);
+
   return (
     <section className="min-h-screen bg-gradient-to-b from-neutral-50 to-white">
       {/* Hero Section */}
@@ -245,14 +255,14 @@ export default function RefundPolicy() {
             </p>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <a
-                href="mailto:care@instapeels.com"
+                href={`mailto:${supportEmail}`}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#B18D0C] px-8 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#8A6A09] hover:shadow-xl"
               >
                 <Mail className="h-5 w-5" />
                 Email Support
               </a>
               <a
-                href="tel:+918355991099"
+                href={`tel:${supportPhone.replace(/\s/g, "")}`}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-neutral-900 shadow-lg transition-all duration-300 hover:bg-neutral-100 hover:shadow-xl"
               >
                 <Package className="h-5 w-5" />

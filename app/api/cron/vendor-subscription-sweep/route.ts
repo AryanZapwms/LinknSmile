@@ -34,6 +34,7 @@ import {
   getVendorSubscriptionExpiryReminderEmail,
   getVendorSubscriptionStorefrontWarningEmail,
 } from "@/lib/email";
+import { resolveEmailLocale } from "@/lib/email-locale";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,21 +93,25 @@ export async function GET(req: NextRequest) {
 
       if (!needsReminder && !needsFinalWarning && !needsStorefrontHide) continue;
 
-      const shop = await Shop.findById(sub.shopId).populate("ownerId", "name email").lean<any>();
+      const shop = await Shop.findById(sub.shopId)
+        .populate("ownerId", "name email locale")
+        .lean<any>();
       if (!shop?.ownerId?.email) continue;
       const vendorName = shop.ownerId.name || "Vendor";
       const shopName = shop.shopName;
+      const vendorLocale = resolveEmailLocale(shop.ownerId.locale);
 
       try {
         if (needsReminder) {
           await sendEmail({
             to: shop.ownerId.email,
             subject: `Subscription ${access.isInGracePeriod ? "Expired" : "Expiring Soon"} - ${shopName}`,
-            html: getVendorSubscriptionExpiryReminderEmail({
+            html: await getVendorSubscriptionExpiryReminderEmail({
               vendorName,
               shopName,
               expiryDate: new Date(sub.expiryDate!),
               daysRemaining: daysUntilExpiry,
+              locale: vendorLocale,
             }),
           });
           result.remindersSent++;
@@ -116,10 +121,11 @@ export async function GET(req: NextRequest) {
           await sendEmail({
             to: shop.ownerId.email,
             subject: `Final Warning: Products Coming Down - ${shopName}`,
-            html: getVendorSubscriptionStorefrontWarningEmail({
+            html: await getVendorSubscriptionStorefrontWarningEmail({
               vendorName,
               shopName,
               hideDate: access.storefrontHideDate!,
+              locale: vendorLocale,
             }),
           });
           result.finalWarningsSent++;

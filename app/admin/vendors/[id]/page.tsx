@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency, LOCALE } from "@/lib/currency";
 import {
   CheckCircle,
   XCircle,
@@ -34,6 +35,7 @@ export default function VendorDetailsPage() {
   const [vendor, setVendor] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [commission, setCommission] = useState("10");
   const [updating, setUpdating] = useState(false);
@@ -136,6 +138,7 @@ export default function VendorDetailsPage() {
       setVendor(data?.shop ?? null);
       setProducts(Array.isArray(data?.products) ? data.products : []);
       setOrders(Array.isArray(data?.orders) ? data.orders : []);
+      setCoupons(Array.isArray(data?.coupons) ? data.coupons : []);
       setCommission(data?.shop?.commissionRate?.toString() ?? "10");
     } catch (error) {
       console.error("Error:", error);
@@ -262,7 +265,7 @@ export default function VendorDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ₹{vendor?.stats?.totalRevenue?.toLocaleString?.() ?? 0}
+              {formatCurrency(vendor?.stats?.totalRevenue ?? 0)}
             </div>
           </CardContent>
         </Card>
@@ -296,6 +299,7 @@ export default function VendorDetailsPage() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="coupons">Coupons</TabsTrigger>
           <TabsTrigger value="bank">Bank Details</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -349,7 +353,7 @@ export default function VendorDetailsPage() {
                       products.map((p) => (
                         <tr key={p._id} className="border-b">
                           <td className="py-2 font-medium">{p.name}</td>
-                          <td className="py-2">₹{p.price}</td>
+                          <td className="py-2">{formatCurrency(p.price)}</td>
                           <td className="py-2">{p.stock}</td>
                           <td className="py-2">
                             <Badge variant={p.isActive ? "default" : "secondary"}>
@@ -373,6 +377,64 @@ export default function VendorDetailsPage() {
                       <tr>
                         <td colSpan={5} className="text-muted-foreground py-4 text-center">
                           No products found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── Coupons tab (read-only — vendor CRUD lives under /vendor/coupons) ── */}
+        <TabsContent value="coupons">
+          <Card>
+            <CardHeader>
+              <CardTitle>Coupons</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left">
+                      <th className="py-2">Code</th>
+                      <th className="py-2">Discount</th>
+                      <th className="py-2">Min. Order</th>
+                      <th className="py-2">Usage</th>
+                      <th className="py-2">Valid Until</th>
+                      <th className="py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {coupons?.length > 0 ? (
+                      coupons.map((c: any) => (
+                        <tr key={c._id} className="border-b">
+                          <td className="py-2 font-mono font-medium">{c.code}</td>
+                          <td className="py-2">
+                            {c.discountType === "percentage"
+                              ? `${c.discountValue}%${c.maxDiscountAmount ? ` (max ${formatCurrency(c.maxDiscountAmount)})` : ""}`
+                              : formatCurrency(c.discountValue)}
+                          </td>
+                          <td className="py-2">{c.minOrderValue ? formatCurrency(c.minOrderValue) : "—"}</td>
+                          <td className="py-2">
+                            {c.usageCount}
+                            {c.usageLimit ? ` / ${c.usageLimit}` : ""}
+                          </td>
+                          <td className="py-2">
+                            {c.validUntil ? new Date(c.validUntil).toLocaleDateString() : "No expiry"}
+                          </td>
+                          <td className="py-2">
+                            <Badge variant={c.isActive ? "default" : "secondary"}>
+                              {c.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="text-muted-foreground py-4 text-center">
+                          No coupons found
                         </td>
                       </tr>
                     )}
@@ -524,7 +586,7 @@ export default function VendorDetailsPage() {
                     <p className="text-muted-foreground text-xs font-medium uppercase">Start Date</p>
                     <p className="text-sm font-semibold">
                       {subscription.startDate
-                        ? new Date(subscription.startDate).toLocaleDateString("en-IN")
+                        ? new Date(subscription.startDate).toLocaleDateString(LOCALE)
                         : "—"}
                     </p>
                   </div>
@@ -532,14 +594,14 @@ export default function VendorDetailsPage() {
                     <p className="text-muted-foreground text-xs font-medium uppercase">Expiry Date</p>
                     <p className="text-sm font-semibold">
                       {subscription.expiryDate
-                        ? new Date(subscription.expiryDate).toLocaleDateString("en-IN")
+                        ? new Date(subscription.expiryDate).toLocaleDateString(LOCALE)
                         : "—"}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs font-medium uppercase">Amount</p>
                     <p className="text-sm font-semibold">
-                      ₹{subscription.amount?.toLocaleString?.() ?? 0}
+                      {formatCurrency(subscription.amount ?? 0)}
                     </p>
                   </div>
                   {subscription.status === "cancelled" && (
@@ -550,7 +612,7 @@ export default function VendorDetailsPage() {
                       <p className="text-sm text-gray-600">
                         {subscription.cancellationReason} —{" "}
                         {subscription.cancelledAt
-                          ? new Date(subscription.cancelledAt).toLocaleDateString("en-IN")
+                          ? new Date(subscription.cancelledAt).toLocaleDateString(LOCALE)
                           : ""}
                       </p>
                     </div>
@@ -581,14 +643,14 @@ export default function VendorDetailsPage() {
                             .map((p: any, i: number) => (
                               <tr key={i} className="border-b">
                                 <td className="py-2">
-                                  {new Date(p.paidAt).toLocaleDateString("en-IN")}
+                                  {new Date(p.paidAt).toLocaleDateString(LOCALE)}
                                 </td>
-                                <td className="py-2">₹{p.amount?.toLocaleString?.() ?? 0}</td>
+                                <td className="py-2">{formatCurrency(p.amount ?? 0)}</td>
                                 <td className="py-2 font-mono text-xs">
                                   {p.razorpayPaymentId || "—"}
                                 </td>
-                                <td className="py-2 border text-black">
-                                  <Badge variant={p.status === "success" ? "default" : "destructive"}>
+                                <td className="py-2 ">
+                                  <Badge className="bg-blue-100 text-blue-800 border-blue-300" variant={p.status === "success" ? "default" : "destructive"}>
                                     {p.status}
                                   </Badge>
                                 </td>

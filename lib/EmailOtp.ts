@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { getEmailTranslator, isRtlLocale, resolveEmailLocale } from "@/lib/email-locale";
 
 const GMAIL_EMAIL = process.env.GMAIL_EMAIL;
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
@@ -42,44 +43,48 @@ export async function sendEmail({
   });
 }
 
-const buildOtpHtml = (name: string, otp: string) => {
+const buildOtpHtml = async (name: string, otp: string, locale?: string) => {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailOtpVerification");
+  const dir = isRtlLocale(resolvedLocale) ? "rtl" : "ltr";
+
   return `
-  <div style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #fafafa; padding: 40px 0; color: #222;">
+  <div dir="${dir}" lang="${resolvedLocale}" style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #fafafa; padding: 40px 0; color: #222;">
     <div style="max-width: 520px; margin: 0 auto; background: #fff; border-radius: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.05); overflow: hidden;">
       <div style="padding: 40px 32px 28px;">
         <div style="text-align:center; margin-bottom: 20px;">
           <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #111;">linknsmile</h1>
-          <p style="font-size: 12px; color: #888; letter-spacing: 2px;">Your Online Partner</p>
+          <p style="font-size: 12px; color: #888; letter-spacing: 2px;">${t("tagline")}</p>
         </div>
 
         <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #111; text-align:center;">
-          Verify Your Email Address
+          ${t("title")}
         </h2>
 
         <p style="font-size: 15px; color: #444; text-align:center; margin-bottom: 8px;">
-          Hi ${name || "there"},
+          ${t("greeting", { name: name || "there" })}
         </p>
         <p style="font-size: 15px; color: #444; text-align:center; margin-bottom: 20px;">
-          Use the following one-time code to verify your account.
+          ${t("intro")}
         </p>
 
         <div style="text-align:center; margin: 28px 0;">
-          <span style="display:inline-block; font-size: 36px; font-weight:700; letter-spacing: 8px; color:#222; background:#f5f5f5; padding: 12px 20px; border-radius: 10px;">
+          <span dir="ltr" style="display:inline-block; font-size: 36px; font-weight:700; letter-spacing: 8px; color:#222; background:#f5f5f5; padding: 12px 20px; border-radius: 10px;">
             ${otp}
           </span>
         </div>
 
         <p style="font-size: 14px; color: #666; text-align:center;">
-          This code will expire in <strong>10 minutes</strong>.
+          ${t.rich("expiryNote", { strong: (chunks) => `<strong>${chunks}</strong>` })}
         </p>
 
         <p style="font-size: 13px; color:#888; text-align:center; margin-top: 30px;">
-          Didn’t request this? Just ignore this email.
+          ${t("ignoreNote")}
         </p>
       </div>
 
       <div style="background:#fafafa; border-top:1px solid #eee; text-align:center; padding:16px;">
-        <p style="font-size:12px; color:#aaa; margin:0;">© ${new Date().getFullYear()} Linknsmile. All rights reserved.</p>
+        <p style="font-size:12px; color:#aaa; margin:0;" dir="ltr">${t("footerCopyright", { year: new Date().getFullYear() })}</p>
       </div>
     </div>
   </div>
@@ -120,9 +125,11 @@ export function buildWelcomeHtml(name: string) {
   `;
 }
 
-export async function sendOtpEmail(to: string, name: string, otp: string) {
-  const html = buildOtpHtml(name, otp);
-  return sendEmail({ to, subject: "Your verification code", html });
+export async function sendOtpEmail(to: string, name: string, otp: string, locale?: string) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailOtpVerification");
+  const html = await buildOtpHtml(name, otp, resolvedLocale);
+  return sendEmail({ to, subject: t("subject"), html });
 }
 
 export async function sendWelcomeEmail(to: string, name: string) {

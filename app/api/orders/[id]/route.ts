@@ -6,6 +6,7 @@ import { User } from "@/lib/models/user";
 import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
 import { sendEmail, getOrderStatusUpdateEmail } from "@/lib/email";
+import { resolveEmailLocale } from "@/lib/email-locale";
 import { sendPushNotificationToMultipleVendors } from "@/lib/services/push-notification";
 
 import { Product } from "@/lib/models/product";
@@ -99,13 +100,14 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
           selectedSize: item.selectedSize,
         }));
 
-        const emailHtml = getOrderStatusUpdateEmail({
+        const emailHtml = await getOrderStatusUpdateEmail({
           orderId: order.orderNumber,
           customerName: userData.name,
           orderStatus: order.orderStatus,
           items: itemsData,
           paymentStatus: order.paymentStatus,
           totalAmount: order.totalAmount,
+          locale: resolveEmailLocale(userData.locale),
         });
 
         await sendEmail({

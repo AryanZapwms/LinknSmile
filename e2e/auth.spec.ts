@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Authentication", () => {
   test("login page loads", async ({ page }) => {
     await page.goto("/auth/login");
-    await expect(page).toHaveTitle(/Linknsmile|LinknSmile/i);
+    await expect(page).toHaveTitle(/Linknsmile/i);
   });
 
   test("invalid login shows error", async ({ page }) => {

@@ -5,6 +5,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { trackCompleteRegistration } from "@/lib/facebook-pixel";
@@ -25,6 +26,7 @@ import OtpForm from "./otp-form";
 import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 
 export function RegisterForm() {
+  const t = useTranslations("RegisterForm");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,7 +50,7 @@ export function RegisterForm() {
     try {
       await signIn("google");
     } catch {
-      setError("Unable to sign in with Google. Please try again.");
+      setError(t("googleSignInFailed"));
       setIsGoogleLoading(false);
     }
   }
@@ -59,11 +61,11 @@ export function RegisterForm() {
 
   const validateName = (v: string) => {
     if (!v.trim()) {
-      setNameError("Name is required");
+      setNameError(t("nameRequired"));
       return false;
     }
     if (v.trim().length < 2) {
-      setNameError("Enter your full name");
+      setNameError(t("nameTooShort"));
       return false;
     }
     setNameError("");
@@ -71,11 +73,11 @@ export function RegisterForm() {
   };
   const validateEmail = (v: string) => {
     if (!v.trim()) {
-      setEmailError("Email is required");
+      setEmailError(t("emailRequired"));
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) {
-      setEmailError("Enter a valid email address");
+      setEmailError(t("emailInvalid"));
       return false;
     }
     setEmailError("");
@@ -83,11 +85,11 @@ export function RegisterForm() {
   };
   const validatePassword = (v: string) => {
     if (!v) {
-      setPasswordError("Password is required");
+      setPasswordError(t("passwordRequired"));
       return false;
     }
     if (v.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
+      setPasswordError(t("passwordTooShort"));
       return false;
     }
     setPasswordError("");
@@ -95,11 +97,11 @@ export function RegisterForm() {
   };
   const validateConfirmPassword = (v: string) => {
     if (!v) {
-      setConfirmError("Please confirm your password");
+      setConfirmError(t("confirmPasswordRequired"));
       return false;
     }
     if (v !== password) {
-      setConfirmError("Passwords do not match");
+      setConfirmError(t("passwordsDontMatch"));
       return false;
     }
     setConfirmError("");
@@ -125,7 +127,7 @@ export function RegisterForm() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Registration failed");
+        setError(data.error || t("registrationFailed"));
         return;
       }
       try {
@@ -133,7 +135,7 @@ export function RegisterForm() {
       } catch (_) {}
       setShowOtp(true);
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(t("genericError"));
     } finally {
       setIsLoading(false);
     }
@@ -149,10 +151,14 @@ export function RegisterForm() {
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
                 <ShieldCheck className="h-5 w-5 text-amber-600" />
               </div>
-              <h2 className="text-xl font-bold text-stone-900">Verify your email</h2>
+              <h2 className="text-xl font-bold text-stone-900">{t("verifyEmailTitle")}</h2>
               <p className="mt-1 text-sm text-stone-400">
-                Enter the code we sent to{" "}
-                <span className="font-semibold text-stone-700">{email}</span>
+                {t.rich("verifyEmailDesc", {
+                  email,
+                  bold: (chunks) => (
+                    <span className="font-semibold text-stone-700">{chunks}</span>
+                  ),
+                })}
               </p>
             </div>
             <div className="px-7 py-6">
@@ -161,13 +167,13 @@ export function RegisterForm() {
                 onSuccess={() => router.push("/auth/login?registered=true&verified=true")}
               />
               <p className="mt-5 text-center text-sm text-stone-400">
-                Already verified?{" "}
+                {t("alreadyVerified")}{" "}
                 <button
                   type="button"
                   onClick={() => router.push("/auth/login")}
                   className="font-semibold text-amber-600 transition-colors hover:text-amber-700"
                 >
-                  Sign in
+                  {t("signInAction")}
                 </button>
               </p>
             </div>
@@ -183,7 +189,7 @@ export function RegisterForm() {
       <div className="w-full max-w-5xl">
         <div className="grid items-start gap-10 lg:grid-cols-2">
           {/* ── Left: brand panel ── */}
-          <div className="hidden flex-col justify-center space-y-8 border-r border-stone-200 pt-4 pr-8 lg:flex">
+          <div className="hidden flex-col justify-center space-y-8 border-e border-stone-200 pt-4 pe-8 lg:flex">
             <div className="relative h-24 w-full max-w-[280px]">
               <Image
                 src={LinkAndSmileLogo}
@@ -196,27 +202,24 @@ export function RegisterForm() {
 
             <div>
               <h1 className="mb-3 text-4xl leading-tight font-bold text-stone-900">
-                Join our community.
+                {t("joinCommunity")}
               </h1>
-              <p className="text-base leading-relaxed text-stone-500">
-                Discover local brands, artisan products, and sellers you can trust — all in one
-                place.
-              </p>
+              <p className="text-base leading-relaxed text-stone-500">{t("joinCommunityDesc")}</p>
             </div>
 
             <div className="space-y-3">
               {[
                 {
-                  label: "Support local sellers",
-                  sub: "Every purchase empowers an Indian small business",
+                  label: t("trustSupportLocal"),
+                  sub: t("trustSupportLocalDesc"),
                 },
                 {
-                  label: "Curated quality",
-                  sub: "Products reviewed before they go live on the platform",
+                  label: t("trustCuratedQuality"),
+                  sub: t("trustCuratedQualityDesc"),
                 },
                 {
-                  label: "Track every order",
-                  sub: "Full order history and easy returns in your account",
+                  label: t("trustTrackOrders"),
+                  sub: t("trustTrackOrdersDesc"),
                 },
               ].map(({ label, sub }) => (
                 <div key={label} className="flex items-start gap-3">
@@ -235,13 +238,17 @@ export function RegisterForm() {
             <div className="grid grid-cols-2 gap-3 pt-2">
               <div className="rounded-xl border border-stone-200 bg-stone-50 p-3.5">
                 <User className="mb-2 h-5 w-5 text-amber-500" />
-                <p className="mb-0.5 text-xs font-bold text-stone-800">Customer</p>
-                <p className="text-[11px] text-stone-400">Shop from local brands</p>
+                <p className="mb-0.5 text-xs font-bold text-stone-800">
+                  {t("accountTypeCustomer")}
+                </p>
+                <p className="text-[11px] text-stone-400">{t("accountTypeCustomerDesc")}</p>
               </div>
               <div className="rounded-xl border border-stone-200 bg-stone-50 p-3.5">
                 <Store className="mb-2 h-5 w-5 text-amber-500" />
-                <p className="mb-0.5 text-xs font-bold text-stone-800">Vendor</p>
-                <p className="text-[11px] text-stone-400">Sell your products</p>
+                <p className="mb-0.5 text-xs font-bold text-stone-800">
+                  {t("accountTypeVendor")}
+                </p>
+                <p className="text-[11px] text-stone-400">{t("accountTypeVendorDesc")}</p>
               </div>
             </div>
           </div>
@@ -258,8 +265,8 @@ export function RegisterForm() {
                     className="object-contain object-left"
                   />
                 </div>
-                <h2 className="text-xl font-bold text-stone-900">Create account</h2>
-                <p className="mt-0.5 text-sm text-stone-400">Fill in your details to get started</p>
+                <h2 className="text-xl font-bold text-stone-900">{t("createAccount")}</h2>
+                <p className="mt-0.5 text-sm text-stone-400">{t("createAccountDesc")}</p>
               </div>
 
               <div className="px-7 py-6">
@@ -274,7 +281,7 @@ export function RegisterForm() {
                   {/* Name */}
                   <FieldWrapper
                     id="name"
-                    label="Full name"
+                    label={t("fullName")}
                     icon={<UserRound className="h-3.5 w-3.5 text-amber-500" />}
                     error={nameError}
                     hasValue={!!name}
@@ -282,7 +289,7 @@ export function RegisterForm() {
                     <Input
                       id="name"
                       type="text"
-                      placeholder="Your full name"
+                      placeholder={t("fullNamePlaceholder")}
                       value={name}
                       disabled={isLoading}
                       onChange={(e) => {
@@ -297,7 +304,7 @@ export function RegisterForm() {
                   {/* Email */}
                   <FieldWrapper
                     id="email"
-                    label="Email address"
+                    label={t("emailAddress")}
                     icon={<Mail className="h-3.5 w-3.5 text-amber-500" />}
                     error={emailError}
                     hasValue={!!email && !emailError}
@@ -305,7 +312,7 @@ export function RegisterForm() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="you@example.com"
+                      placeholder={t("emailPlaceholder")}
                       value={email}
                       disabled={isLoading}
                       onChange={(e) => {
@@ -320,7 +327,7 @@ export function RegisterForm() {
                   {/* Password */}
                   <FieldWrapper
                     id="password"
-                    label="Password"
+                    label={t("password")}
                     icon={<Lock className="h-3.5 w-3.5 text-amber-500" />}
                     error={passwordError}
                     hasValue={!!password && !passwordError}
@@ -329,7 +336,7 @@ export function RegisterForm() {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Create a secure password"
+                        placeholder={t("passwordPlaceholder")}
                         value={password}
                         disabled={isLoading}
                         onChange={(e) => {
@@ -338,13 +345,13 @@ export function RegisterForm() {
                           if (confirmPassword) validateConfirmPassword(confirmPassword);
                         }}
                         onBlur={() => validatePassword(password)}
-                        className={`pr-10 ${inputCls(passwordError, password && !passwordError)}`}
+                        className={`pe-10 ${inputCls(passwordError, password && !passwordError)}`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         disabled={isLoading}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 text-stone-400 transition-colors hover:text-stone-600"
+                        className="absolute top-1/2 end-3 -translate-y-1/2 text-stone-400 transition-colors hover:text-stone-600"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -358,7 +365,7 @@ export function RegisterForm() {
                   {/* Confirm password */}
                   <FieldWrapper
                     id="confirmPassword"
-                    label="Confirm password"
+                    label={t("confirmPassword")}
                     icon={<Lock className="h-3.5 w-3.5 text-amber-500" />}
                     error={confirmError}
                     hasValue={!!confirmPassword && !confirmError}
@@ -367,7 +374,7 @@ export function RegisterForm() {
                       <Input
                         id="confirmPassword"
                         type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Re-enter your password"
+                        placeholder={t("confirmPasswordPlaceholder")}
                         value={confirmPassword}
                         disabled={isLoading}
                         onChange={(e) => {
@@ -375,13 +382,13 @@ export function RegisterForm() {
                           if (confirmError) validateConfirmPassword(e.target.value);
                         }}
                         onBlur={() => validateConfirmPassword(confirmPassword)}
-                        className={`pr-10 ${inputCls(confirmError, confirmPassword && !confirmError)}`}
+                        className={`pe-10 ${inputCls(confirmError, confirmPassword && !confirmError)}`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         disabled={isLoading}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 text-stone-400 transition-colors hover:text-stone-600"
+                        className="absolute top-1/2 end-3 -translate-y-1/2 text-stone-400 transition-colors hover:text-stone-600"
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -401,12 +408,12 @@ export function RegisterForm() {
                     {isLoading ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating account…
+                        {t("creatingAccount")}
                       </>
                     ) : (
                       <>
                         <ShieldCheck className="h-4 w-4" />
-                        Create Account
+                        {t("createAccountButton")}
                       </>
                     )}
                   </button>
@@ -414,7 +421,7 @@ export function RegisterForm() {
 
                 <div className="my-5 flex items-center gap-3">
                   <div className="h-px flex-1 bg-stone-100" />
-                  <span className="text-xs font-medium text-stone-400">or</span>
+                  <span className="text-xs font-medium text-stone-400">{t("or")}</span>
                   <div className="h-px flex-1 bg-stone-100" />
                 </div>
                 <button
@@ -445,36 +452,36 @@ export function RegisterForm() {
                       />
                     </svg>
                   )}
-                  {isGoogleLoading ? "Redirecting…" : "Continue with Google"}
+                  {isGoogleLoading ? t("redirecting") : t("continueWithGoogle")}
                 </button>
 
                 <div className="my-5 flex items-center gap-3">
                   <div className="h-px flex-1 bg-stone-100" />
-                  <span className="text-xs font-medium text-stone-400">Already a member?</span>
+                  <span className="text-xs font-medium text-stone-400">{t("alreadyMember")}</span>
                   <div className="h-px flex-1 bg-stone-100" />
                 </div>
 
                 <p className="text-center text-sm text-stone-500">
-                  Already have an account?{" "}
+                  {t("alreadyHaveAccount")}{" "}
                   <button
                     type="button"
                     onClick={() => router.push("/auth/login")}
                     disabled={isLoading}
                     className="font-bold text-amber-600 transition-colors hover:text-amber-700"
                   >
-                    Sign in →
+                    {t("signInLink")}
                   </button>
                 </p>
 
                 <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-stone-400">
-                  Selling products?{" "}
+                  {t("sellingProducts")}{" "}
                   <button
                     type="button"
                     onClick={() => router.push("/auth/register-vendor")}
                     disabled={isLoading}
                     className="font-semibold text-amber-600 hover:underline"
                   >
-                    Register as a vendor
+                    {t("registerAsVendor")}
                   </button>
                 </p>
               </div>

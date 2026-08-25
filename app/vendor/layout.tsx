@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -19,8 +20,12 @@ import {
   CreditCard,
   AlertTriangle,
   Lock,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LOCALE } from "@/lib/currency";
+import { ACTIVE_GATEWAY } from "@/lib/payments/types";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -47,9 +52,11 @@ interface SubscriptionState {
 }
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("VendorLayout");
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const { supportEmail } = usePlatformSettings();
 
   // 1️⃣ Hooks always declared first
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
@@ -85,6 +92,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   // 4️⃣ Load Razorpay checkout script for the renew flow
   useEffect(() => {
+    if (ACTIVE_GATEWAY !== "razorpay") return;
     const s = document.createElement("script");
     s.src = "https://checkout.razorpay.com/v1/checkout.js";
     s.async = true;
@@ -98,10 +106,29 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   const handleRenew = async () => {
     setRenewing(true);
+
+    if (ACTIVE_GATEWAY === "tap") {
+      // Full-page redirect — the browser navigates away entirely, so
+      // there's no in-page handler here. app/vendor-tap-return picks up
+      // the return leg once Tap sends the browser back with ?tap_id=.
+      try {
+        const orderRes = await fetch("/api/vendor/subscription/tap/create-order", { method: "POST" });
+        const order = await orderRes.json();
+        if (!orderRes.ok || !order.redirectUrl) {
+          throw new Error(order.error || t("renewalFailedGeneric"));
+        }
+        window.location.href = order.redirectUrl;
+      } catch (err) {
+        alert(err instanceof Error ? err.message : t("renewalFailedGeneric"));
+        setRenewing(false);
+      }
+      return;
+    }
+
     try {
       const orderRes = await fetch("/api/vendor/subscription/create-order", { method: "POST" });
       const order = await orderRes.json();
-      if (!orderRes.ok) throw new Error(order.error || "Failed to start renewal");
+      if (!orderRes.ok) throw new Error(order.error || t("renewalFailedGeneric"));
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -125,10 +152,10 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
             if (vRes.ok && vData.success) {
               await checkStatus();
             } else {
-              alert("Payment verification failed. Please contact support@linknsmile.com.");
+              alert(t("paymentVerificationFailedContact", { email: supportEmail }));
             }
           } catch {
-            alert("Payment verification failed. Please try again.");
+            alert(t("paymentVerificationFailedRetry"));
           } finally {
             setRenewing(false);
           }
@@ -140,7 +167,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
       };
       new window.Razorpay(options).open();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to start renewal. Please try again.");
+      alert(err instanceof Error ? err.message : t("renewalFailedGeneric"));
       setRenewing(false);
     }
   };
@@ -163,33 +190,31 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
             <Lock className="h-7 w-7 text-red-500" />
           </div>
-          <h1 className="text-xl font-bold text-stone-900">Vendor Access Suspended</h1>
+          <h1 className="text-xl font-bold text-stone-900">{t("accessSuspendedTitle")}</h1>
           <p className="mt-2 text-sm text-stone-500">
             {subscription.status === "no_subscription"
-              ? "You need an active annual subscription to use the vendor dashboard."
-              : `Your subscription expired on ${
-                  subscription.expiryDate
-                    ? new Date(subscription.expiryDate).toLocaleDateString("en-IN", {
+              ? t("noSubscriptionMsg")
+              : t("expiredMsg", {
+                  date: subscription.expiryDate
+                    ? new Date(subscription.expiryDate).toLocaleDateString(LOCALE, {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
                       })
-                    : ""
-                } and the grace period has ended.`}
+                    : "",
+                })}
           </p>
-          <p className="mt-1 text-xs text-stone-400">
-            Your products remain in our system and will reappear automatically once you renew.
-          </p>
+          <p className="mt-1 text-xs text-stone-400">{t("productsRemainMsg")}</p>
           <Button className="mt-6 w-full" onClick={handleRenew} disabled={renewing}>
-            {renewing ? "Processing…" : "Renew Subscription"}
+            {renewing ? t("processing") : t("renewSubscription")}
           </Button>
           <Button
             variant="ghost"
             className="mt-2 w-full"
             onClick={() => signOut({ callbackUrl: "/" })}
           >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
+            <LogOut className="me-2 h-4 w-4" />
+            {t("logout")}
           </Button>
         </div>
       </div>
@@ -198,13 +223,14 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
 
   // Navigation items, filtered by approval
   const navigation = [
-    { name: "Dashboard", href: "/vendor", icon: LayoutDashboard },
-    { name: "Products", href: "/vendor/products", icon: Package, requiresApproval: true },
-    { name: "Orders", href: "/vendor/orders", icon: ShoppingCart, requiresApproval: true },
-    { name: "Wallet", href: "/vendor/wallet", icon: Wallet },
-    { name: "Reviews", href: "/vendor/reviews", icon: Star, requiresApproval: true },
-    { name: "Bank Details", href: "/vendor/bank-details", icon: CreditCard },
-    { name: "Settings", href: "/vendor/settings", icon: Settings },
+    { name: t("dashboard"), href: "/vendor", icon: LayoutDashboard },
+    { name: t("products"), href: "/vendor/products", icon: Package, requiresApproval: true },
+    { name: t("coupons"), href: "/vendor/coupons", icon: Tag, requiresApproval: true },
+    { name: t("orders"), href: "/vendor/orders", icon: ShoppingCart, requiresApproval: true },
+    { name: t("wallet"), href: "/vendor/wallet", icon: Wallet },
+    { name: t("reviews"), href: "/vendor/reviews", icon: Star, requiresApproval: true },
+    { name: t("bankDetails"), href: "/vendor/bank-details", icon: CreditCard },
+    { name: t("settings"), href: "/vendor/settings", icon: Settings },
   ].filter((item) => !item.requiresApproval || isApproved);
 
   const isActive = (path: string) =>
@@ -215,7 +241,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
       <div className="flex h-14 items-center border-b px-4 lg:h-16 lg:px-6">
         <Link href="/vendor" className="flex items-center gap-2 font-semibold">
           <Store className="h-6 w-6" />
-          <span className="text-lg">Vendor Panel</span>
+          <span className="text-lg">{t("vendorPanel")}</span>
         </Link>
       </div>
       <div className="flex-1 overflow-y-auto">
@@ -243,7 +269,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
           onClick={() => signOut({ callbackUrl: "/" })}
         >
           <LogOut className="h-4 w-4" />
-          Logout
+          {t("logout")}
         </Button>
       </div>
     </div>
@@ -264,7 +290,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="shrink-0 md:hidden">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
+                <span className="sr-only">{t("toggleNav")}</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0">
@@ -273,14 +299,14 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
           </Sheet>
 
           <div className="w-full flex-1">
-            <h1 className="text-lg font-semibold md:hidden">Vendor Dashboard</h1>
+            <h1 className="text-lg font-semibold md:hidden">{t("vendorDashboardMobile")}</h1>
           </div>
 
           {/* Right side actions */}
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" className="relative">
               <Bell className="h-4 w-4" />
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+              <span className="absolute top-0 end-0 h-2 w-2 rounded-full bg-red-500"></span>
             </Button>
 
             <DropdownMenu>
@@ -305,20 +331,20 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/vendor/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                    <Settings className="me-2 h-4 w-4" />
+                    {t("settings")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/">
-                    <Store className="mr-2 h-4 w-4" />
-                    View Storefront
+                    <Store className="me-2 h-4 w-4" />
+                    {t("viewStorefront")}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+                  <LogOut className="me-2 h-4 w-4" />
+                  {t("logout")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -331,21 +357,21 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
             <div className="flex items-center gap-2 text-amber-800">
               <AlertTriangle className="h-4 w-4 shrink-0" />
               <span>
-                Your subscription expired on{" "}
-                {subscription.expiryDate
-                  ? new Date(subscription.expiryDate).toLocaleDateString("en-IN", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })
-                  : ""}
-                . Renew within{" "}
-                {subscription.daysUntilExpiry !== null ? 7 + subscription.daysUntilExpiry : 7} day(s)
-                to avoid losing access.
+                {t("gracePeriodMsg", {
+                  date: subscription.expiryDate
+                    ? new Date(subscription.expiryDate).toLocaleDateString(LOCALE, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "",
+                  days:
+                    subscription.daysUntilExpiry !== null ? 7 + subscription.daysUntilExpiry : 7,
+                })}
               </span>
             </div>
             <Button size="sm" onClick={handleRenew} disabled={renewing} className="shrink-0">
-              {renewing ? "Processing…" : "Renew Now"}
+              {renewing ? t("processing") : t("renewNow")}
             </Button>
           </div>
         )}

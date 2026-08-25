@@ -4,91 +4,100 @@
 import React from "react";
 import Link from "next/link";
 import { Mail, Phone, MapPin, Clock, Shield, Truck, Store, ChevronRight } from "lucide-react";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
-const contactCards = [
-  {
-    icon: MapPin,
-    title: "Visit Our Office",
-    content: (
-      <address className="text-sm leading-relaxed text-stone-600 not-italic">
-        Healthcare Medical Center, S-55,
-        <br />
-        Whispering Palms Shopping Center,
-        <br />
-        Akurli road, Lokhandwala Township,
-        <br />
-        Kandivali (E), Mumbai — 400101
-      </address>
-    ),
-  },
-  {
-    icon: Phone,
-    title: "Call Us",
-    content: (
-      <div className="space-y-3">
-        <div>
-          <p className="mb-0.5 text-[10px] font-semibold tracking-wider text-stone-400 uppercase">
-            Customer Support
-          </p>
+// A function, not a module-level constant, because "Call Us"/"Email Us" need
+// the admin-editable supportPhone/supportEmail (usePlatformSettings) — those
+// can only be read inside the component. sellers@linknsmile.com is a
+// genuinely separate address (seller-specific, never wired to supportEmail)
+// left as a literal, same as the second bulk-order phone number elsewhere.
+function getContactCards(supportPhone: string, supportEmail: string) {
+  const supportPhoneHref = `tel:${supportPhone.replace(/\s/g, "")}`;
+  return [
+    {
+      icon: MapPin,
+      title: "Visit Our Office",
+      content: (
+        <address className="text-sm leading-relaxed text-stone-600 not-italic">
+          Healthcare Medical Center, S-55,
+          <br />
+          Whispering Palms Shopping Center,
+          <br />
+          Akurli road, Lokhandwala Township,
+          <br />
+          Kandivali (E), Mumbai — 400101
+        </address>
+      ),
+    },
+    {
+      icon: Phone,
+      title: "Call Us",
+      content: (
+        <div className="space-y-3">
+          <div>
+            <p className="mb-0.5 text-[10px] font-semibold tracking-wider text-stone-400 uppercase">
+              Customer Support
+            </p>
+            <a
+              href={supportPhoneHref}
+              className="text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
+            >
+              {supportPhone}
+            </a>
+          </div>
+          <div>
+            <p className="mb-0.5 text-[10px] font-semibold tracking-wider text-stone-400 uppercase">
+              Seller Support
+            </p>
+            <a
+              href={supportPhoneHref}
+              className="text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
+            >
+              {supportPhone}
+            </a>
+          </div>
+        </div>
+      ),
+    },
+    {
+      icon: Mail,
+      title: "Email Us",
+      content: (
+        <div className="space-y-2">
           <a
-            href="tel:+918355991099"
-            className="text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
+            href={`mailto:${supportEmail}`}
+            className="block text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
           >
-            +91 8355991099
+            {supportEmail}
           </a>
-        </div>
-        <div>
-          <p className="mb-0.5 text-[10px] font-semibold tracking-wider text-stone-400 uppercase">
-            Seller Support
-          </p>
           <a
-            href="tel:+918355991099"
-            className="text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
+            href="mailto:sellers@linknsmile.com"
+            className="block text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
           >
-            +91 8355991099
+            sellers@linknsmile.com
           </a>
+          <p className="mt-1 text-xs text-stone-400">We respond within 24 hours</p>
         </div>
-      </div>
-    ),
-  },
-  {
-    icon: Mail,
-    title: "Email Us",
-    content: (
-      <div className="space-y-2">
-        <a
-          href="mailto:support@linknsmile.com"
-          className="block text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
-        >
-          support@linknsmile.com
-        </a>
-        <a
-          href="mailto:sellers@linknsmile.com"
-          className="block text-sm font-semibold text-stone-800 transition-colors hover:text-amber-600"
-        >
-          sellers@linknsmile.com
-        </a>
-        <p className="mt-1 text-xs text-stone-400">We respond within 24 hours</p>
-      </div>
-    ),
-  },
-  {
-    icon: Clock,
-    title: "Business Hours",
-    content: (
-      <div className="space-y-1 text-sm text-stone-600">
-        <div className="flex justify-between">
-          <span>Monday – Saturday</span>
-          <span className="font-semibold text-stone-800">10:00 AM – 7:00 PM</span>
+      ),
+    },
+    {
+      icon: Clock,
+      title: "Business Hours",
+      content: (
+        <div className="space-y-1 text-sm text-stone-600">
+          <div className="flex justify-between">
+            <span>Monday – Saturday</span>
+            <span className="font-semibold text-stone-800">10:00 AM – 7:00 PM</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Sunday</span>
+            <span className="font-medium text-red-400">Closed</span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span>Sunday</span>
-          <span className="font-medium text-red-400">Closed</span>
-        </div>
-      </div>
-    ),
-  },
-];
+      ),
+    },
+  ];
+}
 
 const sellerSteps = [
   { step: "1", title: "Register Free", desc: "Create your seller account in minutes" },
@@ -97,6 +106,9 @@ const sellerSteps = [
 ];
 
 export default function ContactUs() {
+  const { supportEmail, supportPhone, brandTagline } = usePlatformSettings();
+  const contactCards = getContactCards(supportPhone, supportEmail);
+
   return (
     <main className="min-h-screen bg-white">
       {/* ── Hero ─────────────────────────── */}
@@ -122,7 +134,7 @@ export default function ContactUs() {
             your business on India's trusted marketplace.
           </p>
           <p className="mt-5 text-xs font-semibold tracking-widest text-amber-400/60 uppercase">
-            Net &amp; Work Builds Up Net-Worth
+            {brandTagline}
           </p>
         </div>
       </section>
@@ -201,7 +213,7 @@ export default function ContactUs() {
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <a
-                  href="tel:+918355991099"
+                  href={`tel:${supportPhone.replace(/\s/g, "")}`}
                   className="flex items-center justify-center gap-2 rounded-xl bg-stone-900 py-3 text-sm font-bold text-white transition-colors duration-200 hover:bg-amber-500"
                 >
                   <Phone className="h-4 w-4" />

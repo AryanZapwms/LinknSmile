@@ -51,6 +51,13 @@ const userSchema = new mongoose.Schema(
 
     // Set when a user starts (but hasn't finished) the vendor application flow.
     pendingVendorApplication: { type: Boolean, default: false },
+
+    // Preferred UI/email language — captured from the NEXT_LOCALE cookie at
+    // registration, kept in sync on every subsequent locale-switcher use
+    // while logged in (see lib/actions/locale.ts). Unset for users created
+    // before this field existed; email sending falls back to "en" in that
+    // case (see lib/email-locale.ts), never assumed.
+    locale: { type: String },
   },
   { timestamps: true }
 );

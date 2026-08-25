@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { normalizeArabicIndicDigits } from "@/lib/normalize-digits";
 
 interface Props {
   email: string;
@@ -10,9 +12,10 @@ interface Props {
 }
 
 export default function OtpForm({ email, onSuccess }: Props) {
+  const t = useTranslations("OtpForm");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
-  const [info, setInfo] = useState(`We've sent a 6-digit code to ${email}`);
+  const [info, setInfo] = useState(t("infoSentCode", { email }));
   const [isLoading, setIsLoading] = useState(false);
 
   async function verifyOtp(e?: React.FormEvent) {
@@ -27,12 +30,12 @@ export default function OtpForm({ email, onSuccess }: Props) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Invalid code");
+        setError(data.error || t("invalidCode"));
         return;
       }
       onSuccess();
     } catch (err) {
-      setError("Verification failed. Try again.");
+      setError(t("verificationFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -49,12 +52,12 @@ export default function OtpForm({ email, onSuccess }: Props) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Couldn't resend");
+        setError(data.error || t("couldntResend"));
       } else {
-        setInfo(`OTP resent to ${email}`);
+        setInfo(t("otpResentTo", { email }));
       }
     } catch (err) {
-      setError("Couldn't resend. Try later.");
+      setError(t("couldntResendRetry"));
     } finally {
       setIsLoading(false);
     }
@@ -69,17 +72,24 @@ export default function OtpForm({ email, onSuccess }: Props) {
       <form onSubmit={verifyOtp} className="space-y-3">
         <Input
           value={otp}
-          onChange={(e) => setOtp(e.target.value)}
-          placeholder="Enter 6-digit code"
+          onChange={(e) =>
+            setOtp(
+              normalizeArabicIndicDigits(e.target.value)
+                .replace(/[^0-9]/g, "")
+                .slice(0, 6)
+            )
+          }
+          placeholder={t("placeholder")}
           required
           maxLength={6}
+          dir="ltr"
         />
         <div className="flex gap-2">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Verifying..." : "Verify"}
+            {isLoading ? t("verifying") : t("verify")}
           </Button>
           <Button type="button" variant="secondary" onClick={resend} disabled={isLoading}>
-            Resend
+            {t("resend")}
           </Button>
         </div>
       </form>

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { sendOtpEmail } from "@/lib/EmailOtp";
+import { resolveEmailLocale } from "@/lib/email-locale";
 import { hash } from "bcryptjs";
 
 function generateOtp() {
@@ -50,8 +51,11 @@ export async function POST(req: Request) {
     //   hasExpiry: !!savedUser.resetOtpExpires
     // })
 
-    // Send email
-    await sendOtpEmail(user.email, user.name, otp);
+    // Send email — uses the user's own current locale preference (kept in
+    // sync by lib/actions/locale.ts on every switch), not the requesting
+    // browser's cookie, since a forgot-password request may come from a
+    // different device/browser than the one they normally use.
+    await sendOtpEmail(user.email, user.name, otp, resolveEmailLocale(user.locale));
     // console.log("[FORGOT_PASSWORD] OTP email sent to:", user.email)
 
     return withCORS(NextResponse.json({ message: "OTP sent successfully" }));

@@ -17,6 +17,7 @@ import { Wallet, IWallet } from "../models/wallet";
 import { LedgerEntry } from "../models/ledger";
 import { AuditLog } from "../models/audit-log";
 import { sendPushNotificationToVendor } from "./push-notification";
+import { formatCurrency } from "../currency";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -186,7 +187,7 @@ export class LedgerService {
         throw new Error(`Wallet is ${wallet.status}. Cannot process payout.`);
       if (wallet.withdrawableBalance < params.amount) {
         throw new Error(
-          `Insufficient withdrawable balance. Available: ₹${wallet.withdrawableBalance}, Requested: ₹${params.amount}`
+          `Insufficient withdrawable balance. Available: ${formatCurrency(wallet.withdrawableBalance)}, Requested: ${formatCurrency(params.amount)}`
         );
       }
 
@@ -227,7 +228,7 @@ export class LedgerService {
         shopId: new mongoose.Types.ObjectId(params.shopId),
         before: { withdrawableBalance: wallet.withdrawableBalance },
         after: { withdrawableBalance: wallet.withdrawableBalance - params.amount },
-        reason: `Payout of ₹${params.amount} initiated`,
+        reason: `Payout of ${formatCurrency(params.amount)} initiated`,
       });
 
       return debitEntry;
@@ -420,7 +421,7 @@ export class LedgerService {
             targetEntity: "Wallet",
             targetId: (wallet._id as any).toString(),
             shopId: wallet.shopId,
-            reason: `Post-payout refund caused negative balance. Amount: ₹${item.refundAmount}`,
+            reason: `Post-payout refund caused negative balance. Amount: ${formatCurrency(item.refundAmount)}`,
           });
         }
 
@@ -520,11 +521,20 @@ export class LedgerService {
       const session = await mongoose.startSession();
       session.startTransaction();
       try {
-        await LedgerEntry.updateOne(
-          { _id: entry._id },
+        // Atomic claim: only proceeds if this entry is still PENDING. Guards
+        // against double-crediting the wallet if this cron overlaps with itself
+        // (duplicate trigger, retry, etc.) — exactly one concurrent caller wins.
+        const claim = await LedgerEntry.updateOne(
+          { _id: entry._id, status: "PENDING" },
           { $set: { status: "CLEARED" } },
           { session }
         );
+
+        if (claim.modifiedCount === 0) {
+          // Already claimed by a concurrent/overlapping run — skip, not a failure.
+          await session.abortTransaction();
+          continue;
+        }
 
         await Wallet.findOneAndUpdate(
           { _id: entry.accountId },
@@ -542,7 +552,7 @@ export class LedgerService {
         await sendPushNotificationToVendor(
           entry.shopId!.toString(), // ensure shopId is stored on LedgerEntry (it should be)
           "💰 Funds Cleared",
-          `₹${entry.amount} from your order earnings is now available for withdrawal.`,
+          `${formatCurrency(entry.amount)} from your order earnings is now available for withdrawal.`,
           { screen: "wallet" }
         );
         cleared++;

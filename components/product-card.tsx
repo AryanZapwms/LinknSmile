@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useToast } from "@/hooks/use-toast";
 import { ShoppingCart, Eye, Phone, Heart } from "lucide-react";
@@ -13,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { ProductQuickView } from "./product-quick-view";
 import FavouriteButton from "@/components/FavouriteButton";
+import { formatCurrency } from "@/lib/currency";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 interface Size {
   size: string;
@@ -54,8 +57,10 @@ export function ProductCard({
   shopName,
   commissionRate,
 }: ProductCardProps) {
+  const t = useTranslations("ProductCard");
   const { toast } = useToast();
   const { data: session } = useSession();
+  const { supportPhone } = usePlatformSettings();
   const addItem = useCartStore((s) => s.addItem);
   const getTotalItems = useCartStore((s) => s.getTotalItems);
   const [selectedSize, setSelectedSize] = useState<Size | null>(null);
@@ -83,8 +88,8 @@ export function ProductCard({
 
     if (!session?.user) {
       toast({
-        title: "Sign in required",
-        description: "Please sign in to add products to your cart.",
+        title: t("signInRequiredTitle"),
+        description: t("signInRequiredDesc"),
         variant: "destructive",
       });
       router.push("/auth/login");
@@ -98,8 +103,8 @@ export function ProductCard({
 
     if (hasMultipleSizes && sizes.length > 0 && !selectedSize) {
       toast({
-        title: "Size required",
-        description: "Please select a size before adding to cart.",
+        title: t("sizeRequiredTitle"),
+        description: t("sizeRequiredDesc"),
         variant: "destructive",
       });
       return;
@@ -120,7 +125,10 @@ export function ProductCard({
         shopName: shopName || "Linknsmile",
         commissionRate: commissionRate || 10,
       });
-      toast({ title: "Added to cart", description: `${name} (${selectedSize.size}) added.` });
+      toast({
+        title: t("addedToCartTitle"),
+        description: t("addedToCartWithSize", { name, size: selectedSize.size }),
+      });
       setSelectedSize(null);
     } else {
       addItem({
@@ -136,7 +144,7 @@ export function ProductCard({
         shopName: shopName || "Linknsmile",
         commissionRate: commissionRate || 10,
       });
-      toast({ title: "Added to cart", description: `${name} added to your cart.` });
+      toast({ title: t("addedToCartTitle"), description: t("addedToCartDesc", { name }) });
     }
   };
 
@@ -193,8 +201,8 @@ export function ProductCard({
 
           {/* Discount badge — amber, not red */}
           {discount > 0 && (
-            <div className="absolute top-2.5 left-2.5 z-10 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-900">
-              {discount}% OFF
+            <div className="absolute top-2.5 start-2.5 z-10 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-900">
+              {t("discountOff", { discount })}
             </div>
           )}
 
@@ -202,13 +210,13 @@ export function ProductCard({
           {isOutOfStock && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
               <span className="rounded-full bg-stone-700 px-3 py-1 text-xs font-semibold tracking-wide text-white">
-                Out of Stock
+                {t("outOfStock")}
               </span>
             </div>
           )}
 
           {/* Wishlist button — top right, always visible softly */}
-          <FavouriteButton type="product" refId={id} className="absolute top-2.5 right-2.5 z-20" />
+          <FavouriteButton type="product" refId={id} className="absolute top-2.5 end-2.5 z-20" />
 
           {/* Hover overlay — quick view */}
           <div className="absolute inset-0 z-10 flex items-end justify-center bg-gradient-to-t from-stone-900/20 to-transparent pb-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
@@ -221,7 +229,7 @@ export function ProductCard({
               className="flex translate-y-2 items-center gap-1.5 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-stone-700 shadow-md backdrop-blur-sm transition-colors duration-300 group-hover:translate-y-0 hover:bg-white"
             >
               <Eye className="h-3 w-3" />
-              Quick view
+              {t("quickView")}
             </button>
           </div>
         </Link>
@@ -251,11 +259,11 @@ export function ProductCard({
               onClick={(e) => e.stopPropagation()}
               className="w-full rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs text-stone-600 transition-all focus:border-amber-300 focus:ring-1 focus:ring-amber-300 focus:outline-none"
             >
-              <option value="">Select size…</option>
+              <option value="">{t("selectSizePlaceholder")}</option>
               {sizes.map((s, i) => (
                 <option key={i} value={`${s.size}-${s.quantity}`} disabled={s.stock === 0}>
                   {s.size} ({s.quantity}
-                  {s.unit}) — ₹{s.discountPrice ?? s.price}
+                  {s.unit}) — {formatCurrency(s.discountPrice ?? s.price)}
                 </option>
               ))}
             </select>
@@ -268,11 +276,11 @@ export function ProductCard({
           <div className="flex items-center justify-between gap-2">
             <div className="flex flex-col leading-tight">
               <span className="text-[15px] font-bold tracking-tight text-stone-900">
-                ₹{Math.round(displayPrice).toLocaleString()}
+                {formatCurrency(displayPrice)}
               </span>
               {(discountPrice || (hasMultipleSizes && sizes.some((s) => s.discountPrice))) && (
                 <span className="text-[11px] text-stone-400 line-through">
-                  ₹{price.toLocaleString()}
+                  {formatCurrency(price)}
                 </span>
               )}
             </div>
@@ -287,7 +295,7 @@ export function ProductCard({
               }`}
             >
               <ShoppingCart className="h-3 w-3" />
-              Add
+              {t("add")}
             </button>
           </div>
         </div>
@@ -298,14 +306,12 @@ export function ProductCard({
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-stone-900">
-              Need a bulk order?
+              {t("bulkOrderTitle")}
             </DialogTitle>
           </DialogHeader>
-          <p className="mb-4 text-sm text-stone-500">
-            You've reached the 5-item cart limit. For bulk orders, contact us directly.
-          </p>
+          <p className="mb-4 text-sm text-stone-500">{t("bulkOrderDesc")}</p>
           <div className="mb-4 space-y-2">
-            {["+91 9820623835", "+91 8355991099"].map((num) => (
+            {["+91 9820623835", supportPhone].map((num) => (
               <a
                 key={num}
                 href={`tel:${num.replace(/\s/g, "")}`}
@@ -322,7 +328,7 @@ export function ProductCard({
               className="flex-1 rounded-xl"
               onClick={() => setShowBulkOrderModal(false)}
             >
-              Continue
+              {t("continue")}
             </Button>
             <Button
               className="flex-1 rounded-xl bg-stone-900 hover:bg-stone-800"
@@ -330,7 +336,7 @@ export function ProductCard({
                 window.location.href = "tel:+919820623835";
               }}
             >
-              Call Now
+              {t("callNow")}
             </Button>
           </div>
         </DialogContent>

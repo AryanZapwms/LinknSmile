@@ -27,6 +27,7 @@ import {
   Smile,
   ChevronRight,
 } from "lucide-react";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 const values = [
   {
@@ -122,6 +123,9 @@ const socials = [
 ];
 
 export default function AboutUs() {
+  const { supportEmail, supportPhone, brandTagline } = usePlatformSettings();
+  const supportPhoneHref = `tel:${supportPhone.replace(/\s/g, "")}`;
+
   return (
     <main className="bg-white">
       {/* ── Hero ─────────────────────────────── */}
@@ -150,7 +154,7 @@ export default function AboutUs() {
             conscious shoppers under one digital roof.
           </p>
           <p className="mt-5 inline-block text-xs font-semibold tracking-widest text-amber-400/70 uppercase">
-            Net &amp; Work Builds Up Net-Worth
+            {brandTagline}
           </p>
         </div>
       </section>
@@ -316,7 +320,7 @@ export default function AboutUs() {
             <div className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50 p-4">
               <Smile className="h-5 w-5 shrink-0 text-amber-600" />
               <p className="text-sm font-semibold text-stone-800">
-                Net &amp; Work Builds Up Net-Worth
+                {brandTagline}
               </p>
             </div>
 
@@ -401,11 +405,11 @@ export default function AboutUs() {
               {[
                 {
                   icon: Mail,
-                  label: "support@linknsmile.com",
-                  href: "mailto:support@linknsmile.com",
+                  label: supportEmail,
+                  href: `mailto:${supportEmail}`,
                 },
-                { icon: Phone, label: "+91 8355991099", href: "tel:+918355991099" },
-                { icon: Phone, label: "+91 8355991099", href: "tel:+918355991099" },
+                { icon: Phone, label: supportPhone, href: supportPhoneHref },
+                { icon: Phone, label: supportPhone, href: supportPhoneHref },
                 {
                   icon: MapPin,
                   label: "S-55, Whispering Palms, Kandivali (E), Mumbai — 400101",

@@ -2,14 +2,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCartStore } from "@/lib/store/cart-store";
 import { CheckoutForm } from "@/components/checkout-form";
 import { trackInitiateCheckout } from "@/lib/facebook-pixel";
-import { Store, ShoppingBag, ChevronRight, Package } from "lucide-react";
+import { Store, ShoppingBag, ChevronRight, Package, Tag, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/currency";
+import { ACTIVE_GATEWAY } from "@/lib/payments/types";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 
 declare global {
   interface Window {
@@ -35,6 +39,7 @@ function TopProgressBar({ visible }: { visible: boolean }) {
 
 /* ─── Full-page loader ───── */
 function FullPageLoader({ message }: { message: string }) {
+  const t = useTranslations("Checkout");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 backdrop-blur-sm">
       <div className="mx-4 flex w-full max-w-sm items-center gap-4 rounded-2xl bg-white p-6 shadow-xl">
@@ -57,7 +62,7 @@ function FullPageLoader({ message }: { message: string }) {
         </div>
         <div>
           <p className="text-sm font-semibold text-stone-900">{message}</p>
-          <p className="mt-0.5 text-xs text-stone-400">Please don't close or refresh the page.</p>
+          <p className="mt-0.5 text-xs text-stone-400">{t("dontClose")}</p>
         </div>
       </div>
     </div>
@@ -82,6 +87,7 @@ function CheckoutSkeleton() {
 
 /* ─── Main page ──────────── */
 export default function CheckoutPage() {
+  const t = useTranslations("Checkout");
   const router = useRouter();
   const { data: session, status } = useSession();
   const { items, getTotalPrice, clearCart, getItemsByVendor, getCommissionBreakdown } =
@@ -92,10 +98,65 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
 
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(
+    null
+  );
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+
+  const { taxRatePercent } = usePlatformSettings();
+
   const itemsByVendor = getItemsByVendor();
   const breakdown = getCommissionBreakdown();
   const totalPrice = getTotalPrice();
   const multiVendor = Object.keys(itemsByVendor).length > 1;
+  const payableTotal = totalPrice - (appliedCoupon?.discountAmount || 0);
+  // Preview only, same formula/inputs as the server's computeOrderPricing
+  // tax step (lib/pricing.ts) — the real charge is always recomputed
+  // server-side at create-order/verify-payment/orders time.
+  const taxAmount = Math.round(((payableTotal * taxRatePercent) / 100) * 100) / 100;
+  const grandTotal = payableTotal + taxAmount;
+
+  const pricingItems = () =>
+    items.map((i) => ({
+      product: i.productId,
+      quantity: i.quantity,
+      selectedSize: i.selectedSize
+        ? { size: i.selectedSize.size, quantity: i.selectedSize.quantity }
+        : undefined,
+    }));
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setValidatingCoupon(true);
+    setCouponError(null);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: pricingItems(), couponCode: code }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAppliedCoupon({ code: data.code, discountAmount: data.discountAmount });
+      } else {
+        setAppliedCoupon(null);
+        setCouponError(data.error || t("invalidCoupon"));
+      }
+    } catch {
+      setCouponError(t("couponValidateFailed"));
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
+  };
 
   useEffect(() => {
     if (status === "unauthenticated") router.replace("/auth/login");
@@ -138,6 +199,7 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
+    if (ACTIVE_GATEWAY !== "razorpay") return;
     const s = document.createElement("script");
     s.src = "https://checkout.razorpay.com/v1/checkout.js";
     s.async = true;
@@ -180,6 +242,7 @@ export default function CheckoutPage() {
             totalAmount: totalPrice,
             paymentMethod: "cod",
             paymentStatus: "pending",
+            couponCode: appliedCoupon?.code,
           }),
         });
         const data = await res.json();
@@ -194,18 +257,13 @@ export default function CheckoutPage() {
 
       
 
-      if (paymentMethod === "razorpay") {
+      if (paymentMethod === "online" && ACTIVE_GATEWAY === "razorpay") {
         const rpRes = await fetch("/api/razorpay/create-order", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    items: items.map((i) => ({
-      product: i.productId,
-      quantity: i.quantity,
-      selectedSize: i.selectedSize
-        ? { size: i.selectedSize.size, quantity: i.selectedSize.quantity }
-        : undefined,
-    })),
+    items: pricingItems(),
+    couponCode: appliedCoupon?.code,
   }),
 });
         const rpOrder = await rpRes.json();
@@ -216,7 +274,7 @@ export default function CheckoutPage() {
           order_id: rpOrder.id,
           amount: rpOrder.amount,
           currency: rpOrder.currency,
-          name: "linknsmile",
+          name: "Linknsmile",
           description: "India's Marketplace",
           handler: async (response: any) => {
             try {
@@ -238,6 +296,7 @@ export default function CheckoutPage() {
                   })),
                   shippingAddress,
                   totalAmount: totalPrice,
+                  couponCode: appliedCoupon?.code,
                 }),
               });
               const vData = await vRes.json();
@@ -246,36 +305,67 @@ export default function CheckoutPage() {
                 await clearServerCart();
                 router.replace(`/order-success/${vData.orderId}`);
               } else {
-                alert("Payment verification failed. Please contact support.");
+                alert(t("paymentVerificationFailed"));
               }
             } catch {
-              alert("Payment verification failed. Please try again.");
+              alert(t("paymentVerificationFailedRetry"));
             } finally {
               setIsLoading(false);
             }
           },
           modal: {
             ondismiss: () => {
-              alert("Payment cancelled.");
+              alert(t("paymentCancelled"));
               setIsLoading(false);
             },
           },
           prefill: { email: session?.user?.email, name: session?.user?.name },
         };
         new window.Razorpay(options).open();
+        return;
+      }
+
+      if (paymentMethod === "online" && ACTIVE_GATEWAY === "tap") {
+        // Tap's checkout is a full-page redirect, not a widget — the
+        // browser fully navigates away, so isLoading stays true (the
+        // TopProgressBar/FullPageLoader keep showing) right up until
+        // navigation happens. app/checkout/tap-return handles the return
+        // leg once Tap sends the browser back with ?tap_id=.
+        const tapRes = await fetch("/api/tap/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: pricingItems(),
+            couponCode: appliedCoupon?.code,
+            shippingAddress,
+          }),
+        });
+        const tapOrder = await tapRes.json();
+        if (!tapRes.ok || !tapOrder.redirectUrl) {
+          throw new Error(tapOrder.error || "Failed to start payment");
+        }
+        window.location.href = tapOrder.redirectUrl;
+        return;
       }
     } catch (err) {
-      alert(`Checkout failed: ${err instanceof Error ? err.message : "Please try again."}`);
+      alert(
+        t("checkoutFailed", {
+          message: err instanceof Error ? err.message : t("pleaseTryAgain"),
+        })
+      );
       setIsLoading(false);
     }
   };
 
   const availablePaymentMethods = (): string[] => {
-    if (!paymentSettings) return ["razorpay"];
+    // "online" is gateway-agnostic — enableRazorpay is reused as the
+    // generic "online payment enabled" flag regardless of ACTIVE_GATEWAY
+    // (see PROJECT_SOURCE_OF_TRUTH.md's payment-settings note).
+    if (!paymentSettings) return ["online"];
     const m: string[] = [];
-    if (paymentSettings.enableRazorpay) m.push("razorpay");
+    if (paymentSettings.enableRazorpay) m.push("online");
     if (paymentSettings.enableCOD) m.push("cod");
-    return m.length > 0 ? m : ["razorpay"];
+    return m.length > 0 ? m : ["online"];
   };
 
   if (status === "loading" || loading) {
@@ -297,19 +387,19 @@ export default function CheckoutPage() {
         <div className="mb-8">
           <nav className="mb-3 flex items-center gap-1.5 text-xs text-stone-400">
             <Link href="/" className="transition-colors hover:text-stone-600">
-              Home
+              {t("home")}
             </Link>
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-3 w-3 rtl:rotate-180" />
             <Link href="/cart" className="transition-colors hover:text-stone-600">
-              Cart
+              {t("cart")}
             </Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-stone-600">Checkout</span>
+            <ChevronRight className="h-3 w-3 rtl:rotate-180" />
+            <span className="text-stone-600">{t("checkout")}</span>
           </nav>
           <p className="mb-1 text-xs font-semibold tracking-widest text-amber-600 uppercase">
-            Almost there
+            {t("almostThere")}
           </p>
-          <h1 className="text-2xl font-bold text-stone-900 md:text-3xl">Checkout</h1>
+          <h1 className="text-2xl font-bold text-stone-900 md:text-3xl">{t("title")}</h1>
         </div>
 
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_340px]">
@@ -323,7 +413,7 @@ export default function CheckoutPage() {
                     <Store className="h-3.5 w-3.5 text-amber-600" />
                   </div>
                   <h2 className="text-sm font-bold text-stone-900">
-                    Items from {Object.keys(itemsByVendor).length} Sellers
+                    {t("itemsFromSellers", { count: Object.keys(itemsByVendor).length })}
                   </h2>
                 </div>
                 <div className="space-y-4 p-5">
@@ -340,11 +430,11 @@ export default function CheckoutPage() {
                               <Store className="h-3.5 w-3.5 text-stone-400" />
                             </div>
                             <span className="text-sm font-semibold text-stone-800">
-                              {vendorItems[0]?.shopName || "linknsmile"}
+                              {vendorItems[0]?.shopName || t("defaultShopName")}
                             </span>
                           </div>
                           <span className="rounded-full border border-stone-100 bg-white px-2.5 py-1 text-xs text-stone-400">
-                            {vendorItems.length} item{vendorItems.length > 1 ? "s" : ""}
+                            {t("itemCount", { count: vendorItems.length })}
                           </span>
                         </div>
                         <div className="mb-3 space-y-1.5">
@@ -354,7 +444,7 @@ export default function CheckoutPage() {
                                 {item.name} × {item.quantity}
                               </span>
                               <span className="font-medium text-stone-700">
-                                ₹{((item.discountPrice || item.price) * item.quantity).toFixed(2)}
+                                {formatCurrency((item.discountPrice || item.price) * item.quantity)}
                               </span>
                             </div>
                           ))}
@@ -362,9 +452,9 @@ export default function CheckoutPage() {
                         {vInfo && (
                           <div className="space-y-1 border-t border-stone-200 pt-3">
                             <div className="flex justify-between text-xs">
-                              <span className="text-stone-400">Subtotal</span>
+                              <span className="text-stone-400">{t("subtotal")}</span>
                               <span className="font-semibold text-stone-700">
-                                ₹{vInfo.subtotal.toFixed(2)}
+                                {formatCurrency(vInfo.subtotal)}
                               </span>
                             </div>
                           </div>
@@ -378,7 +468,7 @@ export default function CheckoutPage() {
 
             {/* Checkout form */}
             <CheckoutForm
-              totalAmount={totalPrice}
+              totalAmount={grandTotal}
               onSubmit={handleCheckout}
               availablePaymentMethods={availablePaymentMethods()}
               initialData={{
@@ -402,9 +492,9 @@ export default function CheckoutPage() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
                   <ShoppingBag className="h-3.5 w-3.5 text-amber-600" />
                 </div>
-                <h2 className="text-sm font-bold text-stone-900">Order Summary</h2>
-                <span className="ml-auto text-xs text-stone-400">
-                  {items.length} item{items.length !== 1 ? "s" : ""}
+                <h2 className="text-sm font-bold text-stone-900">{t("orderSummary")}</h2>
+                <span className="ms-auto text-xs text-stone-400">
+                  {t("itemCount", { count: items.length })}
                 </span>
               </div>
 
@@ -445,10 +535,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="text-xs font-bold text-stone-900">
-                        ₹
-                        {Math.round(
-                          (item.discountPrice || item.price) * item.quantity
-                        ).toLocaleString()}
+                        {formatCurrency((item.discountPrice || item.price) * item.quantity)}
                       </p>
                       <p className="text-[10px] text-stone-400">×{item.quantity}</p>
                     </div>
@@ -456,41 +543,103 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Coupon */}
+              <div className="space-y-2 border-t border-stone-100 px-5 py-4">
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between rounded-xl border border-green-200 bg-green-50 px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-3.5 w-3.5 text-green-600" />
+                      <span className="font-mono text-xs font-bold text-green-700">
+                        {appliedCoupon.code}
+                      </span>
+                      <span className="text-xs text-green-600">{t("couponApplied")}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removeCoupon}
+                      className="text-green-600 hover:text-green-800"
+                      aria-label={t("removeCoupon")}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Tag className="absolute top-1/2 start-3 h-3.5 w-3.5 -translate-y-1/2 text-stone-300" />
+                        <input
+                          value={couponInput}
+                          onChange={(e) => {
+                            setCouponInput(e.target.value.toUpperCase());
+                            setCouponError(null);
+                          }}
+                          placeholder={t("couponPlaceholder")}
+                          disabled={validatingCoupon}
+                          className="h-9 w-full rounded-xl border-2 border-stone-200 bg-white pe-3 ps-9 font-mono text-xs uppercase placeholder:text-stone-300 focus:border-amber-400 focus:outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={applyCoupon}
+                        disabled={!couponInput.trim() || validatingCoupon}
+                        className="flex h-9 items-center gap-1.5 rounded-xl bg-stone-900 px-4 text-xs font-bold text-white transition-colors hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {validatingCoupon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t("apply")}
+                      </button>
+                    </div>
+                    {couponError && <p className="text-xs text-red-500">{couponError}</p>}
+                  </>
+                )}
+              </div>
+
               {/* Totals */}
               <div className="space-y-3 border-t border-stone-100 px-5 pt-4 pb-5">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-stone-500">Subtotal</span>
+                    <span className="text-stone-500">{t("subtotal")}</span>
                     <span className="font-semibold text-stone-800">
-                      ₹{Math.round(totalPrice).toLocaleString()}
+                      {formatCurrency(totalPrice)}
                     </span>
                   </div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-stone-500">{t("couponDiscount")}</span>
+                      <span className="font-semibold text-green-600">
+                        −{formatCurrency(appliedCoupon.discountAmount)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
-                    <span className="text-stone-500">Shipping</span>
-                    <span className="font-semibold text-green-600">Free</span>
+                    <span className="text-stone-500">{t("shipping")}</span>
+                    <span className="font-semibold text-green-600">{t("free")}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-stone-500">Tax</span>
-                    <span className="font-semibold text-stone-800">Included</span>
+                    <span className="text-stone-500">
+                      {taxRatePercent > 0 ? t("taxWithRate", { rate: taxRatePercent }) : t("tax")}
+                    </span>
+                    <span className="font-semibold text-stone-800">
+                      {formatCurrency(taxAmount)}
+                    </span>
                   </div>
                 </div>
 
                 <div className="h-px bg-stone-100" />
 
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-bold text-stone-900">Total</span>
+                  <span className="text-base font-bold text-stone-900">{t("total")}</span>
                   <span className="text-xl font-black text-stone-900">
-                    ₹{Math.round(totalPrice).toLocaleString()}
+                    {formatCurrency(grandTotal)}
                   </span>
                 </div>
 
                 {/* Trust badges */}
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   {[
-                    { icon: "🔒", label: "Secure Checkout" },
-                    { icon: "🚚", label: "Free Delivery" },
-                    { icon: "↩️", label: "Easy Returns" },
-                    { icon: "✅", label: "Verified Sellers" },
+                    { icon: "🔒", label: t("trustSecureCheckout") },
+                    { icon: "🚚", label: t("trustFreeDelivery") },
+                    { icon: "↩️", label: t("trustEasyReturns") },
+                    { icon: "✅", label: t("trustVerifiedSellers") },
                   ].map(({ icon, label }) => (
                     <div
                       key={label}
@@ -507,7 +656,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {isLoading && <FullPageLoader message="Processing your payment…" />}
+      {isLoading && <FullPageLoader message={t("processingPayment")} />}
     </main>
   );
 }

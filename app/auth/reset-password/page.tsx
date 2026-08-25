@@ -2,11 +2,13 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 function ResetPasswordContent() {
+  const t = useTranslations("ResetPasswordPage");
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const otp = searchParams.get("otp") || "";
@@ -29,8 +31,8 @@ function ResetPasswordContent() {
         body: JSON.stringify({ email, otp, newPassword: password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error resetting password");
-      setMessage("Password updated successfully!");
+      if (!res.ok) throw new Error(data.error || t("errorGeneric"));
+      setMessage(t("successMessage"));
       setTimeout(() => router.push("/auth/login"), 1500);
     } catch (err: any) {
       setError(err.message);
@@ -42,11 +44,11 @@ function ResetPasswordContent() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
-        <h1 className="text-center text-2xl font-bold">Reset Password</h1>
+        <h1 className="text-center text-2xl font-bold">{t("title")}</h1>
         <div className="relative">
           <Input
             type={show ? "text" : "password"}
-            placeholder="Enter new password"
+            placeholder={t("newPasswordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -55,7 +57,7 @@ function ResetPasswordContent() {
           <button
             type="button"
             onClick={() => setShow(!show)}
-            className="absolute top-3 right-3 text-gray-500"
+            className="absolute top-3 end-3 text-gray-500"
           >
             {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
@@ -73,7 +75,7 @@ function ResetPasswordContent() {
         )}
 
         <Button type="submit" className="h-12 w-full" disabled={loading}>
-          {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Update Password"}
+          {loading ? <Loader2 className="me-2 h-5 w-5 animate-spin" /> : t("updateButton")}
         </Button>
       </form>
     </div>

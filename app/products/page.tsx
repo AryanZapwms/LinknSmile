@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Package, SlidersHorizontal, X, ChevronDown, ChevronUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Product {
   _id: string;
@@ -89,6 +90,7 @@ function FilterSection({
 }
 
 function ProductsContent() {
+  const t = useTranslations("ProductsPage");
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
   const originParam = searchParams.get("origin");
@@ -174,9 +176,9 @@ function ProductsContent() {
     .map((c) => c.name);
 
   const ORIGINS = [
-    { value: "made-in-india", label: "Made in India", emoji: "🇮🇳" },
+    { value: "made-in-india", label: t("originMadeInIndia"), emoji: "🇮🇳" },
     // { value: "foreign-made", label: "International", emoji: "🌍" },
-    { value: "unspecified", label: "Other", emoji: "🏷️" },
+    { value: "unspecified", label: t("originOther"), emoji: "🏷️" },
   ];
 
   const Sidebar = () => (
@@ -184,7 +186,7 @@ function ProductsContent() {
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="h-4 w-4 text-stone-500" />
-          <span className="text-sm font-bold text-stone-700">Filters</span>
+          <span className="text-sm font-bold text-stone-700">{t("filters")}</span>
           {activeFilterCount > 0 && (
             <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
               {activeFilterCount}
@@ -196,13 +198,13 @@ function ProductsContent() {
             onClick={clearAll}
             className="text-xs font-semibold text-amber-600 transition-colors hover:text-amber-700"
           >
-            Clear all
+            {t("clearAll")}
           </button>
         )}
       </div>
 
       {/* Category filter */}
-      <FilterSection title="Category">
+      <FilterSection title={t("category")}>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -213,7 +215,7 @@ function ProductsContent() {
                 : "border-stone-200 bg-white text-stone-600 hover:border-amber-300 hover:text-amber-700"
             }`}
           >
-            All
+            {t("all")}
           </button>
           {categories.map((cat) => (
             <button
@@ -233,14 +235,14 @@ function ProductsContent() {
       </FilterSection>
 
       {/* Origin filter */}
-      <FilterSection title="Origin">
+      <FilterSection title={t("origin")}>
         <div className="flex flex-col gap-1.5">
           {ORIGINS.map(({ value, label, emoji }) => (
             <button
               key={value}
               type="button"
               onClick={() => toggleOrigin(value)}
-              className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left text-sm font-medium transition-all ${
+              className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-start text-sm font-medium transition-all ${
                 selectedOrigins.includes(value)
                   ? "border-amber-300 bg-amber-50 font-semibold text-amber-700"
                   : "border-stone-100 bg-white text-stone-600 hover:border-amber-200 hover:bg-amber-50/50"
@@ -248,7 +250,7 @@ function ProductsContent() {
             >
               <span className="text-base">{emoji}</span>
               {label}
-              {selectedOrigins.includes(value) && <X className="ml-auto h-3 w-3 text-amber-500" />}
+              {selectedOrigins.includes(value) && <X className="ms-auto h-3 w-3 text-amber-500" />}
             </button>
           ))}
         </div>
@@ -256,18 +258,18 @@ function ProductsContent() {
 
       {/* Sort — mobile only */}
       <div className="md:hidden">
-        <FilterSection title="Sort By">
+        <FilterSection title={t("sortByLabel")}>
           <div className="flex flex-col gap-1">
             {[
-              { value: "newest", label: "Newest First" },
-              { value: "price-low", label: "Price: Low → High" },
-              { value: "price-high", label: "Price: High → Low" },
+              { value: "newest", label: t("newestFirst") },
+              { value: "price-low", label: t("priceLowHigh") },
+              { value: "price-high", label: t("priceHighLow") },
             ].map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setSortBy(opt.value)}
-                className={`rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors ${
+                className={`rounded-xl px-3 py-2 text-start text-sm font-medium transition-colors ${
                   sortBy === opt.value
                     ? "bg-amber-50 font-semibold text-amber-700"
                     : "text-stone-600 hover:bg-stone-50"
@@ -288,7 +290,7 @@ function ProductsContent() {
       <div className="border-b border-stone-100 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-10">
           <p className="mb-1.5 text-xs font-semibold tracking-widest text-amber-600 uppercase">
-            Linknsmile
+            {t("eyebrow")}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -296,15 +298,13 @@ function ProductsContent() {
                 {selectedCategoryNames.length === 1
                   ? selectedCategoryNames[0]
                   : selectedOrigins.includes("made-in-india") && selectedOrigins.length === 1
-                    ? "🇮🇳 Made in India"
+                    ? t("titleMadeInIndia")
                     : selectedOrigins.includes("foreign-made") && selectedOrigins.length === 1
-                      ? "🌍 International Products"
-                      : "All Products"}
+                      ? t("titleInternational")
+                      : t("titleAllProducts")}
               </h1>
               <p className="mt-1 text-sm text-stone-400">
-                {loading
-                  ? "Loading…"
-                  : `${filteredProducts.length} product${filteredProducts.length !== 1 ? "s" : ""} from our curated collection`}
+                {loading ? t("loading") : t("resultsSubtitle", { count: filteredProducts.length })}
               </p>
             </div>
             {activeFilterCount > 0 && (
@@ -357,7 +357,7 @@ function ProductsContent() {
             className="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm font-semibold text-stone-600 transition-colors hover:bg-stone-100 sm:hidden"
           >
             <SlidersHorizontal className="h-4 w-4" />
-            Filters
+            {t("filters")}
             {activeFilterCount > 0 && (
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
                 {activeFilterCount}
@@ -365,17 +365,17 @@ function ProductsContent() {
             )}
           </button>
           <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <Search className="absolute top-1/2 start-3.5 h-4 w-4 -translate-y-1/2 text-stone-400" />
             <Input
-              placeholder="Search products…"
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 rounded-xl border-stone-200 bg-stone-50 pl-10 text-sm focus:border-amber-300 focus:ring-amber-300"
+              className="h-10 rounded-xl border-stone-200 bg-stone-50 ps-10 text-sm focus:border-amber-300 focus:ring-amber-300"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute top-1/2 right-3 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                className="absolute top-1/2 end-3 -translate-y-1/2 text-stone-400 hover:text-stone-600"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -384,17 +384,17 @@ function ProductsContent() {
           <div className="hidden sm:block">
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="h-10 w-48 rounded-xl border-stone-200 bg-stone-50 text-sm focus:ring-amber-300">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue placeholder={t("sortByPlaceholder")} />
               </SelectTrigger>
               <SelectContent className="rounded-xl border-stone-200">
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="price-low">Price: Low → High</SelectItem>
-                <SelectItem value="price-high">Price: High → Low</SelectItem>
+                <SelectItem value="newest">{t("newestFirst")}</SelectItem>
+                <SelectItem value="price-low">{t("priceLowHigh")}</SelectItem>
+                <SelectItem value="price-high">{t("priceHighLow")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <span className="hidden shrink-0 items-center text-xs font-medium whitespace-nowrap text-stone-400 md:flex">
-            {loading ? "…" : `${filteredProducts.length} results`}
+            {loading ? "…" : t("resultsCount", { count: filteredProducts.length })}
           </span>
         </div>
 
@@ -411,9 +411,9 @@ function ProductsContent() {
                 className="absolute inset-0 bg-black/30 backdrop-blur-sm"
                 onClick={() => setMobileSidebarOpen(false)}
               />
-              <div className="relative ml-auto h-full w-72 max-w-full overflow-y-auto bg-white p-5 shadow-2xl">
+              <div className="relative ms-auto h-full w-72 max-w-full overflow-y-auto bg-white p-5 shadow-2xl">
                 <div className="mb-4 flex items-center justify-between">
-                  <span className="font-bold text-stone-800">Filters</span>
+                  <span className="font-bold text-stone-800">{t("filters")}</span>
                   <button
                     onClick={() => setMobileSidebarOpen(false)}
                     className="rounded-lg p-1 text-stone-500 hover:bg-stone-100"
@@ -427,7 +427,7 @@ function ProductsContent() {
                   onClick={() => setMobileSidebarOpen(false)}
                   className="mt-4 w-full rounded-xl bg-amber-500 py-2.5 text-sm font-bold text-white transition-colors hover:bg-amber-600"
                 >
-                  Show {filteredProducts.length} Results
+                  {t("showResults", { count: filteredProducts.length })}
                 </button>
               </div>
             </div>
@@ -479,15 +479,15 @@ function ProductsContent() {
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
                   <Package className="h-7 w-7 text-stone-300" />
                 </div>
-                <h3 className="mb-1 text-base font-bold text-stone-700">No products found</h3>
+                <h3 className="mb-1 text-base font-bold text-stone-700">{t("noProductsFound")}</h3>
                 <p className="mb-5 max-w-xs text-center text-sm text-stone-400">
-                  Try adjusting your filters or search term.
+                  {t("noProductsHint")}
                 </p>
                 <button
                   onClick={clearAll}
                   className="text-sm font-semibold text-amber-600 underline underline-offset-2 hover:text-amber-700"
                 >
-                  Clear filters
+                  {t("clearFilters")}
                 </button>
               </div>
             )}
