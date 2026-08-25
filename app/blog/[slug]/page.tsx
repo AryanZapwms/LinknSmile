@@ -7,6 +7,7 @@ import { connectDB } from "@/lib/db";
 import { Blog } from "@/lib/models/blog";
 import { LOCALE } from "@/lib/currency";
 import { Calendar, User as UserIcon, ArrowLeft } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,7 @@ export default async function BlogDetailPage({
   const { slug } = await params;
   const blog = await getBlog(slug);
   if (!blog) notFound();
+  const t = await getTranslations("BlogDetailPage");
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -75,7 +77,7 @@ export default async function BlogDetailPage({
           href="/blog"
           className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-600 hover:text-amber-700"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to Blog
+          <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" /> {t("backToBlog")}
         </Link>
 
         {blog.company?.name && (

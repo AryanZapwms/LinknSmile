@@ -4,6 +4,7 @@ import Shop from "@/lib/models/shop";
 import Link from "next/link";
 import Image from "next/image";
 import { ShieldCheck, Package, Star, MapPin, ArrowRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import SellerFavouriteButton from "@/components/SellerFavouriteButton";
 
 async function getShops() {
@@ -22,6 +23,7 @@ export const metadata = {
 
 export default async function SellersPage() {
   const shops = await getShops();
+  const t = await getTranslations("SellersPage");
 
   return (
     <main className="min-h-screen bg-stone-50">
@@ -30,20 +32,17 @@ export default async function SellersPage() {
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14">
           <div className="mb-1 flex items-center gap-2">
             <span className="text-xs font-bold tracking-widest text-amber-500 uppercase">
-              Linknsmile Marketplace
+              {t("eyebrow")}
             </span>
           </div>
           <h1 className="mb-2 text-3xl font-bold tracking-tight text-stone-900 md:text-4xl">
-            Our Sellers
+            {t("heading")}
           </h1>
-          <p className="max-w-xl text-base text-stone-500">
-            Browse verified sellers and discover unique products from across India. Every seller is
-            reviewed and approved by our team.
-          </p>
+          <p className="max-w-xl text-base text-stone-500">{t("subtitle")}</p>
           <div className="mt-4 flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700">
               <ShieldCheck className="h-3.5 w-3.5" />
-              {shops.length} Verified Sellers
+              {t("verifiedSellersCount", { count: shops.length })}
             </span>
           </div>
         </div>
@@ -56,11 +55,11 @@ export default async function SellersPage() {
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50">
               <ShieldCheck className="h-8 w-8 text-amber-300" />
             </div>
-            <p className="mb-1 text-lg font-bold text-stone-600">No sellers yet</p>
+            <p className="mb-1 text-lg font-bold text-stone-600">{t("noSellersTitle")}</p>
             <p className="text-sm text-stone-400">
-              Be the first to{" "}
+              {t("beFirstToPrefix")}{" "}
               <Link href="/register-as-seller" className="text-amber-600 hover:underline">
-                sell on linknsmile
+                {t("sellOnLinknsmile")}
               </Link>
             </p>
           </div>
@@ -122,7 +121,7 @@ export default async function SellersPage() {
                     <div className="flex items-center gap-4 border-t border-stone-100 pt-3 text-xs text-stone-400">
                       <span className="flex items-center gap-1">
                         <Package className="h-3.5 w-3.5 text-amber-400" />
-                        {shop.stats?.totalProducts ?? 0} products
+                        {t("productsCount", { count: shop.stats?.totalProducts ?? 0 })}
                       </span>
                       {shop.ratings?.count > 0 && (
                         <span className="flex items-center gap-1">
@@ -136,8 +135,8 @@ export default async function SellersPage() {
                   {/* CTA */}
                   <div className="px-5 pb-4">
                     <div className="flex items-center justify-between text-xs font-semibold text-amber-600 transition-colors group-hover:text-amber-700">
-                      <span>Visit Shop</span>
-                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                      <span>{t("visitShop")}</span>
+                      <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180 transition-transform group-hover:translate-x-0.5" />
                     </div>
                   </div>
                 </Link>
@@ -149,12 +148,12 @@ export default async function SellersPage() {
         {/* Bottom CTA */}
         <div className="mt-12 text-center">
           <div className="inline-flex flex-col items-center gap-3 rounded-2xl border border-stone-100 bg-white px-8 py-6">
-            <p className="font-medium text-stone-600">Want to sell on linknsmile?</p>
+            <p className="font-medium text-stone-600">{t("bottomCtaText")}</p>
             <Link
               href="/register-as-seller"
               className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-600"
             >
-              Become a Seller <ArrowRight className="h-4 w-4" />
+              {t("becomeSeller")} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
           </div>
         </div>

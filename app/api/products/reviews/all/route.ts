@@ -15,8 +15,10 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    // Fetch all reviews with product and company details
-    const reviews = await Review.find()
+    // Public testimonials feed (see app/page.tsx) — only approved, non-deleted
+    // reviews should ever be shown here, same filter fields as the
+    // correctly-scoped sibling route (app/api/products/[id]/reviews).
+    const reviews = await Review.find({ status: "APPROVED", isDeleted: false })
       .populate({
         path: "product",
         select: "name image",

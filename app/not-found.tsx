@@ -4,10 +4,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import logo from "@/public/linknsmile_newOne.png";
 
 export default function NotFound() {
   const router = useRouter();
+  const t = useTranslations("NotFoundPage");
   const [q, setQ] = useState("");
 
   function handleSubmit(e: React.FormEvent) {
@@ -28,11 +30,11 @@ export default function NotFound() {
         className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
       >
         <div
-          className="absolute -top-36 -left-20 h-[520px] w-[520px] rounded-full opacity-20 blur-3xl"
+          className="absolute -top-36 -start-20 h-[520px] w-[520px] rounded-full opacity-20 blur-3xl"
           style={{ background: "radial-gradient(circle at 30% 30%, #fdf2f8, transparent 40%)" }}
         />
         <div
-          className="absolute -right-36 -bottom-28 h-[420px] w-[420px] animate-[float_8s_ease-in-out_infinite] rounded-full opacity-20 blur-2xl"
+          className="absolute -end-36 -bottom-28 h-[420px] w-[420px] animate-[float_8s_ease-in-out_infinite] rounded-full opacity-20 blur-2xl"
           style={{ background: "radial-gradient(circle at 70% 70%, #7c3aed22, transparent 40%)" }}
         />
       </div>
@@ -56,34 +58,30 @@ export default function NotFound() {
               404
             </h1>
 
-            <p className="max-w-xl text-lg text-neutral-600 dark:text-neutral-300">
-              Sorry — we couldn’t find the page you were looking for. It may have been moved,
-              renamed, or might never have existed. Don’t worry — we’ll get you back to your health
-              journey in seconds.
-            </p>
+            <p className="max-w-xl text-lg text-neutral-600 dark:text-neutral-300">{t("body")}</p>
 
             {/* Search */}
             <form
               onSubmit={handleSubmit}
               className="mt-2 flex w-full max-w-2xl items-center gap-3"
               role="search"
-              aria-label="Search products"
+              aria-label={t("searchAriaLabel")}
             >
               <label htmlFor="site-search" className="sr-only">
-                Search products
+                {t("searchAriaLabel")}
               </label>
               <input
                 id="site-search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search for products, services, labs..."
+                placeholder={t("searchPlaceholder")}
                 className="focus:ring-primary/40 min-w-0 flex-1 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 transition outline-none placeholder:text-neutral-400 focus:ring-2 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-50"
               />
               <button
                 type="submit"
                 className="from-primary to-primary/80 focus-visible:ring-primary/20 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-5 py-3 font-semibold text-white shadow hover:brightness-105 focus-visible:ring-4"
               >
-                Search
+                {t("searchButton")}
               </button>
             </form>
 
@@ -92,39 +90,40 @@ export default function NotFound() {
                 href="/"
                 className="inline-block rounded-lg border border-neutral-200 px-4 py-2 text-neutral-800 hover:bg-neutral-50 dark:border-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-800"
               >
-                Home
+                {t("home")}
               </Link>
 
               <Link
                 href="/shop"
                 className="bg-primary inline-block rounded-lg px-4 py-2 font-medium text-white hover:opacity-95"
               >
-                Browse Shop
+                {t("browseShop")}
               </Link>
 
               <Link
                 href="/contact-us"
                 className="inline-block rounded-lg border border-neutral-200 px-4 py-2 text-neutral-800 hover:bg-neutral-50 dark:border-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-800"
               >
-                Contact Us
+                {t("contactUs")}
               </Link>
 
               <a
                 href="mailto:info@linknsmile.com?subject=Broken%20link%20on%20site%20404"
                 className="inline-block rounded-lg px-4 py-2 text-sm text-neutral-600 hover:underline"
               >
-                Report this page
+                {t("reportPage")}
               </a>
             </div>
 
             {/* Small reassurance / UX */}
             <p className="mt-6 text-sm text-neutral-500 dark:text-neutral-400">
-              Pro tip: If you were sent here from a link, try searching for the product name or
-              check out our{" "}
-              <Link href="/shop" className="underline">
-                shop
-              </Link>
-              .
+              {t.rich("proTip", {
+                shopLink: (chunks) => (
+                  <Link href="/shop" className="underline">
+                    {chunks}
+                  </Link>
+                ),
+              })}
             </p>
           </section>
         </div>

@@ -3,78 +3,53 @@
 import React from "react";
 import { Package, RefreshCw, Shield, AlertCircle, CheckCircle, Mail } from "lucide-react";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { useTranslations } from "next-intl";
 
-// A function, not a module-level constant — step 3's description needs the
-// admin-editable supportEmail, only available inside the component via
-// usePlatformSettings(). Also fixes a pre-existing bug found in passing:
-// this previously pointed at the legacy pre-rebrand "care@instapeels.com"
-// domain, not linknsmile.com.
-function getPolicySteps(supportEmail: string) {
-  return [
-    {
-      step: 1,
-      title: "3-Day Return Window",
-      icon: Package,
-      description:
-        "You have 3 days after receiving your item to request a return. This ensures you have time to inspect our chemical peel products upon arrival.",
-    },
-    {
-      step: 2,
-      title: "Product Condition",
-      icon: Shield,
-      description:
-        "Items must be in the same condition as received - unopened, unused, with tags, and in original packaging. You'll need the receipt or proof of purchase.",
-    },
-    {
-      step: 3,
-      title: "Return Request",
-      icon: Mail,
-      description: `Contact us at ${supportEmail} to initiate a return. We'll send you a return shipping label and instructions on where to send your package.`,
-    },
-    {
-      step: 4,
-      title: "Refund Processing",
-      icon: RefreshCw,
-      description:
-        "Once we receive and inspect your return, we'll notify you about refund approval. Approved refunds are processed to your original payment method.",
-    },
-  ];
-}
-
-const keyPoints = [
-  {
-    icon: CheckCircle,
-    title: "Eligible Returns",
-    items: [
-      "Unopened and unused products",
-      "Items with original packaging intact",
-      "Products with tags still attached",
-      "Valid proof of purchase provided",
-    ],
-  },
-  {
-    icon: AlertCircle,
-    title: "Non-Returnable Items",
-    items: [
-      "Products on sale or clearance",
-      "Gift cards and promotional items",
-      "Opened chemical peel products (for safety)",
-      "Items without return authorization",
-    ],
-  },
-];
+const stepIcons = [Package, Shield, Mail, RefreshCw];
 
 export default function RefundPolicy() {
   const { supportEmail, supportPhone } = usePlatformSettings();
-  const policySteps = getPolicySteps(supportEmail);
+  const t = useTranslations("RefundPolicyPage");
+
+  const policySteps = stepIcons.map((icon, i) => ({
+    step: i + 1,
+    title: t(`step${i + 1}Title` as "step1Title"),
+    icon,
+    description: t(`step${i + 1}Description` as "step1Description", { supportEmail }),
+  }));
+
+  const keyPoints = [
+    {
+      id: "eligible",
+      icon: CheckCircle,
+      title: t("eligibleTitle"),
+      items: [
+        t("eligibleItem1"),
+        t("eligibleItem2"),
+        t("eligibleItem3"),
+        t("eligibleItem4"),
+      ],
+    },
+    {
+      id: "nonReturnable",
+      icon: AlertCircle,
+      title: t("nonReturnableTitle"),
+      items: [
+        t("nonReturnableItem1"),
+        t("nonReturnableItem2"),
+        t("nonReturnableItem3"),
+        t("nonReturnableItem4"),
+      ],
+    },
+  ];
 
   return (
     <section className="min-h-screen bg-gradient-to-b from-neutral-50 to-white">
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 px-6 py-20">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-[#B18D0C] blur-3xl"></div>
-          <div className="absolute right-10 bottom-20 h-96 w-96 rounded-full bg-[#B18D0C] blur-3xl"></div>
+          <div className="absolute top-20 start-10 h-72 w-72 rounded-full bg-[#B18D0C] blur-3xl"></div>
+          <div className="absolute end-10 bottom-20 h-96 w-96 rounded-full bg-[#B18D0C] blur-3xl"></div>
         </div>
 
         <div className="relative z-10 mx-auto max-w-4xl text-center">
@@ -82,11 +57,10 @@ export default function RefundPolicy() {
             <RefreshCw className="h-10 w-10 text-[#B18D0C]" />
           </div>
           <h1 className="mb-6 text-5xl font-bold tracking-tight text-white md:text-6xl">
-            Refund & <span className="text-[#B18D0C]">Return Policy</span>
+            {t("heroTitle")} <span className="text-[#B18D0C]">{t("heroTitleAccent")}</span>
           </h1>
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-neutral-300 md:text-xl">
-            Your satisfaction is our priority. Review our straightforward return and refund process
-            for Instapeel chemical peel products.
+            {t("heroSubtitle")}
           </p>
         </div>
       </div>
@@ -95,17 +69,14 @@ export default function RefundPolicy() {
       <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         {/* Policy Highlight */}
         <div className="mb-16 rounded-2xl bg-gradient-to-r from-[#B18D0C] to-[#8A6A09] p-8 text-center shadow-xl md:p-12">
-          <h2 className="mb-4 text-4xl font-bold text-white">3-Day Return Policy</h2>
-          <p className="mx-auto max-w-2xl text-xl text-neutral-100">
-            We stand behind the quality of our home-use chemical peel products. If you're not
-            completely satisfied, we're here to help.
-          </p>
+          <h2 className="mb-4 text-4xl font-bold text-white">{t("highlightTitle")}</h2>
+          <p className="mx-auto max-w-2xl text-xl text-neutral-100">{t("highlightBody")}</p>
         </div>
 
         {/* Return Process Steps */}
         <div className="mb-20">
           <h3 className="mb-12 text-center text-3xl font-bold text-neutral-900">
-            How Returns Work
+            {t("howReturnsWork")}
           </h3>
           <div className="grid gap-8 md:grid-cols-2">
             {policySteps.map((item) => {
@@ -121,12 +92,12 @@ export default function RefundPolicy() {
                     </div>
                     <div>
                       <div className="mb-2 inline-block rounded-full bg-[#B18D0C] px-3 py-1 text-sm font-bold text-white">
-                        Step {item.step}
+                        {t("stepLabel", { step: item.step })}
                       </div>
                       <h4 className="mb-2 text-xl font-semibold text-neutral-900">{item.title}</h4>
                     </div>
                   </div>
-                  <p className="ml-20 leading-relaxed text-neutral-700">{item.description}</p>
+                  <p className="ms-20 leading-relaxed text-neutral-700">{item.description}</p>
                 </div>
               );
             })}
@@ -139,18 +110,18 @@ export default function RefundPolicy() {
             const Icon = section.icon;
             return (
               <div
-                key={section.title}
+                key={section.id}
                 className="rounded-2xl border border-neutral-100 bg-white p-8 shadow-lg"
               >
                 <div className="mb-6 flex items-center gap-4">
                   <div
                     className={`rounded-xl p-4 ${
-                      section.title === "Eligible Returns" ? "bg-green-100" : "bg-orange-100"
+                      section.id === "eligible" ? "bg-green-100" : "bg-orange-100"
                     }`}
                   >
                     <Icon
                       className={`h-8 w-8 ${
-                        section.title === "Eligible Returns" ? "text-green-600" : "text-orange-600"
+                        section.id === "eligible" ? "text-green-600" : "text-orange-600"
                       }`}
                     />
                   </div>
@@ -161,7 +132,7 @@ export default function RefundPolicy() {
                     <li key={idx} className="flex items-start gap-3">
                       <div
                         className={`mt-2 h-2 w-2 flex-shrink-0 rounded-full ${
-                          section.title === "Eligible Returns" ? "bg-green-600" : "bg-orange-600"
+                          section.id === "eligible" ? "bg-green-600" : "bg-orange-600"
                         }`}
                       ></div>
                       <span className="text-neutral-700">{item}</span>
@@ -175,28 +146,21 @@ export default function RefundPolicy() {
 
         {/* Additional Information */}
         <div className="mb-16 rounded-2xl border border-neutral-200 bg-neutral-50 p-8 md:p-12">
-          <h3 className="mb-6 text-2xl font-bold text-neutral-900">Important Information</h3>
+          <h3 className="mb-6 text-2xl font-bold text-neutral-900">{t("importantInfoTitle")}</h3>
           <div className="grid gap-8 md:grid-cols-2">
             <div>
               <h4 className="mb-3 flex items-center gap-2 font-semibold text-neutral-900">
                 <Package className="h-5 w-5 text-[#B18D0C]" />
-                Damages & Issues
+                {t("damagesTitle")}
               </h4>
-              <p className="leading-relaxed text-neutral-700">
-                Please inspect your order upon reception. Contact us immediately if the item is
-                defective, damaged, or if you receive the wrong item, so we can evaluate the issue
-                and make it right.
-              </p>
+              <p className="leading-relaxed text-neutral-700">{t("damagesBody")}</p>
             </div>
             <div>
               <h4 className="mb-3 flex items-center gap-2 font-semibold text-neutral-900">
                 <RefreshCw className="h-5 w-5 text-[#B18D0C]" />
-                Exchanges
+                {t("exchangesTitle")}
               </h4>
-              <p className="leading-relaxed text-neutral-700">
-                The fastest way to ensure you get what you want is to return the item you have, and
-                once the return is accepted, make a separate purchase for the new item.
-              </p>
+              <p className="leading-relaxed text-neutral-700">{t("exchangesBody")}</p>
             </div>
           </div>
         </div>
@@ -204,7 +168,7 @@ export default function RefundPolicy() {
         {/* Refund Timeline */}
         <div className="mb-16 rounded-2xl border border-neutral-100 bg-white p-8 shadow-lg md:p-12">
           <h3 className="mb-6 text-center text-2xl font-bold text-neutral-900">
-            Refund Processing Timeline
+            {t("timelineTitle")}
           </h3>
           <div className="mx-auto max-w-3xl">
             <div className="mb-6 flex items-center gap-4">
@@ -212,8 +176,8 @@ export default function RefundPolicy() {
                 1
               </div>
               <div>
-                <h4 className="font-semibold text-neutral-900">We Receive Your Return</h4>
-                <p className="text-neutral-600">Within 1-2 business days after you ship it</p>
+                <h4 className="font-semibold text-neutral-900">{t("timeline1Title")}</h4>
+                <p className="text-neutral-600">{t("timeline1Body")}</p>
               </div>
             </div>
             <div className="mb-6 flex items-center gap-4">
@@ -221,10 +185,8 @@ export default function RefundPolicy() {
                 2
               </div>
               <div>
-                <h4 className="font-semibold text-neutral-900">Inspection & Approval</h4>
-                <p className="text-neutral-600">
-                  We'll notify you via email within 1-2 business days
-                </p>
+                <h4 className="font-semibold text-neutral-900">{t("timeline2Title")}</h4>
+                <p className="text-neutral-600">{t("timeline2Body")}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -232,11 +194,8 @@ export default function RefundPolicy() {
                 3
               </div>
               <div>
-                <h4 className="font-semibold text-neutral-900">Refund Credited</h4>
-                <p className="text-neutral-600">
-                  Processed to your original payment method. Bank processing may take 5-10 business
-                  days
-                </p>
+                <h4 className="font-semibold text-neutral-900">{t("timeline3Title")}</h4>
+                <p className="text-neutral-600">{t("timeline3Body")}</p>
               </div>
             </div>
           </div>
@@ -245,28 +204,25 @@ export default function RefundPolicy() {
         {/* Contact CTA */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 p-8 text-center md:p-12">
           <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-[#B18D0C] blur-3xl"></div>
+            <div className="absolute top-0 end-0 h-64 w-64 rounded-full bg-[#B18D0C] blur-3xl"></div>
           </div>
           <div className="relative z-10">
-            <h3 className="mb-4 text-3xl font-bold text-white">Need Help with a Return?</h3>
-            <p className="mx-auto mb-8 max-w-2xl text-lg text-neutral-300">
-              Our customer support team is ready to assist you with any questions about returns,
-              refunds, or exchanges of our chemical peel products.
-            </p>
+            <h3 className="mb-4 text-3xl font-bold text-white">{t("ctaTitle")}</h3>
+            <p className="mx-auto mb-8 max-w-2xl text-lg text-neutral-300">{t("ctaBody")}</p>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <a
                 href={`mailto:${supportEmail}`}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#B18D0C] px-8 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#8A6A09] hover:shadow-xl"
               >
                 <Mail className="h-5 w-5" />
-                Email Support
+                {t("emailSupportButton")}
               </a>
               <a
                 href={`tel:${supportPhone.replace(/\s/g, "")}`}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-8 py-4 font-semibold text-neutral-900 shadow-lg transition-all duration-300 hover:bg-neutral-100 hover:shadow-xl"
               >
                 <Package className="h-5 w-5" />
-                Call Us
+                {t("callUsButton")}
               </a>
             </div>
           </div>

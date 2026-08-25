@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart-store";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export function CartIcon() {
   const router = useRouter();
+  const t = useTranslations("CartIcon");
 
   // mounted prevents server/client mismatch for UI that depends on client-only storage
   const [mounted, setMounted] = React.useState(false);
@@ -27,12 +29,12 @@ export function CartIcon() {
       size="icon"
       className="relative cursor-pointer"
       onClick={() => router.push("/cart")}
-      aria-label="Open cart"
+      aria-label={t("openCartAriaLabel")}
     >
       <ShoppingCart className="h-5 w-5" />
       {showBadge && (
         <span
-          className="bg-destructive absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white"
+          className="bg-destructive absolute -top-2 -end-2 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white"
           aria-live="polite"
         >
           {totalItems}

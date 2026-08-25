@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import FavouriteButton from "@/components/FavouriteButton";
 import { formatCurrency } from "@/lib/currency";
+import { useTranslations } from "next-intl";
 
 export default function FavouritesPage() {
+  const t = useTranslations("ProfileFavouritesPage");
   const { favourites } = useFavouritesStore();
   const loading = !useFavouritesStore((s) => s.loaded);
   const [products, setProducts] = useState<any[]>([]);
@@ -37,17 +39,17 @@ export default function FavouritesPage() {
     }
   }, [favourites]);
 
-  if (loading) return <p className="p-8 text-center">Loading favourites…</p>;
+  if (loading) return <p className="p-8 text-center">{t("loading")}</p>;
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 p-6">
-      <h1 className="text-2xl font-bold">My Favourites</h1>
+      <h1 className="text-2xl font-bold">{t("heading")}</h1>
 
       {/* Favourite Sellers */}
       <section>
-        <h2 className="mb-4 text-lg font-semibold">Favourite Sellers</h2>
+        <h2 className="mb-4 text-lg font-semibold">{t("favouriteSellersTitle")}</h2>
         {sellers.length === 0 ? (
-          <p className="text-sm text-gray-500">No favourite sellers yet.</p>
+          <p className="text-sm text-gray-500">{t("noFavouriteSellers")}</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {sellers.map((s) => (
@@ -55,7 +57,7 @@ export default function FavouritesPage() {
                 key={s._id}
                 className="relative flex flex-col items-center gap-2 rounded-xl border p-4"
               >
-                <FavouriteButton type="seller" refId={s._id} className="absolute top-2 right-2" />
+                <FavouriteButton type="seller" refId={s._id} className="absolute top-2 end-2" />
                 <img
                   src={
                     s.logo ||
@@ -75,9 +77,9 @@ export default function FavouritesPage() {
 
       {/* Favourite Products */}
       <section>
-        <h2 className="mb-4 text-lg font-semibold">Favourite Products</h2>
+        <h2 className="mb-4 text-lg font-semibold">{t("favouriteProductsTitle")}</h2>
         {products.length === 0 ? (
-          <p className="text-sm text-gray-500">No favourite products yet.</p>
+          <p className="text-sm text-gray-500">{t("noFavouriteProducts")}</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {products.map((p) => (
@@ -85,7 +87,7 @@ export default function FavouritesPage() {
                 <FavouriteButton
                   type="product"
                   refId={p._id}
-                  className="absolute top-2 right-2 bg-white/80 backdrop-blur"
+                  className="absolute top-2 end-2 bg-white/80 backdrop-blur"
                 />
                 <Link href={`/products/${p._id}`}>
                   <img src={p.images?.[0]} className="h-40 w-full object-cover" alt={p.name} />

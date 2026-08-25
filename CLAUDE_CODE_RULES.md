@@ -3,9 +3,21 @@
 These rules apply to ALL work in this repo until explicitly revoked. They sit above any
 individual prompt. If a prompt conflicts with these rules, follow these rules and flag the conflict.
 
+> **Note added 2026-08-24 (not superseding this file's rules — those still apply — just
+> correcting a stale pointer within it):** `SECURITY_VERIFICATION_REPORT.md`, referenced in
+> rule 1 below as "the fix backlog," **does not exist anywhere in this repo** (confirmed via
+> a full reconciliation pass — it was apparently never committed). The numbered findings this
+> file refers to throughout (#1–#13) are the same ones now tracked, verified against current
+> code, and kept up to date in `PROJECT_SOURCE_OF_TRUTH.md` §12 and §16 — treat that doc's §12
+> as the actual current fix backlog in this report's absence. `SECURITY_FIXES_SUMMARY.md` (the
+> plain-English changelog this process produced) is marked historical/superseded as of the same
+> date, at its own top.
+
 ## 1. Reference documents
 - `PROJECT_SOURCE_OF_TRUTH.md` is the architecture reference. Do not regenerate it wholesale.
-- `SECURITY_VERIFICATION_REPORT.md` (the confirmed-findings report) is the fix backlog.
+- ~~`SECURITY_VERIFICATION_REPORT.md` (the confirmed-findings report) is the fix backlog.~~ This
+  file does not exist in the repo — see the note above. Use `PROJECT_SOURCE_OF_TRUTH.md` §12
+  instead.
 - If either document conflicts with the current code, the **code wins** — but flag the
   discrepancy in your response instead of silently editing the doc.
 

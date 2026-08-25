@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { Blog } from "@/lib/models/blog";
 import { LOCALE } from "@/lib/currency";
 import { Calendar, User as UserIcon, BookOpen } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export const metadata: Metadata = {
   title: "Blog | Linknsmile",
@@ -53,18 +54,19 @@ export default async function BlogListPage({
   const page = Math.max(1, parseInt(pageParam || "1", 10) || 1);
   const { blogs, total } = await getBlogs(page);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const t = await getTranslations("BlogListPage");
 
   return (
     <div className="min-h-screen bg-stone-50">
       <div className="border-b border-stone-100 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-10">
           <p className="mb-1.5 text-xs font-semibold tracking-widest text-amber-600 uppercase">
-            Linknsmile
+            {t("eyebrow")}
           </p>
-          <h1 className="text-2xl font-bold tracking-tight text-stone-900 md:text-3xl">Blog</h1>
-          <p className="mt-1 text-sm text-stone-400">
-            {total} article{total !== 1 ? "s" : ""} on skincare, sellers, and more
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-stone-900 md:text-3xl">
+            {t("heading")}
+          </h1>
+          <p className="mt-1 text-sm text-stone-400">{t("articlesCount", { count: total })}</p>
         </div>
       </div>
 
@@ -74,10 +76,8 @@ export default async function BlogListPage({
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
               <BookOpen className="h-7 w-7 text-stone-300" />
             </div>
-            <h3 className="mb-1 text-base font-bold text-stone-700">No articles yet</h3>
-            <p className="max-w-xs text-center text-sm text-stone-400">
-              Check back soon for skincare tips and stories.
-            </p>
+            <h3 className="mb-1 text-base font-bold text-stone-700">{t("noArticlesTitle")}</h3>
+            <p className="max-w-xs text-center text-sm text-stone-400">{t("noArticlesBody")}</p>
           </div>
         ) : (
           <>
@@ -146,10 +146,10 @@ export default async function BlogListPage({
                       : "border-stone-200 text-stone-600 hover:border-amber-300 hover:text-amber-700"
                   }`}
                 >
-                  Previous
+                  {t("previous")}
                 </Link>
                 <span className="text-sm text-stone-500">
-                  Page {page} of {totalPages}
+                  {t("pageOf", { page, totalPages })}
                 </span>
                 <Link
                   href={page < totalPages ? `/blog?page=${page + 1}` : "#"}
@@ -160,7 +160,7 @@ export default async function BlogListPage({
                       : "border-stone-200 text-stone-600 hover:border-amber-300 hover:text-amber-700"
                   }`}
                 >
-                  Next
+                  {t("next")}
                 </Link>
               </div>
             )}

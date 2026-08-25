@@ -16,6 +16,7 @@ import amexImage from "./assets/amex.png";
 import onlineBankingImage from "./assets/onlinebanking.png";
 import varifiedIcon from "./assets/verified-icon.png";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { useTranslations } from "next-intl";
 
 type FeatureProps = {
   title: string;
@@ -68,27 +69,6 @@ function PaymentLogo({ img, index }: { img: StaticImageData; index: number }) {
   );
 }
 
-const features: FeatureProps[] = [
-  {
-    image: quickOrder,
-    title: "Quick Order",
-    desc: "Multiple SKUs can be entered manually or imported directly into the Quick Order form.",
-    accent: "bg-amber-50",
-  },
-  {
-    image: fastDelivery,
-    title: "Fast Delivery",
-    desc: "Sellers offer buyers much faster delivery for quicker satisfaction.",
-    accent: "bg-blue-50",
-  },
-  {
-    image: bestPrice,
-    title: "Best Price",
-    desc: "Get the lowest prices — shop smart and save more on every purchase.",
-    accent: "bg-green-50",
-  },
-];
-
 const paymentLogos = [
   rupayImage,
   gpayImage,
@@ -101,6 +81,28 @@ const paymentLogos = [
 
 export default function WhyChoose() {
   const { supportPhone } = usePlatformSettings();
+  const t = useTranslations("WhyChoose");
+
+  const features: FeatureProps[] = [
+    {
+      image: quickOrder,
+      title: t("quickOrderTitle"),
+      desc: t("quickOrderDesc"),
+      accent: "bg-amber-50",
+    },
+    {
+      image: fastDelivery,
+      title: t("fastDeliveryTitle"),
+      desc: t("fastDeliveryDesc"),
+      accent: "bg-blue-50",
+    },
+    {
+      image: bestPrice,
+      title: t("bestPriceTitle"),
+      desc: t("bestPriceDesc"),
+      accent: "bg-green-50",
+    },
+  ];
 
   return (
     <section className="py-2">
@@ -108,7 +110,7 @@ export default function WhyChoose() {
       <div className="mb-6 flex items-center gap-3">
         <div className="h-px flex-1 bg-stone-100" />
         <span className="text-xs font-semibold tracking-widest text-stone-400 uppercase">
-          Why Shop With Us
+          {t("sectionLabel")}
         </span>
         <div className="h-px flex-1 bg-stone-100" />
       </div>
@@ -135,10 +137,12 @@ export default function WhyChoose() {
               />
             </div>
             <div>
-              <p className="text-sm font-semibold text-stone-900">100% Payment Protection</p>
-              <p className="text-xs text-stone-500">Easy Return Policy</p>
+              <p className="text-sm font-semibold text-stone-900">
+                {t("paymentProtectionTitle")}
+              </p>
+              <p className="text-xs text-stone-500">{t("easyReturnPolicy")}</p>
             </div>
-            <span className="ml-auto text-xs text-stone-400">We accept</span>
+            <span className="ms-auto text-xs text-stone-400">{t("weAccept")}</span>
           </div>
           <div className="grid grid-cols-4 gap-2">
             {paymentLogos.map((img, i) => (
@@ -165,14 +169,14 @@ export default function WhyChoose() {
             </svg>
           </div>
           <div>
-            <h3 className="mb-1 text-sm font-semibold text-stone-900">Have Queries or Concerns?</h3>
-            <p className="text-xs text-stone-500">Our team is here to help you</p>
+            <h3 className="mb-1 text-sm font-semibold text-stone-900">{t("queriesTitle")}</h3>
+            <p className="text-xs text-stone-500">{t("queriesBody")}</p>
           </div>
           <a
             href={`tel:${supportPhone.replace(/\s/g, "")}`}
             className="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-white px-5 py-2 text-sm font-semibold text-amber-700 shadow-sm transition-all duration-150 hover:border-amber-300 hover:bg-amber-50"
           >
-            Contact Us
+            {t("contactUs")}
           </a>
         </div>
       </div>
