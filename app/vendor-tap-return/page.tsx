@@ -12,9 +12,11 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 function VendorTapReturnContent() {
   const searchParams = useSearchParams();
+  const t = useTranslations("VendorTapReturnPage");
   const [state, setState] = useState<"verifying" | "success" | "error">("verifying");
   const [error, setError] = useState<string | null>(null);
   const ran = useRef(false);
@@ -26,7 +28,7 @@ function VendorTapReturnContent() {
     const tapId = searchParams.get("tap_id");
     if (!tapId) {
       setState("error");
-      setError("Missing payment reference. If you were charged, please contact support.");
+      setError(t("missingReference"));
       return;
     }
 
@@ -42,11 +44,11 @@ function VendorTapReturnContent() {
           setState("success");
         } else {
           setState("error");
-          setError(data.error || "Payment verification failed.");
+          setError(data.error || t("verificationFailedDefault"));
         }
       } catch {
         setState("error");
-        setError("Payment verification failed. Please contact support.");
+        setError(t("verificationFailedCatch"));
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,33 +60,33 @@ function VendorTapReturnContent() {
         {state === "verifying" && (
           <>
             <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-amber-500" />
-            <h1 className="text-lg font-bold text-stone-900">Confirming your payment…</h1>
-            <p className="mt-2 text-sm text-stone-500">Please don't close or refresh this page.</p>
+            <h1 className="text-lg font-bold text-stone-900">{t("confirmingTitle")}</h1>
+            <p className="mt-2 text-sm text-stone-500">{t("confirmingBody")}</p>
           </>
         )}
         {state === "success" && (
           <>
             <CheckCircle2 className="mx-auto mb-4 h-10 w-10 text-green-500" />
-            <h1 className="text-lg font-bold text-stone-900">Subscription renewed</h1>
-            <p className="mt-2 text-sm text-stone-500">Your vendor account is active again.</p>
+            <h1 className="text-lg font-bold text-stone-900">{t("successTitle")}</h1>
+            <p className="mt-2 text-sm text-stone-500">{t("successBody")}</p>
             <Link
               href="/vendor"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-stone-900 px-6 text-sm font-bold text-white hover:bg-amber-500"
             >
-              Go to Vendor Dashboard
+              {t("goToDashboard")}
             </Link>
           </>
         )}
         {state === "error" && (
           <>
             <XCircle className="mx-auto mb-4 h-10 w-10 text-red-500" />
-            <h1 className="text-lg font-bold text-stone-900">Payment verification failed</h1>
+            <h1 className="text-lg font-bold text-stone-900">{t("errorTitle")}</h1>
             <p className="mt-2 text-sm text-stone-500">{error}</p>
             <Link
               href="/vendor"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-stone-900 px-6 text-sm font-bold text-white hover:bg-amber-500"
             >
-              Back to Vendor Dashboard
+              {t("backToDashboard")}
             </Link>
           </>
         )}

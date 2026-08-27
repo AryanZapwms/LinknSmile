@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   Receipt,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { formatCurrency, LOCALE } from "@/lib/currency";
 
 interface OrderItem {
@@ -51,64 +52,72 @@ interface Order {
   paymentMethod?: string;
 }
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; icon: React.ElementType; color: string; bg: string; border: string }
-> = {
-  pending: {
-    label: "Pending",
-    icon: Clock,
-    color: "text-amber-700",
-    bg: "bg-amber-50",
-    border: "border-amber-200",
-  },
-  processing: {
-    label: "Processing",
-    icon: Package,
-    color: "text-blue-700",
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-  },
-  shipped: {
-    label: "Shipped",
-    icon: Truck,
-    color: "text-violet-700",
-    bg: "bg-violet-50",
-    border: "border-violet-200",
-  },
-  delivered: {
-    label: "Delivered",
-    icon: CheckCircle2,
-    color: "text-emerald-700",
-    bg: "bg-emerald-50",
-    border: "border-emerald-200",
-  },
-  cancelled: {
-    label: "Cancelled",
-    icon: XCircle,
-    color: "text-red-700",
-    bg: "bg-red-50",
-    border: "border-red-200",
-  },
-  canceled: {
-    label: "Cancelled",
-    icon: XCircle,
-    color: "text-red-700",
-    bg: "bg-red-50",
-    border: "border-red-200",
-  },
-};
+type StatusTranslator = ReturnType<typeof useTranslations<"ProfileOrdersPage">>;
 
-const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  pending: { label: "Payment Pending", color: "text-amber-600" },
-  completed: { label: "Paid", color: "text-emerald-600" },
-  failed: { label: "Payment Failed", color: "text-red-600" },
-};
+function getStatusConfig(
+  t: StatusTranslator
+): Record<string, { label: string; icon: React.ElementType; color: string; bg: string; border: string }> {
+  return {
+    pending: {
+      label: t("statusPending"),
+      icon: Clock,
+      color: "text-amber-700",
+      bg: "bg-amber-50",
+      border: "border-amber-200",
+    },
+    processing: {
+      label: t("statusProcessing"),
+      icon: Package,
+      color: "text-blue-700",
+      bg: "bg-blue-50",
+      border: "border-blue-200",
+    },
+    shipped: {
+      label: t("statusShipped"),
+      icon: Truck,
+      color: "text-violet-700",
+      bg: "bg-violet-50",
+      border: "border-violet-200",
+    },
+    delivered: {
+      label: t("statusDelivered"),
+      icon: CheckCircle2,
+      color: "text-emerald-700",
+      bg: "bg-emerald-50",
+      border: "border-emerald-200",
+    },
+    cancelled: {
+      label: t("statusCancelled"),
+      icon: XCircle,
+      color: "text-red-700",
+      bg: "bg-red-50",
+      border: "border-red-200",
+    },
+    canceled: {
+      label: t("statusCancelled"),
+      icon: XCircle,
+      color: "text-red-700",
+      bg: "bg-red-50",
+      border: "border-red-200",
+    },
+  };
+}
+
+function getPaymentStatusConfig(
+  t: StatusTranslator
+): Record<string, { label: string; color: string }> {
+  return {
+    pending: { label: t("paymentPending"), color: "text-amber-600" },
+    completed: { label: t("paymentPaid"), color: "text-emerald-600" },
+    failed: { label: t("paymentFailed"), color: "text-red-600" },
+  };
+}
 
 function StatusBadge({ status }: { status?: string }) {
+  const t = useTranslations("ProfileOrdersPage");
   const key = (status ?? "pending").toLowerCase();
-  const cfg = STATUS_CONFIG[key] ?? {
-    label: status ?? "Unknown",
+  const cfg = getStatusConfig(t)[key] ?? {
+    label: status ?? t("statusUnknown"),
     icon: AlertCircle,
     color: "text-gray-700",
     bg: "bg-gray-50",
@@ -154,6 +163,7 @@ function OrderSkeleton() {
 export default function OrdersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const t = useTranslations("ProfileOrdersPage");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -175,14 +185,14 @@ export default function OrdersPage() {
       const res = await fetch("/api/orders?userOrders=true");
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "Failed to fetch orders");
+        throw new Error(errData.error || t("loadError"));
       }
       const data = await res.json();
       // Handle both array and { orders: [] } response shapes
       const normalized = Array.isArray(data) ? data : (data.orders ?? []);
       setOrders(normalized);
     } catch (err: any) {
-      setError(err?.message ?? "Something went wrong");
+      setError(err?.message ?? t("genericError"));
     } finally {
       setLoading(false);
     }
@@ -219,8 +229,8 @@ export default function OrdersPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-foreground text-2xl font-bold">My Orders</h1>
-              <p className="text-muted-foreground text-sm">View and track all your orders</p>
+              <h1 className="text-foreground text-2xl font-bold">{t("heading")}</h1>
+              <p className="text-muted-foreground text-sm">{t("subtitle")}</p>
             </div>
           </div>
           <Button
@@ -231,7 +241,7 @@ export default function OrdersPage() {
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            {t("refresh")}
           </Button>
         </div>
 
@@ -247,9 +257,9 @@ export default function OrdersPage() {
                 variant="outline"
                 size="sm"
                 onClick={fetchOrders}
-                className="ml-auto border-red-300 text-red-700 hover:bg-red-100"
+                className="ms-auto border-red-300 text-red-700 hover:bg-red-100"
               >
-                Retry
+                {t("retry")}
               </Button>
             </CardContent>
           </Card>
@@ -261,12 +271,10 @@ export default function OrdersPage() {
             <div className="bg-primary/10 mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full">
               <ShoppingBag className="text-primary h-10 w-10" />
             </div>
-            <h2 className="text-foreground mb-2 text-xl font-semibold">No orders yet</h2>
-            <p className="text-muted-foreground mx-auto mb-8 max-w-sm">
-              You haven't placed any orders yet. Start shopping to see your orders here.
-            </p>
+            <h2 className="text-foreground mb-2 text-xl font-semibold">{t("noOrdersTitle")}</h2>
+            <p className="text-muted-foreground mx-auto mb-8 max-w-sm">{t("noOrdersBody")}</p>
             <Link href="/products">
-              <Button className="rounded-full px-8">Browse Products</Button>
+              <Button className="rounded-full px-8">{t("browseProducts")}</Button>
             </Link>
           </div>
         )}
@@ -275,14 +283,14 @@ export default function OrdersPage() {
         {!loading && !error && orders.length > 0 && (
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm font-medium">
-              {orders.length} order{orders.length !== 1 ? "s" : ""} found
+              {t("ordersFoundCount", { count: orders.length })}
             </p>
             {orders.map((order) => {
               const items = order.items ?? [];
               const firstItem = items[0];
               const remainingCount = items.length - 1;
               const productImage = firstItem?.product?.image;
-              const productName = firstItem?.product?.name ?? "Product";
+              const productName = firstItem?.product?.name ?? t("productFallback");
               const createdAt = order.createdAt
                 ? new Date(order.createdAt).toLocaleDateString(LOCALE, {
                     day: "numeric",
@@ -290,9 +298,9 @@ export default function OrdersPage() {
                     year: "numeric",
                   })
                 : "—";
-              const paymentCfg = PAYMENT_STATUS_CONFIG[
+              const paymentCfg = getPaymentStatusConfig(t)[
                 (order.paymentStatus ?? "").toLowerCase()
-              ] ?? { label: order.paymentStatus ?? "Unknown", color: "text-muted-foreground" };
+              ] ?? { label: order.paymentStatus ?? t("statusUnknown"), color: "text-muted-foreground" };
 
               return (
                 <Link key={order._id} href={`/profile/orders/${order._id}`}>
@@ -306,7 +314,7 @@ export default function OrdersPage() {
                             <span className="text-foreground text-xs font-semibold">
                               #{order.orderNumber ?? order._id.slice(-8).toUpperCase()}
                             </span>
-                            <span className="text-muted-foreground ml-2 text-xs">{createdAt}</span>
+                            <span className="text-muted-foreground ms-2 text-xs">{createdAt}</span>
                           </div>
                         </div>
                         <StatusBadge status={order.orderStatus} />
@@ -331,7 +339,7 @@ export default function OrdersPage() {
                             </div>
                           )}
                           {items.length > 1 && (
-                            <div className="bg-primary text-primary-foreground absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
+                            <div className="bg-primary text-primary-foreground absolute -end-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
                               {items.length}
                             </div>
                           )}
@@ -344,7 +352,7 @@ export default function OrdersPage() {
                           </p>
                           {remainingCount > 0 && (
                             <p className="text-muted-foreground mt-0.5 text-xs">
-                              +{remainingCount} more item{remainingCount !== 1 ? "s" : ""}
+                              {t("moreItemsCount", { count: remainingCount })}
                             </p>
                           )}
                           {firstItem?.selectedSize && (
@@ -356,8 +364,8 @@ export default function OrdersPage() {
                           <p className={`mt-1 text-xs font-medium ${paymentCfg.color}`}>
                             {paymentCfg.label}
                             {order.paymentMethod && (
-                              <span className="text-muted-foreground ml-1 font-normal">
-                                via {order.paymentMethod.toUpperCase()}
+                              <span className="text-muted-foreground ms-1 font-normal">
+                                {t("paymentVia", { method: order.paymentMethod.toUpperCase() })}
                               </span>
                             )}
                           </p>
@@ -365,12 +373,12 @@ export default function OrdersPage() {
 
                         {/* Amount + arrow */}
                         <div className="flex flex-shrink-0 items-center gap-2">
-                          <div className="text-right">
+                          <div className="text-end">
                             <p className="text-foreground font-bold">
                               {formatCurrency(Number(order.totalAmount ?? 0))}
                             </p>
                             <p className="text-muted-foreground text-xs">
-                              {items.length} item{items.length !== 1 ? "s" : ""}
+                              {t("itemsCount", { count: items.length })}
                             </p>
                           </div>
                           <ChevronRight className="text-muted-foreground group-hover:text-primary h-4 w-4 transition-colors" />

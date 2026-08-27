@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Category {
   _id: string;
@@ -34,6 +35,7 @@ function CategorySkeleton() {
 }
 
 export function CategorySlider() {
+  const t = useTranslations("CategorySlider");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,18 +57,16 @@ export function CategorySlider() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-stone-900 md:text-2xl">
-            Shop by Category
+            {t("heading")}
           </h2>
-          <p className="mt-0.5 text-xs font-medium text-stone-400">
-            Find exactly what you're looking for
-          </p>
+          <p className="mt-0.5 text-xs font-medium text-stone-400">{t("subtitle")}</p>
         </div>
         <Link
           href="/products"
           className="group flex items-center gap-1 text-sm font-medium text-amber-600 transition-colors hover:text-amber-700"
         >
-          View all
-          <ChevronRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+          {t("viewAll")}
+          <ChevronRight className="h-4 w-4 rtl:rotate-180 transition-transform duration-150 group-hover:translate-x-0.5" />
         </Link>
       </div>
 

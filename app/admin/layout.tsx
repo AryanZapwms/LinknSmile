@@ -25,6 +25,7 @@ import {
   GalleryHorizontal,
   Star,
   Settings2,
+  House
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  { href: "/", label: "Home", icon: <House className="h-5 w-5" /> },
   { href: "/admin", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
   { href: "/admin/orders", label: "Orders", icon: <ShoppingCart className="h-5 w-5" /> },
   { href: "/admin/products", label: "Products", icon: <Package className="h-5 w-5" /> },

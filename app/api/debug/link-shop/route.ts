@@ -7,7 +7,7 @@ import { User } from "@/lib/models/user";
 import Shop from "@/lib/models/shop";
 import mongoose from "mongoose";
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   if (req.method === "OPTIONS") {
     return withCORS(new NextResponse(null));
   }

@@ -19,10 +19,12 @@ import {
   ShieldCheck,
   FileText,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function VendorApplyPage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
+  const t = useTranslations("VendorApplyPage");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -75,7 +77,7 @@ export default function VendorApplyPage() {
       !formData.state ||
       !formData.pincode
     ) {
-      setError("Please fill in all required shop and address fields.");
+      setError(t("validationError"));
       return;
     }
 
@@ -89,7 +91,7 @@ export default function VendorApplyPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to submit application");
+        setError(data.error || t("submitFailedDefault"));
         return;
       }
 
@@ -97,7 +99,7 @@ export default function VendorApplyPage() {
       await update({ role: "shop_owner", shopId: data.shopId });
       setTimeout(() => router.push("/vendor"), 1500);
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(t("genericError"));
     } finally {
       setLoading(false);
     }
@@ -119,8 +121,8 @@ export default function VendorApplyPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <CheckCircle2 className="h-9 w-9 text-green-600" />
             </div>
-            <h2 className="text-2xl font-bold">Application submitted!</h2>
-            <p className="text-muted-foreground">Taking you to your vendor dashboard…</p>
+            <h2 className="text-2xl font-bold">{t("successTitle")}</h2>
+            <p className="text-muted-foreground">{t("successBody")}</p>
           </CardContent>
         </Card>
       </main>
@@ -132,10 +134,11 @@ export default function VendorApplyPage() {
       <div className="w-full max-w-xl">
         <Card className="overflow-hidden rounded-2xl border shadow-xl">
           <CardHeader className="space-y-2 border-b pb-6">
-            <CardTitle className="text-2xl font-bold">Complete your vendor application</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t("formTitle")}</CardTitle>
             <CardDescription>
-              Welcome, {session?.user?.name || "there"} — just a few more details about your shop
-              and we'll get your application in for review.
+              {t("formSubtitle", {
+                name: session?.user?.name || t("welcomeFallbackName"),
+              })}
             </CardDescription>
           </CardHeader>
 
@@ -150,12 +153,12 @@ export default function VendorApplyPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="shopName" className="flex items-center gap-2 text-sm font-bold">
-                  <Store className="h-4 w-4 text-amber-500" /> Shop Name *
+                  <Store className="h-4 w-4 text-amber-500" /> {t("shopNameLabel")}
                 </Label>
                 <Input
                   id="shopName"
                   name="shopName"
-                  placeholder="Your shop's name"
+                  placeholder={t("shopNamePlaceholder")}
                   value={formData.shopName}
                   onChange={handleChange}
                   required
@@ -165,12 +168,12 @@ export default function VendorApplyPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-bold">
-                  <Phone className="h-4 w-4 text-amber-500" /> Contact Phone *
+                  <Phone className="h-4 w-4 text-amber-500" /> {t("phoneLabel")}
                 </Label>
                 <Input
                   id="phone"
                   name="phone"
-                  placeholder="Phone number"
+                  placeholder={t("phonePlaceholder")}
                   value={formData.phone}
                   onChange={handleChange}
                   required
@@ -180,12 +183,12 @@ export default function VendorApplyPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="street" className="flex items-center gap-2 text-sm font-bold">
-                  <MapPin className="h-4 w-4 text-amber-500" /> Street Address *
+                  <MapPin className="h-4 w-4 text-amber-500" /> {t("streetLabel")}
                 </Label>
                 <Input
                   id="street"
                   name="street"
-                  placeholder="123 Main St"
+                  placeholder={t("streetPlaceholder")}
                   value={formData.street}
                   onChange={handleChange}
                   required
@@ -196,12 +199,12 @@ export default function VendorApplyPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="city" className="text-sm font-bold">
-                    City *
+                    {t("cityLabel")}
                   </Label>
                   <Input
                     id="city"
                     name="city"
-                    placeholder="Mumbai"
+                    placeholder={t("cityPlaceholder")}
                     value={formData.city}
                     onChange={handleChange}
                     required
@@ -210,12 +213,12 @@ export default function VendorApplyPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state" className="text-sm font-bold">
-                    State *
+                    {t("stateLabel")}
                   </Label>
                   <Input
                     id="state"
                     name="state"
-                    placeholder="Maharashtra"
+                    placeholder={t("statePlaceholder")}
                     value={formData.state}
                     onChange={handleChange}
                     required
@@ -226,12 +229,12 @@ export default function VendorApplyPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="pincode" className="text-sm font-bold">
-                  Pincode *
+                  {t("pincodeLabel")}
                 </Label>
                 <Input
                   id="pincode"
                   name="pincode"
-                  placeholder="400001"
+                  placeholder={t("pincodePlaceholder")}
                   value={formData.pincode}
                   onChange={handleChange}
                   required
@@ -242,7 +245,7 @@ export default function VendorApplyPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="gstNumber" className="flex items-center gap-2 text-sm font-bold">
-                    <FileText className="h-3.5 w-3.5" /> GST (optional)
+                    <FileText className="h-3.5 w-3.5" /> {t("gstLabel")}
                   </Label>
                   <Input
                     id="gstNumber"
@@ -254,7 +257,7 @@ export default function VendorApplyPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="panNumber" className="flex items-center gap-2 text-sm font-bold">
-                    <FileText className="h-3.5 w-3.5" /> PAN (optional)
+                    <FileText className="h-3.5 w-3.5" /> {t("panLabel")}
                   </Label>
                   <Input
                     id="panNumber"
@@ -267,8 +270,7 @@ export default function VendorApplyPage() {
               </div>
 
               <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 text-sm text-amber-800 italic">
-                By submitting this application, you agree to our Vendor Terms and Conditions. Our
-                team will review your application within 24-48 hours.
+                {t("termsNotice")}
               </div>
 
               <Button
@@ -277,11 +279,11 @@ export default function VendorApplyPage() {
                 className="h-12 w-full rounded-xl bg-stone-900 font-bold text-white hover:bg-amber-500"
               >
                 {loading ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="me-2 h-5 w-5 animate-spin" />
                 ) : (
-                  <ShieldCheck className="mr-2 h-5 w-5" />
+                  <ShieldCheck className="me-2 h-5 w-5" />
                 )}
-                {loading ? "Submitting…" : "Submit Application"}
+                {loading ? t("submitting") : t("submitApplication")}
               </Button>
             </form>
           </CardContent>

@@ -3,6 +3,7 @@ import { Heart } from "lucide-react";
 import { useFavouritesStore } from "@/hooks/useFavourites";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -15,6 +16,7 @@ export default function FavouriteButton({ type, refId, className }: Props) {
   const { toggle, isFavourite } = useFavouritesStore();
   const { data: session } = useSession();
   const router = useRouter();
+  const t = useTranslations("FavouriteButton");
   const faved = isFavourite(type, refId);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -32,7 +34,7 @@ export default function FavouriteButton({ type, refId, className }: Props) {
         faved ? "text-red-500" : "text-stone-400 hover:text-red-400",
         className
       )}
-      aria-label={faved ? "Remove from favourites" : "Add to favourites"}
+      aria-label={faved ? t("removeAriaLabel") : t("addAriaLabel")}
     >
       <Heart className={cn("h-4 w-4", faved && "fill-current")} />
     </button>

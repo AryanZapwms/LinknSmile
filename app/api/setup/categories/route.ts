@@ -3,10 +3,16 @@ import { connectDB } from "@/lib/db";
 import { Category } from "@/lib/models/category";
 import { Company } from "@/lib/models/company";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export async function POST() {
-
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "admin") {
+      return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
+    }
+
     await connectDB();
 
     // Get all companies

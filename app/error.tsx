@@ -11,6 +11,7 @@
  */
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -18,6 +19,8 @@ interface ErrorProps {
 }
 
 export default function GlobalError({ error, reset }: ErrorProps) {
+  const t = useTranslations("ErrorBoundaryPage");
+
   useEffect(() => {
     // Log to your error tracking service here (e.g. Sentry)
     console.error("[GlobalError]", error);
@@ -27,11 +30,13 @@ export default function GlobalError({ error, reset }: ErrorProps) {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-md space-y-6 text-center">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-gray-900">Something went wrong</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{t("title")}</h1>
           <p className="text-sm text-gray-500">
-            We hit an unexpected error. Our team has been notified.
+            {t("body")}
             {error.digest && (
-              <span className="mt-1 block text-xs text-gray-400">Error ID: {error.digest}</span>
+              <span className="mt-1 block text-xs text-gray-400">
+                {t("errorIdLabel", { id: error.digest })}
+              </span>
             )}
           </p>
         </div>
@@ -41,13 +46,13 @@ export default function GlobalError({ error, reset }: ErrorProps) {
             onClick={reset}
             className="rounded-md bg-black px-4 py-2 text-sm text-white transition-colors hover:bg-gray-800"
           >
-            Try again
+            {t("tryAgain")}
           </button>
           <a
             href="/"
             className="rounded-md border border-gray-300 px-4 py-2 text-sm transition-colors hover:bg-gray-50"
           >
-            Go home
+            {t("goHome")}
           </a>
         </div>
       </div>

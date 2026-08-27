@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, User, Phone, MapPin, Store, ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface UserProfile {
   name: string;
@@ -26,6 +27,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const t = useTranslations("ProfilePage");
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     email: "",
@@ -99,12 +101,12 @@ export default function ProfilePage() {
 
       const updatedData = await res.json();
       setProfile(updatedData);
-      setMessage("✓ Profile saved successfully! Your changes have been stored.");
+      setMessage(t("saveSuccess"));
 
       // Clear message after 3 seconds
       setTimeout(() => setMessage(""), 3000);
     } catch (error) {
-      setMessage("❌ Error updating profile. Please try again.");
+      setMessage(t("saveError"));
       console.error("Error:", error);
     } finally {
       setLoading(false);
@@ -114,7 +116,7 @@ export default function ProfilePage() {
   if (status === "loading") {
     return (
       <main className="bg-background flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading profile...</p>
+        <p className="text-muted-foreground">{t("loadingProfile")}</p>
       </main>
     );
   }
@@ -126,10 +128,8 @@ export default function ProfilePage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-foreground mb-2 text-3xl font-bold">Profile Settings</h1>
-        <p className="text-muted-foreground">
-          Update your personal information and contact details
-        </p>
+        <h1 className="text-foreground mb-2 text-3xl font-bold">{t("heading")}</h1>
+        <p className="text-muted-foreground">{t("subtitle")}</p>
       </div>
       {profile.role === "user" && profile.pendingVendorApplication && (
         <Card className="mb-6 border-amber-200 bg-amber-50">
@@ -139,12 +139,8 @@ export default function ProfilePage() {
                 <Store className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-amber-900">
-                  Finish setting up your vendor account
-                </p>
-                <p className="text-xs text-amber-700">
-                  You started a vendor application but haven't submitted your shop details yet.
-                </p>
+                <p className="text-sm font-semibold text-amber-900">{t("vendorBannerTitle")}</p>
+                <p className="text-xs text-amber-700">{t("vendorBannerBody")}</p>
               </div>
             </div>
             <Button
@@ -152,29 +148,29 @@ export default function ProfilePage() {
               className="shrink-0 bg-amber-600 hover:bg-amber-700"
               onClick={() => router.push("/vendor-apply")}
             >
-              Continue application <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              {t("continueApplication")} <ArrowRight className="ms-1.5 h-3.5 w-3.5 rtl:rotate-180" />
             </Button>
           </CardContent>
         </Card>
       )}
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+          <CardTitle>{t("personalInfoTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name */}
             <div>
               <label className="text-foreground mb-2 block text-sm font-medium">
-                <User className="mr-2 inline h-4 w-4" />
-                Full Name
+                <User className="me-2 inline h-4 w-4" />
+                {t("fullNameLabel")}
               </label>
               <Input
                 type="text"
                 name="name"
                 value={profile.name}
                 onChange={handleChange}
-                placeholder="Enter your full name"
+                placeholder={t("fullNamePlaceholder")}
                 className="bg-background border-border"
               />
             </div>
@@ -182,8 +178,8 @@ export default function ProfilePage() {
             {/* Email */}
             <div>
               <label className="text-foreground mb-2 block text-sm font-medium">
-                <Mail className="mr-2 inline h-4 w-4" />
-                Email
+                <Mail className="me-2 inline h-4 w-4" />
+                {t("emailLabel")}
               </label>
               <Input
                 type="email"
@@ -197,15 +193,15 @@ export default function ProfilePage() {
             {/* Phone */}
             <div>
               <label className="text-foreground mb-2 block text-sm font-medium">
-                <Phone className="mr-2 inline h-4 w-4" />
-                Phone Number
+                <Phone className="me-2 inline h-4 w-4" />
+                {t("phoneLabel")}
               </label>
               <Input
                 type="tel"
                 name="phone"
                 value={profile.phone}
                 onChange={handleChange}
-                placeholder="Enter your phone number"
+                placeholder={t("phonePlaceholder")}
                 className="bg-background border-border"
               />
             </div>
@@ -213,15 +209,15 @@ export default function ProfilePage() {
             {/* Address */}
             <div>
               <label className="text-foreground mb-2 block text-sm font-medium">
-                <MapPin className="mr-2 inline h-4 w-4" />
-                Address
+                <MapPin className="me-2 inline h-4 w-4" />
+                {t("addressLabel")}
               </label>
               <Input
                 type="text"
                 name="address"
                 value={profile.address}
                 onChange={handleChange}
-                placeholder="Enter your address"
+                placeholder={t("addressPlaceholder")}
                 className="bg-background border-border"
               />
             </div>
@@ -229,35 +225,41 @@ export default function ProfilePage() {
             {/* City, State, Pincode */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
-                <label className="text-foreground mb-2 block text-sm font-medium">City</label>
+                <label className="text-foreground mb-2 block text-sm font-medium">
+                  {t("cityLabel")}
+                </label>
                 <Input
                   type="text"
                   name="city"
                   value={profile.city}
                   onChange={handleChange}
-                  placeholder="City"
+                  placeholder={t("cityPlaceholder")}
                   className="bg-background border-border"
                 />
               </div>
               <div>
-                <label className="text-foreground mb-2 block text-sm font-medium">State</label>
+                <label className="text-foreground mb-2 block text-sm font-medium">
+                  {t("stateLabel")}
+                </label>
                 <Input
                   type="text"
                   name="state"
                   value={profile.state}
                   onChange={handleChange}
-                  placeholder="State"
+                  placeholder={t("statePlaceholder")}
                   className="bg-background border-border"
                 />
               </div>
               <div>
-                <label className="text-foreground mb-2 block text-sm font-medium">Pincode</label>
+                <label className="text-foreground mb-2 block text-sm font-medium">
+                  {t("pincodeLabel")}
+                </label>
                 <Input
                   type="text"
                   name="pincode"
                   value={profile.pincode}
                   onChange={handleChange}
-                  placeholder="Pincode"
+                  placeholder={t("pincodePlaceholder")}
                   className="bg-background border-border"
                 />
               </div>
@@ -278,7 +280,7 @@ export default function ProfilePage() {
 
             {/* Submit Button */}
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Saving..." : "Save Changes"}
+              {loading ? t("saving") : t("saveChanges")}
             </Button>
           </form>
         </CardContent>

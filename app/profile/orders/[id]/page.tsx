@@ -18,25 +18,32 @@ import {
   Package,
   Truck,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { formatCurrency, LOCALE } from "@/lib/currency";
 
 const numberFormatter = new Intl.NumberFormat(LOCALE);
 
-const statusLabelMap: Record<string, string> = {
-  pending: "Pending",
-  processing: "Processing",
-  shipped: "Shipped",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-  canceled: "Cancelled",
-};
+type DetailTranslator = ReturnType<typeof useTranslations<"ProfileOrderDetailPage">>;
 
-const statusSteps = [
-  { key: "pending", label: "Pending", description: "Order received successfully." },
-  { key: "processing", label: "Processing", description: "Your items are being prepared." },
-  { key: "shipped", label: "Shipped", description: "Package has left the warehouse." },
-  { key: "delivered", label: "Delivered", description: "Order delivered to your address." },
-];
+function getStatusLabelMap(t: DetailTranslator): Record<string, string> {
+  return {
+    pending: t("stepPendingLabel"),
+    processing: t("stepProcessingLabel"),
+    shipped: t("stepShippedLabel"),
+    delivered: t("stepDeliveredLabel"),
+    cancelled: t("cancelledLabel"),
+    canceled: t("cancelledLabel"),
+  };
+}
+
+function getStatusSteps(t: DetailTranslator) {
+  return [
+    { key: "pending", label: t("stepPendingLabel"), description: t("stepPendingDesc") },
+    { key: "processing", label: t("stepProcessingLabel"), description: t("stepProcessingDesc") },
+    { key: "shipped", label: t("stepShippedLabel"), description: t("stepShippedDesc") },
+    { key: "delivered", label: t("stepDeliveredLabel"), description: t("stepDeliveredDesc") },
+  ];
+}
 
 const getStatusBadgeColor = (status?: string) => {
   if (!status) return "bg-gray-100 text-gray-800";
@@ -110,13 +117,14 @@ export default function OrderDetailsPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const orderId = params?.id ?? "";
+  const t = useTranslations("ProfileOrderDetailPage");
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchOrder = useCallback(async () => {
     if (!orderId) {
-      setError("Order not found");
+      setError(t("orderNotFound"));
       setOrder(null);
       setLoading(false);
       return;
@@ -128,7 +136,7 @@ export default function OrderDetailsPage() {
     try {
       const res = await fetch(`/api/orders/${orderId}`);
       if (!res.ok) {
-        throw new Error("Failed to fetch order details");
+        throw new Error(t("loadError"));
       }
 
       const data: Record<string, any> = await res.json();
@@ -166,11 +174,11 @@ export default function OrderDetailsPage() {
     } catch (fetchError: any) {
       console.error("Error fetching order detail:", fetchError);
       setOrder(null);
-      setError(fetchError?.message ?? "Failed to fetch order details");
+      setError(fetchError?.message ?? t("loadError"));
     } finally {
       setLoading(false);
     }
-  }, [orderId]);
+  }, [orderId, t]);
 
   useEffect(() => {
     if (status === "loading") {
@@ -190,9 +198,10 @@ export default function OrderDetailsPage() {
   }, [status, session, router, fetchOrder]);
 
   const statusInfo = useMemo(() => {
+    const statusSteps = getStatusSteps(t);
     if (!order?.orderStatus) {
       return {
-        label: "Unknown",
+        label: t("unknownLabel"),
         normalized: "",
         steps: statusSteps.map((step) => ({
           ...step,
@@ -209,7 +218,7 @@ export default function OrderDetailsPage() {
     const activeIndex = cancelled ? -1 : statusSteps.findIndex((step) => step.key === normalized);
 
     return {
-      label: statusLabelMap[normalized] ?? order.orderStatus,
+      label: getStatusLabelMap(t)[normalized] ?? order.orderStatus,
       normalized,
       steps: statusSteps.map((step, index) => {
         const reached = activeIndex !== -1 && index <= activeIndex;
@@ -224,7 +233,7 @@ export default function OrderDetailsPage() {
       }),
       cancelled,
     };
-  }, [order]);
+  }, [order, t]);
 
   const itemCount = useMemo(() => {
     if (!order?.items?.length) return 0;
@@ -245,7 +254,7 @@ export default function OrderDetailsPage() {
   if (status === "loading") {
     return (
       <main className="bg-background flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading order details...</p>
+        <p className="text-muted-foreground">{t("loadingOrderDetails")}</p>
       </main>
     );
   }
@@ -257,7 +266,7 @@ export default function OrderDetailsPage() {
   if (loading) {
     return (
       <main className="bg-background flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading order details...</p>
+        <p className="text-muted-foreground">{t("loadingOrderDetails")}</p>
       </main>
     );
   }
@@ -269,7 +278,7 @@ export default function OrderDetailsPage() {
           <Card>
             <CardContent className="space-y-4 py-8 text-center">
               <p className="font-medium text-red-600">{error}</p>
-              <Button onClick={fetchOrder}>Retry</Button>
+              <Button onClick={fetchOrder}>{t("retry")}</Button>
             </CardContent>
           </Card>
         </div>
@@ -280,7 +289,7 @@ export default function OrderDetailsPage() {
   if (!order) {
     return (
       <main className="bg-background flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Order not found.</p>
+        <p className="text-muted-foreground">{t("orderNotFound")}</p>
       </main>
     );
   }
@@ -297,8 +306,8 @@ export default function OrderDetailsPage() {
             onClick={() => router.push("/profile/orders")}
             className="w-full justify-start sm:w-auto"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Orders
+            <ArrowLeft className="me-2 h-4 w-4 rtl:rotate-180" />
+            {t("backToOrders")}
           </Button>
           <Badge className={`${statusBadge} px-3 py-1 text-sm`}>{statusLabel}</Badge>
         </div>
@@ -306,13 +315,13 @@ export default function OrderDetailsPage() {
         <Card>
           <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle>Order #{order.orderNumber ?? order._id}</CardTitle>
+              <CardTitle>{t("orderNumberLabel", { number: order.orderNumber ?? order._id })}</CardTitle>
               <p className="text-muted-foreground text-sm">
-                Placed on {createdAt ? createdAt.toLocaleString() : "—"}
+                {t("placedOn", { date: createdAt ? createdAt.toLocaleString() : "—" })}
               </p>
             </div>
             <p className="text-muted-foreground text-xs">
-              Last updated {updatedAt ? updatedAt.toLocaleString() : "—"}
+              {t("lastUpdated", { date: updatedAt ? updatedAt.toLocaleString() : "—" })}
             </p>
           </CardHeader>
           <CardContent>
@@ -320,36 +329,36 @@ export default function OrderDetailsPage() {
               <div className="border-border rounded-lg border p-4">
                 <div className="text-foreground flex items-center gap-2 text-sm font-semibold">
                   <Package className="text-primary h-4 w-4" />
-                  Items
+                  {t("itemsCardLabel")}
                 </div>
                 <p className="text-foreground mt-2 text-2xl font-bold">
                   {numberFormatter.format(itemCount)}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Subtotal {formatCurrency(itemsSubtotal)}
+                  {t("subtotalLabel", { amount: formatCurrency(itemsSubtotal) })}
                 </p>
               </div>
               <div className="border-border rounded-lg border p-4">
                 <div className="text-foreground flex items-center gap-2 text-sm font-semibold">
                   <CreditCard className="text-primary h-4 w-4" />
-                  Payment
+                  {t("paymentCardLabel")}
                 </div>
                 <p className="text-foreground mt-2 text-2xl font-bold">
                   {formatCurrency(order.totalAmount)}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {(order.paymentStatus ?? "Unknown").toUpperCase()} ·{" "}
+                  {(order.paymentStatus ?? t("unknownLabel")).toUpperCase()} ·{" "}
                   {order.paymentMethod?.toUpperCase() ?? "—"}
                 </p>
               </div>
               <div className="border-border rounded-lg border p-4">
                 <div className="text-foreground flex items-center gap-2 text-sm font-semibold">
                   <Truck className="text-primary h-4 w-4" />
-                  Status
+                  {t("statusCardLabel")}
                 </div>
                 <p className="text-foreground mt-2 text-lg font-semibold">{statusLabel}</p>
                 <p className="text-muted-foreground text-xs">
-                  Reference {order.razorpayOrderId ?? "—"}
+                  {t("referenceLabel", { ref: order.razorpayOrderId ?? "—" })}
                 </p>
               </div>
             </div>
@@ -358,7 +367,7 @@ export default function OrderDetailsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Delivery Progress</CardTitle>
+            <CardTitle>{t("deliveryProgressTitle")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-4">
@@ -388,9 +397,9 @@ export default function OrderDetailsPage() {
                 <div className="rounded-lg border border-red-300 bg-red-50 p-3">
                   <div className="flex items-center gap-2 rounded-lg border border-purple-100 bg-purple-50 px-3 py-1.5">
                     <CircleX className="h-4 w-4" />
-                    Cancelled
+                    {t("cancelledLabel")}
                   </div>
-                  <p className="mt-1 text-xs text-red-500">This order was cancelled.</p>
+                  <p className="mt-1 text-xs text-red-500">{t("cancelledBody")}</p>
                 </div>
               ) : null}
             </div>
@@ -399,7 +408,7 @@ export default function OrderDetailsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Items</CardTitle>
+            <CardTitle>{t("itemsTitle")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {order.items.length ? (
@@ -407,7 +416,8 @@ export default function OrderDetailsPage() {
                 const quantity = Number(item.quantity ?? 0);
                 const price = Number(item.price ?? 0);
                 const subtotal = quantity * price;
-                const productName = item.productName ?? item.product?.name ?? `Item ${idx + 1}`;
+                const productName =
+                  item.productName ?? item.product?.name ?? t("itemFallback", { number: idx + 1 });
                 const productImage = item.product?.image;
                 const companyName =
                   item.product?.company && typeof item.product.company === "object"
@@ -455,27 +465,30 @@ export default function OrderDetailsPage() {
                       ) : null}
                       {item.selectedSize && (
                         <p className="text-muted-foreground text-xs">
-                          Size: {item.selectedSize.size} ({item.selectedSize.quantity}
-                          {item.selectedSize.unit})
+                          {t("sizeLabel", {
+                            size: item.selectedSize.size,
+                            quantity: item.selectedSize.quantity,
+                            unit: item.selectedSize.unit,
+                          })}
                         </p>
                       )}
                       <p className="text-muted-foreground text-xs">
-                        Quantity {numberFormatter.format(quantity)}
+                        {t("quantityLabel", { quantity: numberFormatter.format(quantity) })}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <p className="text-foreground text-sm font-semibold">
                         {formatCurrency(price)}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Subtotal {formatCurrency(subtotal)}
+                        {t("subtotalLabel", { amount: formatCurrency(subtotal) })}
                       </p>
                     </div>
                   </div>
                 );
               })
             ) : (
-              <p className="text-muted-foreground text-sm">No items available for this order.</p>
+              <p className="text-muted-foreground text-sm">{t("noItems")}</p>
             )}
           </CardContent>
         </Card>
@@ -483,7 +496,7 @@ export default function OrderDetailsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Shipping Address</CardTitle>
+              <CardTitle>{t("shippingAddressTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {order.shippingAddress ? (
@@ -495,7 +508,9 @@ export default function OrderDetailsPage() {
                     </p>
                   ) : null}
                   {order.shippingAddress.phone ? (
-                    <p className="text-muted-foreground">Phone {order.shippingAddress.phone}</p>
+                    <p className="text-muted-foreground">
+                      {t("phoneLabel", { phone: order.shippingAddress.phone })}
+                    </p>
                   ) : null}
                   <div className="text-muted-foreground space-y-1">
                     {[order.shippingAddress.street, order.shippingAddress.address]
@@ -519,34 +534,34 @@ export default function OrderDetailsPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">No shipping address available.</p>
+                <p className="text-muted-foreground text-sm">{t("noShippingAddress")}</p>
               )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Payment Details</CardTitle>
+              <CardTitle>{t("paymentDetailsTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Payment status</span>
-                <Badge variant="outline">{order.paymentStatus ?? "Unknown"}</Badge>
+                <span className="text-muted-foreground">{t("paymentStatusLabel")}</span>
+                <Badge variant="outline">{order.paymentStatus ?? t("unknownLabel")}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Payment method</span>
+                <span className="text-muted-foreground">{t("paymentMethodLabel")}</span>
                 <span className="text-foreground font-medium">
                   {order.paymentMethod?.toUpperCase() ?? "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Transaction ID</span>
+                <span className="text-muted-foreground">{t("transactionIdLabel")}</span>
                 <span className="text-foreground font-medium">
                   {order.razorpayPaymentId ?? "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Order total</span>
+                <span className="text-muted-foreground">{t("orderTotalLabel")}</span>
                 <span className="text-foreground font-semibold">
                   {formatCurrency(order.totalAmount)}
                 </span>

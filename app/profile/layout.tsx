@@ -7,18 +7,20 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
 import { User, ShoppingBag, Heart, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { href: "/profile", label: "Profile Settings", icon: User },
-  { href: "/profile/orders", label: "My Orders", icon: ShoppingBag },
-  { href: "/profile/favourites", label: "My Favourites", icon: Heart },
-];
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("ProfileLayout");
+
+  const navItems = [
+    { href: "/profile", label: t("navProfileSettings"), icon: User },
+    { href: "/profile/orders", label: t("navMyOrders"), icon: ShoppingBag },
+    { href: "/profile/favourites", label: t("navMyFavourites"), icon: Heart },
+  ];
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -29,7 +31,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
   if (status === "loading") {
     return (
       <main className="bg-background flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">{t("loading")}</p>
       </main>
     );
   }
@@ -46,7 +48,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
               {/* User badge */}
               <div className="mb-2 border-b border-stone-100 px-3 py-3">
                 <p className="text-xs font-medium tracking-wider text-stone-400 uppercase">
-                  Account
+                  {t("accountLabel")}
                 </p>
                 <p className="mt-0.5 truncate text-sm font-semibold text-stone-800">
                   {session?.user?.name || session?.user?.email}

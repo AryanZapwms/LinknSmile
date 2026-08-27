@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useCartStore } from "@/lib/store/cart-store";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // Where the customer's browser lands after Tap's hosted checkout page
 // redirects back with ?tap_id=. Verifies the charge server-side (never
@@ -18,6 +19,7 @@ function TapReturnContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { clearCart } = useCartStore();
+  const t = useTranslations("TapReturnPage");
   const [state, setState] = useState<"verifying" | "success" | "error">("verifying");
   const [error, setError] = useState<string | null>(null);
   const ran = useRef(false);
@@ -29,7 +31,7 @@ function TapReturnContent() {
     const tapId = searchParams.get("tap_id");
     if (!tapId) {
       setState("error");
-      setError("Missing payment reference. If you were charged, please contact support.");
+      setError(t("missingReference"));
       return;
     }
 
@@ -50,11 +52,11 @@ function TapReturnContent() {
           router.replace(`/order-success/${data.orderId}`);
         } else {
           setState("error");
-          setError(data.error || "Payment verification failed.");
+          setError(data.error || t("verificationFailedDefault"));
         }
       } catch {
         setState("error");
-        setError("Payment verification failed. Please contact support.");
+        setError(t("verificationFailedCatch"));
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,27 +68,27 @@ function TapReturnContent() {
         {state === "verifying" && (
           <>
             <Loader2 className="mx-auto mb-4 h-10 w-10 animate-spin text-amber-500" />
-            <h1 className="text-lg font-bold text-stone-900">Confirming your payment…</h1>
-            <p className="mt-2 text-sm text-stone-500">Please don't close or refresh this page.</p>
+            <h1 className="text-lg font-bold text-stone-900">{t("confirmingTitle")}</h1>
+            <p className="mt-2 text-sm text-stone-500">{t("confirmingBody")}</p>
           </>
         )}
         {state === "success" && (
           <>
             <CheckCircle2 className="mx-auto mb-4 h-10 w-10 text-green-500" />
-            <h1 className="text-lg font-bold text-stone-900">Payment confirmed</h1>
-            <p className="mt-2 text-sm text-stone-500">Redirecting to your order…</p>
+            <h1 className="text-lg font-bold text-stone-900">{t("successTitle")}</h1>
+            <p className="mt-2 text-sm text-stone-500">{t("successBody")}</p>
           </>
         )}
         {state === "error" && (
           <>
             <XCircle className="mx-auto mb-4 h-10 w-10 text-red-500" />
-            <h1 className="text-lg font-bold text-stone-900">Payment verification failed</h1>
+            <h1 className="text-lg font-bold text-stone-900">{t("errorTitle")}</h1>
             <p className="mt-2 text-sm text-stone-500">{error}</p>
             <Link
               href="/cart"
               className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-stone-900 px-6 text-sm font-bold text-white hover:bg-amber-500"
             >
-              Return to Cart
+              {t("returnToCart")}
             </Link>
           </>
         )}

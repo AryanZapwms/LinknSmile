@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface CarouselImage {
   _id: string;
@@ -34,6 +35,7 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
   const [autoPlay, setAutoPlay] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const router = useRouter();
+  const t = useTranslations("HomeCarousel");
 
   const goTo = useCallback(
     (index: number) => {
@@ -92,13 +94,13 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
             {isDataUrl ? (
               <img
                 src={currentImage.url}
-                alt={currentImage.title || "Carousel image"}
+                alt={currentImage.title || t("imageFallbackAlt")}
                 className="h-full w-full object-contain object-center sm:object-cover"
               />
             ) : (
               <Image
                 src={currentImage.url}
-                alt={currentImage.title || "Carousel image"}
+                alt={currentImage.title || t("imageFallbackAlt")}
                 fill
                 className="object-contain object-center sm:object-cover"
                 sizes="(max-width: 640px) 100vw, 100vw"
@@ -132,10 +134,10 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
                 setAutoPlay(false);
                 goTo(currentIndex - 1);
               }}
-              aria-label="Previous slide"
-              className="absolute top-1/2 left-3 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 shadow-md backdrop-blur-sm transition-all duration-150 hover:scale-105 hover:bg-white sm:left-5 sm:h-10 sm:w-10"
+              aria-label={t("previousSlide")}
+              className="absolute top-1/2 start-3 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 shadow-md backdrop-blur-sm transition-all duration-150 hover:scale-105 hover:bg-white sm:start-5 sm:h-10 sm:w-10"
             >
-              <ChevronLeft className="h-5 w-5 text-stone-700" />
+              <ChevronLeft className="h-5 w-5 text-stone-700 rtl:rotate-180" />
             </button>
             <button
               onClick={(e) => {
@@ -143,10 +145,10 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
                 setAutoPlay(false);
                 goTo(currentIndex + 1);
               }}
-              aria-label="Next slide"
-              className="absolute top-1/2 right-3 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 shadow-md backdrop-blur-sm transition-all duration-150 hover:scale-105 hover:bg-white sm:right-5 sm:h-10 sm:w-10"
+              aria-label={t("nextSlide")}
+              className="absolute top-1/2 end-3 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 shadow-md backdrop-blur-sm transition-all duration-150 hover:scale-105 hover:bg-white sm:end-5 sm:h-10 sm:w-10"
             >
-              <ChevronRight className="h-5 w-5 text-stone-700" />
+              <ChevronRight className="h-5 w-5 text-stone-700 rtl:rotate-180" />
             </button>
           </>
         )}
@@ -161,7 +163,7 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
                   setAutoPlay(false);
                   goTo(idx);
                 }}
-                aria-label={`Go to slide ${idx + 1}`}
+                aria-label={t("goToSlide", { number: idx + 1 })}
                 className={`rounded-full transition-all duration-300 ${
                   idx === currentIndex
                     ? "h-2 w-6 bg-white"
@@ -174,7 +176,7 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
 
         {/* Slide counter */}
         {carouselImages.length > 1 && (
-          <div className="absolute top-4 right-4 z-20 rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+          <div className="absolute top-4 end-4 z-20 rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
             {currentIndex + 1} / {carouselImages.length}
           </div>
         )}

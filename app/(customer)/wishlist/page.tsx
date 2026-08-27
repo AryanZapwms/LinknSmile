@@ -64,7 +64,7 @@ export default function WishlistPage() {
   if (status === "loading" || loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="mb-8 text-3xl font-bold">My Wishlist</h1>
+        <h1 className="mb-8 text-3xl font-bold">{t("heading")}</h1>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-80 rounded-lg" />
@@ -78,10 +78,10 @@ export default function WishlistPage() {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <Heart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
-        <h1 className="mb-2 text-2xl font-bold">Login to view your wishlist</h1>
-        <p className="text-muted-foreground mb-6">Save your favourite items and never lose them.</p>
+        <h1 className="mb-2 text-2xl font-bold">{t("loginRequiredTitle")}</h1>
+        <p className="text-muted-foreground mb-6">{t("loginRequiredBody")}</p>
         <Button asChild>
-          <Link href="/auth/login">Login / Sign Up</Link>
+          <Link href="/auth/login">{t("loginSignup")}</Link>
         </Button>
       </div>
     );
@@ -91,12 +91,10 @@ export default function WishlistPage() {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <Heart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
-        <h1 className="mb-2 text-2xl font-bold">Your wishlist is empty</h1>
-        <p className="text-muted-foreground mb-6">
-          Add products you love to your wishlist and they'll appear here.
-        </p>
+        <h1 className="mb-2 text-2xl font-bold">{t("emptyTitle")}</h1>
+        <p className="text-muted-foreground mb-6">{t("emptyBody")}</p>
         <Button asChild>
-          <Link href="/products">Start Shopping</Link>
+          <Link href="/products">{t("startShopping")}</Link>
         </Button>
       </div>
     );
@@ -104,7 +102,7 @@ export default function WishlistPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-8 text-3xl font-bold">My Wishlist</h1>
+      <h1 className="mb-8 text-3xl font-bold">{t("heading")}</h1>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {items.map((item) => (
           <Card key={item._id} className="group overflow-hidden">
@@ -128,8 +126,8 @@ export default function WishlistPage() {
               <div className="mt-4 flex gap-2">
                 <Button asChild variant="outline" className="flex-1">
                   <Link href={`/products/${item.productId}`}>
-                    <ShoppingBag className="mr-2 h-4 w-4" />
-                    View
+                    <ShoppingBag className="me-2 h-4 w-4" />
+                    {t("viewButton")}
                   </Link>
                 </Button>
                 <Button

@@ -2,6 +2,12 @@
 
 _Last updated: 2026-08-17_
 
+> **⚠️ HISTORICAL / SUPERSEDED as of 2026-08-24.** This file is kept for its historical record (the plain-English rationale and the database-correction numbers below are still accurate), but it is **no longer the current status reference** — `PROJECT_SOURCE_OF_TRUTH.md` §12 (Security & Error Handling) and §16 (Known Issues) are, following a full verification pass on 2026-08-24 that re-checked every claim in this file directly against the current code. Two things in this file were found to be stale during that pass and are **not** corrected here (see the source-of-truth doc instead, which explains each):
+> - **"What's still left to do — A"** below (the duplicate fund-release cron "hasn't been deleted yet") is now wrong — that work was completed the day after this file's last update. See §16 item 1.
+> - **"What's still left to do — C"** below (a status word meaning two different things in two places) could not be reproduced/verified against the current code at all. See §12's "Discrepancies found this pass" note.
+>
+> Everything else in this file (items 1–8 of "what's been fixed", and the database-correction numbers) was individually re-verified and confirmed still accurate as of 2026-08-24 — see `PROJECT_SOURCE_OF_TRUTH.md` for the up-to-date, cross-referenced version of each.
+
 This explains, in simple terms, what security problems we found in the app, what's been fixed, what changed in the live database, and what's still left to do.
 
 ---

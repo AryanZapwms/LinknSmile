@@ -13,24 +13,26 @@ import {
   Phone,
 } from "lucide-react";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
-
-const tabs = [
-  { id: "ordering", label: "Ordering", icon: ShoppingBag },
-  { id: "shipping", label: "Shipping", icon: Truck },
-  { id: "returns", label: "Returns", icon: RotateCcw },
-];
+import { useTranslations } from "next-intl";
 
 export default function OrdersReturns() {
   const [activeTab, setActiveTab] = useState("ordering");
   const { supportEmail, supportPhone } = usePlatformSettings();
+  const t = useTranslations("OrdersAndReturnsPage");
+
+  const tabs = [
+    { id: "ordering", label: t("tabOrdering"), icon: ShoppingBag },
+    { id: "shipping", label: t("tabShipping"), icon: Truck },
+    { id: "returns", label: t("tabReturns"), icon: RotateCcw },
+  ];
 
   return (
     <section className="min-h-screen bg-gradient-to-b from-neutral-50 to-white">
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 px-6 py-20">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 h-72 w-72 rounded-full bg-[#B18D0C] blur-3xl"></div>
-          <div className="absolute right-10 bottom-20 h-96 w-96 rounded-full bg-[#B18D0C] blur-3xl"></div>
+          <div className="absolute top-20 start-10 h-72 w-72 rounded-full bg-[#B18D0C] blur-3xl"></div>
+          <div className="absolute end-10 bottom-20 h-96 w-96 rounded-full bg-[#B18D0C] blur-3xl"></div>
         </div>
 
         <div className="relative z-10 mx-auto max-w-4xl text-center">
@@ -38,11 +40,10 @@ export default function OrdersReturns() {
             <Package className="h-10 w-10 text-[#B18D0C]" />
           </div>
           <h1 className="mb-6 text-5xl font-bold tracking-tight text-white md:text-6xl">
-            Orders & <span className="text-[#B18D0C]">Returns</span>
+            {t("heroTitle")} <span className="text-[#B18D0C]">{t("heroTitleAccent")}</span>
           </h1>
           <p className="mx-auto max-w-2xl text-lg leading-relaxed text-neutral-300 md:text-xl">
-            Everything you need to know about ordering, shipping, and returning your Instapeel
-            chemical peel products.
+            {t("heroSubtitle")}
           </p>
         </div>
       </div>
@@ -76,10 +77,9 @@ export default function OrdersReturns() {
         {activeTab === "ordering" && (
           <div className="space-y-8">
             <div className="mb-12 text-center">
-              <h2 className="mb-4 text-4xl font-bold text-neutral-900">How to Order</h2>
+              <h2 className="mb-4 text-4xl font-bold text-neutral-900">{t("orderingTitle")}</h2>
               <p className="mx-auto max-w-2xl text-lg text-neutral-600">
-                Purchasing Instapeel's professional-grade chemical peels for home use is simple and
-                secure
+                {t("orderingSubtitle")}
               </p>
             </div>
 
@@ -88,43 +88,39 @@ export default function OrdersReturns() {
                 <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-[#B18D0C]/10">
                   <ShoppingBag className="h-8 w-8 text-[#B18D0C]" />
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-neutral-900">Browse Products</h3>
-                <p className="text-neutral-600">
-                  Select from our range of chemical peels designed for different skin concerns and
-                  types
-                </p>
+                <h3 className="mb-3 text-xl font-bold text-neutral-900">
+                  {t("browseProductsTitle")}
+                </h3>
+                <p className="text-neutral-600">{t("browseProductsDesc")}</p>
               </div>
 
               <div className="rounded-2xl border border-neutral-100 bg-white p-8 text-center shadow-lg transition-all hover:shadow-xl">
                 <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-[#B18D0C]/10">
                   <CheckCircle2 className="h-8 w-8 text-[#B18D0C]" />
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-neutral-900">Secure Checkout</h3>
-                <p className="text-neutral-600">
-                  Complete your purchase with encrypted payment processing for your security
-                </p>
+                <h3 className="mb-3 text-xl font-bold text-neutral-900">
+                  {t("secureCheckoutTitle")}
+                </h3>
+                <p className="text-neutral-600">{t("secureCheckoutDesc")}</p>
               </div>
 
               <div className="rounded-2xl border border-neutral-100 bg-white p-8 text-center shadow-lg transition-all hover:shadow-xl">
                 <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-[#B18D0C]/10">
                   <Truck className="h-8 w-8 text-[#B18D0C]" />
                 </div>
-                <h3 className="mb-3 text-xl font-bold text-neutral-900">Fast Delivery</h3>
-                <p className="text-neutral-600">
-                  Receive your order within 3-7 business days with tracking information
-                </p>
+                <h3 className="mb-3 text-xl font-bold text-neutral-900">
+                  {t("fastDeliveryTitle")}
+                </h3>
+                <p className="text-neutral-600">{t("fastDeliveryDesc")}</p>
               </div>
             </div>
 
-            <div className="rounded-r-xl border-l-4 border-[#B18D0C] bg-gradient-to-r from-[#B18D0C]/10 to-[#B18D0C]/5 p-6">
+            <div className="rounded-e-xl border-s-4 border-[#B18D0C] bg-gradient-to-r from-[#B18D0C]/10 to-[#B18D0C]/5 p-6">
               <h4 className="mb-2 flex items-center gap-2 font-semibold text-neutral-900">
                 <AlertTriangle className="h-5 w-5 text-[#B18D0C]" />
-                Order Verification
+                {t("orderVerificationTitle")}
               </h4>
-              <p className="text-neutral-700">
-                All orders are subject to verification. We may contact you to confirm details before
-                processing your chemical peel product order.
-              </p>
+              <p className="text-neutral-700">{t("orderVerificationBody")}</p>
             </div>
           </div>
         )}
@@ -133,9 +129,9 @@ export default function OrdersReturns() {
         {activeTab === "shipping" && (
           <div className="space-y-8">
             <div className="mb-12 text-center">
-              <h2 className="mb-4 text-4xl font-bold text-neutral-900">Shipping Information</h2>
+              <h2 className="mb-4 text-4xl font-bold text-neutral-900">{t("shippingTitle")}</h2>
               <p className="mx-auto max-w-2xl text-lg text-neutral-600">
-                We ship Instapeel products across India with care and speed
+                {t("shippingSubtitle")}
               </p>
             </div>
 
@@ -145,28 +141,30 @@ export default function OrdersReturns() {
                   <div className="rounded-xl bg-[#B18D0C]/10 p-4">
                     <Clock className="h-8 w-8 text-[#B18D0C]" />
                   </div>
-                  <h3 className="text-2xl font-bold text-neutral-900">Delivery Time</h3>
+                  <h3 className="text-2xl font-bold text-neutral-900">
+                    {t("deliveryTimeTitle")}
+                  </h3>
                 </div>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-[#B18D0C]"></div>
                     <div>
-                      <p className="font-semibold text-neutral-900">Metro Cities</p>
-                      <p className="text-neutral-600">3-5 business days</p>
+                      <p className="font-semibold text-neutral-900">{t("metroCities")}</p>
+                      <p className="text-neutral-600">{t("metroCitiesDays")}</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-[#B18D0C]"></div>
                     <div>
-                      <p className="font-semibold text-neutral-900">Other Cities</p>
-                      <p className="text-neutral-600">5-7 business days</p>
+                      <p className="font-semibold text-neutral-900">{t("otherCities")}</p>
+                      <p className="text-neutral-600">{t("otherCitiesDays")}</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-[#B18D0C]"></div>
                     <div>
-                      <p className="font-semibold text-neutral-900">Remote Areas</p>
-                      <p className="text-neutral-600">7-10 business days</p>
+                      <p className="font-semibold text-neutral-900">{t("remoteAreas")}</p>
+                      <p className="text-neutral-600">{t("remoteAreasDays")}</p>
                     </div>
                   </li>
                 </ul>
@@ -177,42 +175,34 @@ export default function OrdersReturns() {
                   <div className="rounded-xl bg-[#B18D0C]/10 p-4">
                     <Package className="h-8 w-8 text-[#B18D0C]" />
                   </div>
-                  <h3 className="text-2xl font-bold text-neutral-900">Packaging</h3>
+                  <h3 className="text-2xl font-bold text-neutral-900">{t("packagingTitle")}</h3>
                 </div>
-                <p className="mb-4 text-neutral-700">
-                  All chemical peel products are carefully packaged to ensure they arrive in perfect
-                  condition:
-                </p>
+                <p className="mb-4 text-neutral-700">{t("packagingIntro")}</p>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
-                    <span className="text-neutral-700">Secure, tamper-proof packaging</span>
+                    <span className="text-neutral-700">{t("packagingItem1")}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
-                    <span className="text-neutral-700">Temperature-controlled shipping</span>
+                    <span className="text-neutral-700">{t("packagingItem2")}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
-                    <span className="text-neutral-700">Discreet, professional packaging</span>
+                    <span className="text-neutral-700">{t("packagingItem3")}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
-                    <span className="text-neutral-700">Full product information included</span>
+                    <span className="text-neutral-700">{t("packagingItem4")}</span>
                   </li>
                 </ul>
               </div>
             </div>
 
             <div className="rounded-2xl bg-neutral-900 p-8 text-white">
-              <h4 className="mb-4 text-xl font-bold">Track Your Order</h4>
-              <p className="mb-4 text-neutral-300">
-                Once your order ships, you'll receive a tracking number via email. Monitor your
-                shipment's progress in real-time.
-              </p>
-              <p className="text-sm text-neutral-400">
-                Orders are processed within 24 hours on business days
-              </p>
+              <h4 className="mb-4 text-xl font-bold">{t("trackOrderTitle")}</h4>
+              <p className="mb-4 text-neutral-300">{t("trackOrderBody")}</p>
+              <p className="text-sm text-neutral-400">{t("trackOrderNote")}</p>
             </div>
           </div>
         )}
@@ -221,41 +211,43 @@ export default function OrdersReturns() {
         {activeTab === "returns" && (
           <div className="space-y-8">
             <div className="mb-12 text-center">
-              <h2 className="mb-4 text-4xl font-bold text-neutral-900">Return Policy</h2>
+              <h2 className="mb-4 text-4xl font-bold text-neutral-900">
+                {t("returnPolicyTitle")}
+              </h2>
               <p className="mx-auto max-w-2xl text-lg text-neutral-600">
-                We have a 3-day return policy for unopened products
+                {t("returnPolicySubtitle")}
               </p>
             </div>
 
             <div className="mb-12 rounded-2xl bg-gradient-to-r from-[#B18D0C] to-[#8A6A09] p-8 text-center text-white">
-              <h3 className="mb-2 text-3xl font-bold">3-Day Return Window</h3>
-              <p className="text-xl text-neutral-100">
-                From the date you receive your chemical peel products
-              </p>
+              <h3 className="mb-2 text-3xl font-bold">{t("returnWindowTitle")}</h3>
+              <p className="text-xl text-neutral-100">{t("returnWindowBody")}</p>
             </div>
 
             <div className="mb-12 grid gap-8 md:grid-cols-2">
               <div className="rounded-2xl border border-neutral-100 bg-white p-8 shadow-lg">
                 <div className="mb-6 flex items-center gap-4">
                   <CheckCircle2 className="h-10 w-10 text-green-600" />
-                  <h3 className="text-2xl font-bold text-neutral-900">Eligible for Return</h3>
+                  <h3 className="text-2xl font-bold text-neutral-900">
+                    {t("eligibleForReturn")}
+                  </h3>
                 </div>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-green-600"></div>
-                    <span className="text-neutral-700">Unopened, unused products</span>
+                    <span className="text-neutral-700">{t("eligibleItem1")}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-green-600"></div>
-                    <span className="text-neutral-700">Original packaging intact</span>
+                    <span className="text-neutral-700">{t("eligibleItem2")}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-green-600"></div>
-                    <span className="text-neutral-700">All tags still attached</span>
+                    <span className="text-neutral-700">{t("eligibleItem3")}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-green-600"></div>
-                    <span className="text-neutral-700">Valid proof of purchase</span>
+                    <span className="text-neutral-700">{t("eligibleItem4")}</span>
                   </li>
                 </ul>
               </div>
@@ -263,41 +255,43 @@ export default function OrdersReturns() {
               <div className="rounded-2xl border border-neutral-100 bg-white p-8 shadow-lg">
                 <div className="mb-6 flex items-center gap-4">
                   <AlertTriangle className="h-10 w-10 text-orange-600" />
-                  <h3 className="text-2xl font-bold text-neutral-900">Not Eligible</h3>
+                  <h3 className="text-2xl font-bold text-neutral-900">{t("notEligible")}</h3>
                 </div>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-orange-600"></div>
-                    <span className="text-neutral-700">Opened or used products</span>
+                    <span className="text-neutral-700">{t("notEligibleItem1")}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-orange-600"></div>
-                    <span className="text-neutral-700">Sale or clearance items</span>
+                    <span className="text-neutral-700">{t("notEligibleItem2")}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-orange-600"></div>
-                    <span className="text-neutral-700">Gift cards</span>
+                    <span className="text-neutral-700">{t("notEligibleItem3")}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <div className="mt-2 h-2 w-2 rounded-full bg-orange-600"></div>
-                    <span className="text-neutral-700">Items past 3-day window</span>
+                    <span className="text-neutral-700">{t("notEligibleItem4")}</span>
                   </li>
                 </ul>
               </div>
             </div>
 
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-8">
-              <h3 className="mb-6 text-2xl font-bold text-neutral-900">Return Process</h3>
+              <h3 className="mb-6 text-2xl font-bold text-neutral-900">
+                {t("returnProcessTitle")}
+              </h3>
               <div className="space-y-6">
                 <div className="flex gap-4">
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#B18D0C] font-bold text-white">
                     1
                   </div>
                   <div>
-                    <h4 className="mb-1 font-semibold text-neutral-900">Contact Us</h4>
-                    <p className="text-neutral-700">
-                      Email {supportEmail} to start your return request
-                    </p>
+                    <h4 className="mb-1 font-semibold text-neutral-900">
+                      {t("returnStep1Title")}
+                    </h4>
+                    <p className="text-neutral-700">{t("returnStep1Body", { supportEmail })}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -305,10 +299,10 @@ export default function OrdersReturns() {
                     2
                   </div>
                   <div>
-                    <h4 className="mb-1 font-semibold text-neutral-900">Get Approval</h4>
-                    <p className="text-neutral-700">
-                      We'll review and send you a return shipping label
-                    </p>
+                    <h4 className="mb-1 font-semibold text-neutral-900">
+                      {t("returnStep2Title")}
+                    </h4>
+                    <p className="text-neutral-700">{t("returnStep2Body")}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -316,10 +310,10 @@ export default function OrdersReturns() {
                     3
                   </div>
                   <div>
-                    <h4 className="mb-1 font-semibold text-neutral-900">Ship It Back</h4>
-                    <p className="text-neutral-700">
-                      Pack securely and ship using our provided label
-                    </p>
+                    <h4 className="mb-1 font-semibold text-neutral-900">
+                      {t("returnStep3Title")}
+                    </h4>
+                    <p className="text-neutral-700">{t("returnStep3Body")}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -327,23 +321,18 @@ export default function OrdersReturns() {
                     4
                   </div>
                   <div>
-                    <h4 className="mb-1 font-semibold text-neutral-900">Get Refunded</h4>
-                    <p className="text-neutral-700">
-                      Receive refund to original payment method within 5-10 days
-                    </p>
+                    <h4 className="mb-1 font-semibold text-neutral-900">
+                      {t("returnStep4Title")}
+                    </h4>
+                    <p className="text-neutral-700">{t("returnStep4Body")}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-r-xl border-l-4 border-[#B18D0C] bg-gradient-to-r from-[#B18D0C]/10 to-[#B18D0C]/5 p-6">
-              <h4 className="mb-2 font-semibold text-neutral-900">
-                Damaged or Defective Products?
-              </h4>
-              <p className="text-neutral-700">
-                Please inspect your order upon reception. Contact us immediately if items are
-                defective, damaged, or incorrect. We'll make it right promptly.
-              </p>
+            <div className="rounded-e-xl border-s-4 border-[#B18D0C] bg-gradient-to-r from-[#B18D0C]/10 to-[#B18D0C]/5 p-6">
+              <h4 className="mb-2 font-semibold text-neutral-900">{t("damagedTitle")}</h4>
+              <p className="text-neutral-700">{t("damagedBody")}</p>
             </div>
           </div>
         )}
@@ -351,10 +340,8 @@ export default function OrdersReturns() {
         {/* Contact Section */}
         <div className="mt-16 rounded-2xl border border-neutral-100 bg-white p-8 shadow-lg md:p-12">
           <div className="mb-8 text-center">
-            <h3 className="mb-4 text-3xl font-bold text-neutral-900">Need Help?</h3>
-            <p className="text-lg text-neutral-600">
-              Our customer support team is here to assist with your orders and returns
-            </p>
+            <h3 className="mb-4 text-3xl font-bold text-neutral-900">{t("needHelpTitle")}</h3>
+            <p className="text-lg text-neutral-600">{t("needHelpSubtitle")}</p>
           </div>
           <div className="mx-auto grid max-w-3xl gap-6 md:grid-cols-2">
             <a
@@ -362,14 +349,14 @@ export default function OrdersReturns() {
               className="flex items-center justify-center gap-3 rounded-xl bg-[#B18D0C] px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#8A6A09] hover:shadow-xl"
             >
               <Mail className="h-5 w-5" />
-              Email Support
+              {t("emailSupportButton")}
             </a>
             <a
               href={`tel:${supportPhone.replace(/\s/g, "")}`}
               className="flex items-center justify-center gap-3 rounded-xl bg-neutral-900 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:bg-neutral-800 hover:shadow-xl"
             >
               <Phone className="h-5 w-5" />
-              Call Us
+              {t("callUsButton")}
             </a>
           </div>
         </div>

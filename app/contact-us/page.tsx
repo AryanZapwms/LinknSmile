@@ -5,38 +5,36 @@ import React from "react";
 import Link from "next/link";
 import { Mail, Phone, MapPin, Clock, Shield, Truck, Store, ChevronRight } from "lucide-react";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { useTranslations } from "next-intl";
 
-// A function, not a module-level constant, because "Call Us"/"Email Us" need
-// the admin-editable supportPhone/supportEmail (usePlatformSettings) — those
-// can only be read inside the component. sellers@linknsmile.com is a
-// genuinely separate address (seller-specific, never wired to supportEmail)
-// left as a literal, same as the second bulk-order phone number elsewhere.
-function getContactCards(supportPhone: string, supportEmail: string) {
+export default function ContactUs() {
+  const { supportEmail, supportPhone, brandTagline } = usePlatformSettings();
+  const t = useTranslations("ContactUsPage");
   const supportPhoneHref = `tel:${supportPhone.replace(/\s/g, "")}`;
-  return [
+
+  // A function, not a module-level constant, because "Call Us"/"Email Us" need
+  // the admin-editable supportPhone/supportEmail (usePlatformSettings) — those
+  // can only be read inside the component. sellers@linknsmile.com is a
+  // genuinely separate address (seller-specific, never wired to supportEmail)
+  // left as a literal, same as the second bulk-order phone number elsewhere.
+  const contactCards = [
     {
       icon: MapPin,
-      title: "Visit Our Office",
+      title: t("visitOfficeTitle"),
       content: (
-        <address className="text-sm leading-relaxed text-stone-600 not-italic">
-          Healthcare Medical Center, S-55,
-          <br />
-          Whispering Palms Shopping Center,
-          <br />
-          Akurli road, Lokhandwala Township,
-          <br />
-          Kandivali (E), Mumbai — 400101
+        <address className="text-sm leading-relaxed text-stone-600 not-italic whitespace-pre-line">
+          {t("officeAddress")}
         </address>
       ),
     },
     {
       icon: Phone,
-      title: "Call Us",
+      title: t("callUsTitle"),
       content: (
         <div className="space-y-3">
           <div>
             <p className="mb-0.5 text-[10px] font-semibold tracking-wider text-stone-400 uppercase">
-              Customer Support
+              {t("customerSupportLabel")}
             </p>
             <a
               href={supportPhoneHref}
@@ -47,7 +45,7 @@ function getContactCards(supportPhone: string, supportEmail: string) {
           </div>
           <div>
             <p className="mb-0.5 text-[10px] font-semibold tracking-wider text-stone-400 uppercase">
-              Seller Support
+              {t("sellerSupportLabel")}
             </p>
             <a
               href={supportPhoneHref}
@@ -61,7 +59,7 @@ function getContactCards(supportPhone: string, supportEmail: string) {
     },
     {
       icon: Mail,
-      title: "Email Us",
+      title: t("emailUsTitle"),
       content: (
         <div className="space-y-2">
           <a
@@ -76,38 +74,33 @@ function getContactCards(supportPhone: string, supportEmail: string) {
           >
             sellers@linknsmile.com
           </a>
-          <p className="mt-1 text-xs text-stone-400">We respond within 24 hours</p>
+          <p className="mt-1 text-xs text-stone-400">{t("respondWithin24h")}</p>
         </div>
       ),
     },
     {
       icon: Clock,
-      title: "Business Hours",
+      title: t("businessHoursTitle"),
       content: (
         <div className="space-y-1 text-sm text-stone-600">
           <div className="flex justify-between">
-            <span>Monday – Saturday</span>
-            <span className="font-semibold text-stone-800">10:00 AM – 7:00 PM</span>
+            <span>{t("mondaySaturday")}</span>
+            <span className="font-semibold text-stone-800">{t("mondaySaturdayHours")}</span>
           </div>
           <div className="flex justify-between">
-            <span>Sunday</span>
-            <span className="font-medium text-red-400">Closed</span>
+            <span>{t("sunday")}</span>
+            <span className="font-medium text-red-400">{t("closed")}</span>
           </div>
         </div>
       ),
     },
   ];
-}
 
-const sellerSteps = [
-  { step: "1", title: "Register Free", desc: "Create your seller account in minutes" },
-  { step: "2", title: "List Products", desc: "Showcase your products to millions" },
-  { step: "3", title: "Start Selling", desc: "Grow your business nationwide" },
-];
-
-export default function ContactUs() {
-  const { supportEmail, supportPhone, brandTagline } = usePlatformSettings();
-  const contactCards = getContactCards(supportPhone, supportEmail);
+  const sellerSteps = [
+    { step: "1", title: t("sellerStep1Title"), desc: t("sellerStep1Desc") },
+    { step: "2", title: t("sellerStep2Title"), desc: t("sellerStep2Desc") },
+    { step: "3", title: t("sellerStep3Title"), desc: t("sellerStep3Desc") },
+  ];
 
   return (
     <main className="min-h-screen bg-white">
@@ -124,14 +117,13 @@ export default function ContactUs() {
         <div className="relative z-10 mx-auto max-w-3xl py-8 text-center">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-1.5 text-xs font-semibold tracking-widest text-amber-300 uppercase">
             <Mail className="h-3.5 w-3.5" />
-            We'd love to hear from you
+            {t("heroBadge")}
           </div>
           <h1 className="mb-4 text-4xl font-black tracking-tight text-white md:text-5xl">
-            Get In <span className="text-amber-400">Touch</span>
+            {t("heroTitle")} <span className="text-amber-400">{t("heroTitleAccent")}</span>
           </h1>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-stone-300 md:text-base">
-            We're here to help you connect with local sellers, discover authentic products, and grow
-            your business on India's trusted marketplace.
+            {t("heroSubtitle")}
           </p>
           <p className="mt-5 text-xs font-semibold tracking-widest text-amber-400/60 uppercase">
             {brandTagline}
@@ -166,8 +158,8 @@ export default function ContactUs() {
             {/* Trust pills */}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { icon: Shield, label: "Verified Sellers" },
-                { icon: Truck, label: "Fast Delivery" },
+                { icon: Shield, label: t("verifiedSellers") },
+                { icon: Truck, label: t("fastDelivery") },
               ].map(({ icon: Icon, label }) => (
                 <div
                   key={label}
@@ -190,8 +182,8 @@ export default function ContactUs() {
                   <MapPin className="h-3.5 w-3.5 text-amber-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-stone-900">Find Us Here</p>
-                  <p className="text-xs text-stone-400">Visit us for partnerships and support</p>
+                  <p className="text-sm font-bold text-stone-900">{t("findUsTitle")}</p>
+                  <p className="text-xs text-stone-400">{t("findUsSubtitle")}</p>
                 </div>
               </div>
               <iframe
@@ -206,10 +198,11 @@ export default function ContactUs() {
 
             {/* CTA card */}
             <div className="rounded-2xl border border-stone-100 bg-stone-50 p-6">
-              <h4 className="mb-1.5 text-base font-bold text-stone-900">Need Assistance?</h4>
+              <h4 className="mb-1.5 text-base font-bold text-stone-900">
+                {t("needAssistanceTitle")}
+              </h4>
               <p className="mb-5 text-sm leading-relaxed text-stone-500">
-                Whether you're a shopper or a seller — our team is here to help you every step of
-                the way.
+                {t("needAssistanceBody")}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <a
@@ -217,14 +210,14 @@ export default function ContactUs() {
                   className="flex items-center justify-center gap-2 rounded-xl bg-stone-900 py-3 text-sm font-bold text-white transition-colors duration-200 hover:bg-amber-500"
                 >
                   <Phone className="h-4 w-4" />
-                  Call Us
+                  {t("callUsButton")}
                 </a>
                 <a
                   href="mailto:sellers@linknsmile.com"
                   className="flex items-center justify-center gap-2 rounded-xl border-2 border-stone-200 py-3 text-sm font-bold text-stone-700 transition-all duration-200 hover:border-amber-400 hover:bg-amber-50"
                 >
                   <Store className="h-4 w-4" />
-                  Sell With Us
+                  {t("sellWithUsButton")}
                 </a>
               </div>
             </div>
@@ -236,14 +229,13 @@ export default function ContactUs() {
       <section className="border-y border-stone-100 bg-stone-50 px-4 py-14">
         <div className="mx-auto mb-10 max-w-3xl text-center">
           <p className="mb-2 text-xs font-semibold tracking-widest text-amber-600 uppercase">
-            Grow Your Business
+            {t("growBusinessEyebrow")}
           </p>
           <h2 className="mb-3 text-2xl font-bold text-stone-900 md:text-3xl">
-            Start Selling on Linknsmile
+            {t("startSellingTitle")}
           </h2>
           <p className="mx-auto max-w-xl text-sm leading-relaxed text-stone-500">
-            Join thousands of local businesses, home-based entrepreneurs, and organic product
-            sellers reaching customers across India.
+            {t("startSellingBody")}
           </p>
         </div>
 
@@ -267,8 +259,8 @@ export default function ContactUs() {
             href="/register-as-seller"
             className="inline-flex items-center gap-2 rounded-xl bg-stone-900 px-7 py-3 text-sm font-bold text-white shadow-sm transition-colors duration-200 hover:bg-amber-500"
           >
-            Register as Seller
-            <ChevronRight className="h-4 w-4" />
+            {t("registerAsSeller")}
+            <ChevronRight className="h-4 w-4 rtl:rotate-180" />
           </Link>
         </div>
       </section>
@@ -277,19 +269,19 @@ export default function ContactUs() {
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 sm:flex-row">
         <div className="flex items-center gap-4 text-xs text-stone-400">
           <Link href="/about-us" className="transition-colors hover:text-amber-600">
-            About Us
+            {t("aboutUs")}
           </Link>
           <span>·</span>
           <Link href="/privacy-policy" className="transition-colors hover:text-amber-600">
-            Privacy Policy
+            {t("privacyPolicy")}
           </Link>
           <span>·</span>
           <Link href="/termsofservice" className="transition-colors hover:text-amber-600">
-            Terms
+            {t("termsLink")}
           </Link>
         </div>
         <p className="text-xs text-stone-400">
-          © {new Date().getFullYear()} Linknsmile. All rights reserved.
+          {t("footerCopyright", { year: new Date().getFullYear() })}
         </p>
       </div>
     </main>
