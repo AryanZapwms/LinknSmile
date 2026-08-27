@@ -1,0 +1,79 @@
+name: Deploy AE
+
+# UAE deployment — mirrors deploy.yml exactly, but targets a separate VPS
+# app root/PM2 process/port so it can never touch the India deployment.
+# Deliberately a standalone file (not a second job bolted onto deploy.yml)
+# so this addition is zero-diff against the existing India workflow.
+#
+# Gated on the same CI workflow succeeding on main as India's deploy —
+# both deployments run the same codebase, so one CI gate covers both.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy-ae:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    # A DIFFERENT concurrency group than India's "deploy-production" —
+    # deliberately so a UAE deploy/rollback can never be blocked by, or
+    # block, an India deploy/rollback. Only serializes against itself and
+    # rollback-ae.yml.
+    concurrency:
+      group: deploy-production-ae
+      cancel-in-progress: false
+    steps:
+      - name: Show what's being deployed
+        run: |
+          echo "Commit: ${{ github.event.workflow_run.head_sha }}"
+          echo "Triggered by CI run: ${{ github.event.workflow_run.html_url }}"
+
+      - name: Deploy to VPS (UAE)
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 15m
+          envs: COMMIT_SHA
+          script: |
+            set -euo pipefail
+
+            # ── Fixed, non-sensitive server config for the UAE instance ──
+            # Not secrets — change these here (via a PR) if the server
+            # layout, port, or Node install path ever changes. Uses the
+            # SAME SSH host/creds as India (one VPS, two independent app
+            # roots) — see Deployment.md / PROJECT_SOURCE_OF_TRUTH.md §11.
+            export APP_ROOT=/home/ae.linknsmile.com
+            export NODE_BIN_DIR=/root/.nvm/versions/node/v20.20.2/bin
+            export PORT=3005
+            # Different temp health-check port than India's 3999, so a
+            # concurrent India deploy can never collide on the same port.
+            export HEALTH_CHECK_PORT=3998
+            export RELEASES_TO_KEEP=5
+
+            # Read by ecosystem.config.js — see that file's own comment.
+            # Defaults there are India's values, so these MUST be set
+            # here for the UAE instance to end up as its own separate
+            # PM2 process instead of colliding with India's.
+            export PM2_APP_NAME=linknsmile-ae
+            export PM2_APP_ROOT=/home/ae.linknsmile.com
+            export PM2_PORT=3005
+
+            RELEASE_NAME="$(date +%Y%m%d%H%M%S)"
+            RELEASE_DIR="$APP_ROOT/releases/$RELEASE_NAME"
+
+            echo "→ Cloning $COMMIT_SHA into $RELEASE_DIR"
+            git clone --branch main --single-branch \
+              https://github.com/AryanZapwms/LinknSmile.git "$RELEASE_DIR"
+            cd "$RELEASE_DIR"
+            git checkout "$COMMIT_SHA"
+
+            # Same versioned deploy.sh India uses — it's fully generic,
+            # driven only by the env vars exported above.
+            bash scripts/deploy/deploy.sh
+        env:
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}

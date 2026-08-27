@@ -1,0 +1,50 @@
+name: Rollback AE
+
+# UAE rollback — mirrors rollback.yml exactly, targeting the same
+# separate VPS app root/port as deploy-ae.yml. Standalone file so this
+# addition is zero-diff against the existing India rollback.yml.
+#
+# Manual-only. Purely a symlink swap + PM2 reload on the server — no
+# checkout, no build, no new commit required. Takes seconds.
+on:
+  workflow_dispatch:
+    inputs:
+      target_release:
+        description: "Release timestamp to roll back to (see releases/ on the server, format YYYYMMDDHHMMSS). Leave blank to roll back to the release immediately before whatever is currently live."
+        required: false
+        default: ""
+
+jobs:
+  rollback-ae:
+    runs-on: ubuntu-latest
+    # Same group as deploy-ae.yml (and DIFFERENT from India's
+    # "deploy-production" group) so a UAE deploy/rollback can never race
+    # itself, but also never blocks or is blocked by India.
+    concurrency:
+      group: deploy-production-ae
+      cancel-in-progress: false
+    steps:
+      - name: Roll back on VPS (UAE)
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 5m
+          envs: TARGET_RELEASE
+          script: |
+            set -euo pipefail
+
+            export APP_ROOT=/home/ae.linknsmile.com
+            export NODE_BIN_DIR=/root/.nvm/versions/node/v20.20.2/bin
+            export PORT=3005
+            export HEALTH_CHECK_PORT=3998
+
+            # rollback.sh is run from inside the *currently live* release,
+            # since rollback doesn't check out any new code — it reuses
+            # whatever is already deployed. It prints the full list of
+            # available releases before doing anything else.
+            bash "$APP_ROOT/current/scripts/deploy/rollback.sh" "${TARGET_RELEASE:-}"
+        env:
+          TARGET_RELEASE: ${{ github.event.inputs.target_release }}
