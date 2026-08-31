@@ -111,7 +111,7 @@ export function LoginForm() {
         <div className="grid items-center gap-10 lg:grid-cols-2">
           {/* ── Left: brand panel ── */}
           <div className="hidden flex-col justify-center space-y-8 border-e border-stone-200 pe-8 lg:flex">
-            <div className="relative h-28 w-full max-w-[300px]">
+            <div className="relative h-84 w-full max-w-105">
               <Image
                 src={LinkAndSmileLogo}
                 alt="LinkAndSmile"
