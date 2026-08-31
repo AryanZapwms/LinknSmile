@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     return withCORS(NextResponse.json({ message: "Email verified" }, { status: 200 }));
   } catch (err) {
-    // console.error("[verify-otp] caught:", err);
+    console.error("[verify-otp] caught:", err);
     return withCORS(NextResponse.json({ error: "Internal server error" }, { status: 500 }));
   }
 }

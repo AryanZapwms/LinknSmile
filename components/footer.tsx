@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import LinkAndSmileLogo from "@/public/LinkAndSmile2.png";
 import { Divide } from "lucide-react";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { IS_INDIA } from "@/lib/site-config";
 
 const socials = [
   {
@@ -130,7 +131,7 @@ export default function Footer() {
             <div className="flex flex-wrap gap-2 pt-1">
               {[
                 t("trustBadges.verifiedSellers"),
-                t("trustBadges.madeInIndia"),
+                ...(IS_INDIA ? [t("trustBadges.madeInIndia")] : []),
                 t("trustBadges.securePayments"),
               ].map((badge) => (
                 <span

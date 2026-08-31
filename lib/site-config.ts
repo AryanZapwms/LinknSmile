@@ -25,3 +25,12 @@ export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "AW-602275
 
 export const GOOGLE_ADS_CONVERSION_LABEL =
   process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL || "U1R3CO3tn6wbEIf8l58C";
+
+// Whether this deployment is the India storefront. Reuses the existing
+// NEXT_PUBLIC_DEFAULT_COUNTRY var (see components/checkout-form.tsx) rather
+// than introducing a second "which country is this" signal — UAE's
+// .env.ae.example already sets this to "United Arab Emirates". Gates
+// India-only marketing claims (e.g. "Made in India" in the homepage promo
+// ticker / footer trust badges) that are factually wrong on any other
+// deployment, regardless of active UI language.
+export const IS_INDIA = (process.env.NEXT_PUBLIC_DEFAULT_COUNTRY || "India") === "India";
