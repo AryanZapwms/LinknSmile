@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, X, AlertCircle, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -57,6 +57,7 @@ interface Product {
 
 export default function EditProductPage() {
   const t = useTranslations("VendorEditProduct");
+  const { toast } = useToast();
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
@@ -118,12 +119,12 @@ export default function EditProductPage() {
           suitableFor: prod.suitableFor?.join(", ") || "",
         });
       } else {
-        toast.error(t("productNotFoundToast"));
+        toast({ title: t("productNotFoundToast"), variant: "destructive" });
         router.push("/vendor/products");
       }
     } catch (error) {
       console.error("Failed to fetch product:", error);
-      toast.error(t("loadFailed"));
+      toast({ title: t("loadFailed"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -174,11 +175,11 @@ export default function EditProductPage() {
           image: prev.image || data.urls[0],
           images: [...prev.images, ...data.urls],
         }));
-        toast.success(t("imagesUploadedSuccess"));
+        toast({ title: t("imagesUploadedSuccess") });
       }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error(t("uploadFailed"));
+      toast({ title: t("uploadFailed"), variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -199,7 +200,7 @@ export default function EditProductPage() {
     e.preventDefault();
 
     if (!formData.name || !formData.slug || !formData.price || !formData.company) {
-      toast.error(t("fillRequiredFields"));
+      toast({ title: t("fillRequiredFields"), variant: "destructive" });
       return;
     }
 
@@ -231,14 +232,14 @@ export default function EditProductPage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(data.message || t("updateSuccess"));
+        toast({ title: data.message || t("updateSuccess") });
         router.push("/vendor/products");
       } else {
-        toast.error(data.message || t("updateFailed"));
+        toast({ title: data.message || t("updateFailed"), variant: "destructive" });
       }
     } catch (error) {
       console.error("Update error:", error);
-      toast.error(t("updateFailed"));
+      toast({ title: t("updateFailed"), variant: "destructive" });
     } finally {
       setSaving(false);
     }

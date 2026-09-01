@@ -12,6 +12,7 @@ import { ArrowLeft, X, Upload } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
+import { useToast } from "@/hooks/use-toast";
 
 interface Category {
   _id: string;
@@ -38,7 +39,7 @@ export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingResult, setUploadingResult] = useState(false);
-  const [message, setMessage] = useState("");
+  const { toast } = useToast();
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [formData, setFormData] = useState({
@@ -123,7 +124,7 @@ export default function AddProductPage() {
       const data = await res.json();
       setImageUrls((prev) => [...prev, ...data.urls]);
     } catch (error) {
-      setMessage("Error uploading images. Please try again.");
+      toast({ title: "Error uploading images. Please try again.", variant: "destructive" });
       console.error("Error:", error);
     } finally {
       setUploading(false);
@@ -144,7 +145,7 @@ export default function AddProductPage() {
 
   const handleAddSize = () => {
     if (!sizeInput.size || sizeInput.quantity <= 0 || sizeInput.price <= 0) {
-      setMessage("Please fill in all size fields with valid values");
+      toast({ title: "Please fill in all size fields with valid values", variant: "destructive" });
       return;
     }
 
@@ -158,7 +159,6 @@ export default function AddProductPage() {
       stock: 0,
       sku: "",
     });
-    setMessage("");
   };
 
   const removeSize = (index: number) => {
@@ -188,7 +188,7 @@ export default function AddProductPage() {
         setResultImageUrl(data.urls[0]);
       }
     } catch (error) {
-      setMessage("Error uploading result image. Please try again.");
+      toast({ title: "Error uploading result image. Please try again.", variant: "destructive" });
       console.error("Error:", error);
     } finally {
       setUploadingResult(false);
@@ -200,12 +200,11 @@ export default function AddProductPage() {
     e.preventDefault();
 
     if (imageUrls.length === 0) {
-      setMessage("Please add at least one image.");
+      toast({ title: "Please add at least one image.", variant: "destructive" });
       return;
     }
 
     setLoading(true);
-    setMessage("");
 
     try {
       const bodyData = {
@@ -250,10 +249,10 @@ export default function AddProductPage() {
         throw new Error(responseData.error || "Failed to create product");
       }
 
-      setMessage("Product created successfully!");
+      toast({ title: "Product created successfully!" });
       setTimeout(() => router.push("/admin/products"), 1500);
     } catch (error) {
-      setMessage("Error creating product. Please try again.");
+      toast({ title: "Error creating product. Please try again.", variant: "destructive" });
       console.error("Error:", error);
     } finally {
       setLoading(false);

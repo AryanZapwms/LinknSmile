@@ -12,6 +12,7 @@ import { ArrowLeft, X, Upload, Loader2, Pencil } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
+import { useToast } from "@/hooks/use-toast";
 
 interface Category {
   _id: string;
@@ -84,7 +85,7 @@ export default function EditProductPage() {
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingResult, setUploadingResult] = useState(false);
-  const [message, setMessage] = useState("");
+  const { toast } = useToast();
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [formData, setFormData] = useState<Product & { mainCategory?: string }>({
@@ -161,7 +162,7 @@ export default function EditProductPage() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      setMessage("Error loading product data");
+      toast({ title: "Error loading product data", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -189,7 +190,7 @@ export default function EditProductPage() {
       const data = await res.json();
       setImageUrls((prev) => [...prev, ...data.urls]);
     } catch (error) {
-      setMessage("Error uploading images. Please try again.");
+      toast({ title: "Error uploading images. Please try again.", variant: "destructive" });
       console.error("Error:", error);
     } finally {
       setUploading(false);
@@ -210,7 +211,7 @@ export default function EditProductPage() {
 
   const handleAddSize = () => {
     if (!sizeInput.size || sizeInput.quantity <= 0 || sizeInput.price <= 0) {
-      setMessage("Please fill in all size fields with valid values");
+      toast({ title: "Please fill in all size fields with valid values", variant: "destructive" });
       return;
     }
     setSizes((prev) => {
@@ -221,7 +222,6 @@ export default function EditProductPage() {
     });
     setSizeInput(createEmptySize());
     setEditingSizeIndex(null);
-    setMessage("");
   };
 
   const removeSize = (index: number) => {
@@ -240,7 +240,6 @@ export default function EditProductPage() {
   const handleCancelEditSize = () => {
     setSizeInput(createEmptySize());
     setEditingSizeIndex(null);
-    setMessage("");
   };
 
   const handleResultFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,7 +254,7 @@ export default function EditProductPage() {
       const data = await res.json();
       if (data.urls && data.urls[0]) setResultImageUrl(data.urls[0]);
     } catch (error) {
-      setMessage("Error uploading result image. Please try again.");
+      toast({ title: "Error uploading result image. Please try again.", variant: "destructive" });
       console.error("Error:", error);
     } finally {
       setUploadingResult(false);
@@ -266,11 +265,10 @@ export default function EditProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (imageUrls.length === 0) {
-      setMessage("Please add at least one image.");
+      toast({ title: "Please add at least one image.", variant: "destructive" });
       return;
     }
     setSubmitting(true);
-    setMessage("");
     try {
       const bodyData = {
         ...formData,
@@ -301,10 +299,10 @@ export default function EditProductPage() {
       const responseData = await res.json();
       if (!res.ok) throw new Error(responseData.error || "Failed to update product");
 
-      setMessage("Product updated successfully!");
+      toast({ title: "Product updated successfully!" });
       setTimeout(() => router.push("/admin/products"), 1500);
     } catch (error) {
-      setMessage("Error updating product. Please try again.");
+      toast({ title: "Error updating product. Please try again.", variant: "destructive" });
       console.error("Error:", error);
     } finally {
       setSubmitting(false);
