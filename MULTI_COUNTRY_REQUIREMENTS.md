@@ -2,7 +2,7 @@
 
 > Purpose: this is a parking lot for everything the UAE/Qatar/Saudi expansion needs that is **not** an engineering task — business decisions, account signups, documents, and approvals that have to come from your boss or from external providers before certain code can be finished or tested. Engineering work that doesn't depend on any of this keeps moving in parallel (see "Not Blocked" section at the bottom).
 >
-> Last updated: 2026-08-24 (i18n — email templates fully translated, `User.locale` infrastructure built and kept in sync on every locale-switch, see `PROJECT_SOURCE_OF_TRUTH.md` §4.25 — item 3; i18n/RTL Batch 5 — toast-string sweep completed, validation-message question resolved (no work needed) — item 3; Arabic-Indic OTP digit-input bug fixed, standalone fix, see `PROJECT_SOURCE_OF_TRUTH.md` §4.23 — item 3; i18n/RTL Batch 4 — auth/registration forms — completed — item 3; i18n/RTL Batch 3b — vendor portal complete — item 3; i18n/RTL Batch 3 — vendor portal, first slice — completed — item 3; i18n/RTL Batch 2 — core purchase funnel — completed — item 3; i18n/RTL Phase 1 proof-of-concept completed — item 3; tax/VAT engine computation piece completed — item 2; Tap Payments still paused on phone verification — item 1)
+> Last updated: 2026-08-31 (India-specific "Made in India" copy fixed in the homepage promo ticker + footer trust badges — item 5, new; UAE domain is now live and SSL-verified, not just DNS-pending — item 5; **UAE data-isolation bug is the current top blocker for any real UAE use** — item 5, new, cross-references `LINKNSMILE_UAE_DEPLOYMENT.md` §7). Previous: 2026-08-24 (i18n — email templates fully translated, `User.locale` infrastructure built and kept in sync on every locale-switch, see `PROJECT_SOURCE_OF_TRUTH.md` §4.25 — item 3; i18n/RTL Batch 5 — toast-string sweep completed, validation-message question resolved (no work needed) — item 3; Arabic-Indic OTP digit-input bug fixed, standalone fix, see `PROJECT_SOURCE_OF_TRUTH.md` §4.23 — item 3; i18n/RTL Batch 4 — auth/registration forms — completed — item 3; i18n/RTL Batch 3b — vendor portal complete — item 3; i18n/RTL Batch 3 — vendor portal, first slice — completed — item 3; i18n/RTL Batch 2 — core purchase funnel — completed — item 3; i18n/RTL Phase 1 proof-of-concept completed — item 3; tax/VAT engine computation piece completed — item 2; Tap Payments still paused on phone verification — item 1)
 
 ---
 
@@ -104,10 +104,27 @@ Confirmed independent, as before — and now also proven technically, not just t
 These aren't blocking any specific engineering task right now, but will need answers before a country actually goes live:
 
 - **Support contact info per country** — is support email/phone shared across all countries for now, or does each country need its own? (Left as shared for now per earlier decision — revisit before launch.) **Update 2026-08-21:** these are now admin-editable DB fields (`PlatformSettings.supportEmail`/`supportPhone`, see `PROJECT_SOURCE_OF_TRUTH.md` §4.16), not an env var as this line previously implied — each country's separate database/deployment can already set its own values independently through the admin UI, no code change needed. This item is really just the *business* question (shared or per-country) now, not a technical blocker.
-- **Domain/subdomain per country** — confirm `ae.linknsmile.com` / `qa.linknsmile.com` / `sa.linknsmile.com` (or whatever pattern) and get DNS set up when ready.
+- **Domain/subdomain per country** — `ae.linknsmile.com` is now live with a real Let's Encrypt cert (confirmed 2026-08-28, see `LINKNSMILE_UAE_DEPLOYMENT.md` §5). `qa.linknsmile.com` / `sa.linknsmile.com` still to come whenever those deployments are stood up.
 - **Tracking IDs per country** — Sentry, Facebook Pixel, GTM, Google Ads currently default to the existing India IDs (env-pluggable now, per Step 4 work) — decide whether each new country deployment gets its own tracking accounts or shares the existing ones.
 - **Address model** — `lib/models/address.ts` (the saved address-book, separate from the checkout form) has no `country` field at all. Deliberately deferred during Step 5 — will need its own schema-change task before a UAE customer can save an address book entry properly, not just check out once.
 - **Regional bank details for vendor payouts** — the existing IFSC (India) validation has a SWIFT/BIC path already available as an alternate — confirm this is sufficient for GCC vendor payouts or needs its own local bank-format validation.
+
+---
+
+## 5. ⚠️ UAE data-isolation bug — current top blocker for real UAE use
+
+**Status: confirmed, reproducible, UNRESOLVED as of 2026-08-31.** `ae.linknsmile.com` is live (SSL working, correct separate `MONGODB_URI` in its `shared/.env`, its `linknsmile_ae` database independently verified empty via a standalone diagnostic script) — but the running app is nonetheless serving **India's real data** back to UAE visitors: a real India product through `/api/products` (first found and deeply investigated in `LINKNSMILE_UAE_DEPLOYMENT.md` §7), and — newly confirmed this session (2026-08-31) — India's `PlatformSettings.brandTagline` (the Hindi-language "Aap Ka Swadeshi Bazaar" tagline shown under the logo) and India's `HomeBanner` promotional carousel content ("Become a Vendor on linknsmile... Sign Up Now") as well. This means the bug is **systemic — every MongoDB collection, not just products** — not a one-off seeding mistake.
+
+**This is not a code bug.** This session re-read `lib/db.ts`, `lib/env.ts`, `.env.ae.example`, the `PlatformSettings`/`HomeBanner` read paths, and the `/api/products` in-memory cache, and confirmed all of them are correctly written and correctly isolated per-deployment. `LINKNSMILE_UAE_DEPLOYMENT.md` §7 independently ruled out the URI content, the `.env.local` symlink, PM2 process freshness, static build caching, OpenLiteSpeed page caching, and Mongoose connection/auth failures — and proved with a standalone script (identical file/URI/library, run directly on the server) that `linknsmile_ae` really is empty and really is reachable correctly in isolation.
+
+**What's needed, and from whom:**
+
+| Item | Needed from | Notes |
+|---|---|---|
+| Live server diagnosis of what's actually answering UAE's traffic | **Whoever has SSH access to the VPS** (not addressable by an in-repo code change) | `LINKNSMILE_UAE_DEPLOYMENT.md` §7's own recommended next step, not yet run: `ss -tlnp \| grep :3005` cross-checked against `pm2 list`'s reported PID, plus watching `pm2 logs` live during a real `curl` to see whether the fresh UAE process even receives the request. Leading theory: a stray/orphaned process still bound to port 3005, or a reverse-proxy misroute — not the application code. |
+| Re-verification once the above is fixed | **Engineering, quick** | Once UAE is confirmed to actually be hitting its own database, `PlatformSettings`/`HomeBanner`/`products` etc. will all correctly come back empty/default with **zero code changes needed** — at that point it becomes the normal admin-panel data-entry task (set UAE's own brand tagline, upload UAE's own homepage banners) rather than an engineering bug. |
+
+**Until this is resolved, do not treat `ae.linknsmile.com` as trustworthy for demos, testing, or anything data-related.**
 
 ---
 

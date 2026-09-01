@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       )
     );
   } catch (error) {
-    // console.error("Registration error:", error);
+    console.error("[register] Registration error:", error);
     return withCORS(NextResponse.json({ error: "Internal server error" }, { status: 500 }));
   }
 }

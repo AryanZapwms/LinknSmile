@@ -10,6 +10,7 @@ import WhyChoose from "@/components/why-choose";
 import { getCachedSync, fetchWithCache, invalidateCache } from "@/lib/cacheClient";
 import { formatCurrency } from "@/lib/currency";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { IS_INDIA } from "@/lib/site-config";
 
 interface Product {
   _id: string;
@@ -346,7 +347,11 @@ export default function Home() {
               <span className="text-amber-400">✦</span> {t("promoTicker.authentic")}
               <span className="text-amber-400">✦</span> {t("promoTicker.easyReturns")}
               <span className="text-amber-400">✦</span> {t("promoTicker.verifiedSellers")}
-              <span className="text-amber-400">✦</span> {t("promoTicker.madeInIndia")}
+              {IS_INDIA && (
+                <>
+                  <span className="text-amber-400">✦</span> {t("promoTicker.madeInIndia")}
+                </>
+              )}
               <span className="text-amber-400">✦</span> {t("promoTicker.securePayments")}
             </span>
           ))}
