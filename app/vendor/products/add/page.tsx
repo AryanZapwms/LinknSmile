@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, X, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ interface Category {
 
 export default function AddProductPage() {
   const t = useTranslations("VendorAddProduct");
+  const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -84,10 +85,10 @@ export default function AddProductPage() {
           image: prev.image || data.urls[0],
           images: [...prev.images, ...data.urls],
         }));
-        toast.success(t("imagesUploaded"));
+        toast({ title: t("imagesUploaded") });
       }
     } catch {
-      toast.error(t("uploadFailed"));
+      toast({ title: t("uploadFailed"), variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -100,7 +101,7 @@ export default function AddProductPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.slug || !formData.price) {
-      toast.error(t("fillRequiredFields"));
+      toast({ title: t("fillRequiredFields"), variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -127,13 +128,13 @@ export default function AddProductPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success(t("productSubmitted"));
+        toast({ title: t("productSubmitted") });
         router.push("/vendor/products");
       } else {
-        toast.error(data.message || t("createFailed"));
+        toast({ title: data.message || t("createFailed"), variant: "destructive" });
       }
     } catch {
-      toast.error(t("createFailed"));
+      toast({ title: t("createFailed"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
