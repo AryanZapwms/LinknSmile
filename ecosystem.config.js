@@ -24,10 +24,30 @@
 // multi-app array, so an India deploy can never reach into/restart the
 // UAE PM2 process (or vice versa). See .github/workflows/deploy-ae.yml
 // and PROJECT_SOURCE_OF_TRUTH.md §11 for how UAE sets these.
+const path = require("path");
+
 const APP_NAME = process.env.PM2_APP_NAME || "linknsmile";
 const APP_ROOT = process.env.PM2_APP_ROOT || "/home/linknsmile.com";
 const PORT = Number(process.env.PM2_PORT) || 3004;
 const INSTANCES = Number(process.env.PM2_INSTANCES) || 2;
+
+// Load the same .env file Next.js itself loads (deploy.sh symlinks
+// shared/.env -> <release>/.env.local) so the sanitization below sees the
+// real deployed value, not just whatever the launching shell happened to
+// export.
+require("dotenv").config({ path: path.join(__dirname, ".env.local") });
+
+// Defensive guard against a corrupted/duplicated env value (seen in
+// production as "https://x.com, https://x.com") — sanitized here, the
+// earliest point we control, ahead of Next.js's own env loading and ahead
+// of any node_modules code (e.g. next-auth/react's module-scope `new
+// URL()` call) that reads process.env directly.
+function firstUrl(value) {
+  return value ? value.split(",")[0].trim() : value;
+}
+
+const NEXTAUTH_URL = firstUrl(process.env.NEXTAUTH_URL);
+const NEXT_PUBLIC_SITE_URL = firstUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
 module.exports = {
   apps: [
@@ -41,6 +61,8 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         PORT,
+        ...(NEXTAUTH_URL && { NEXTAUTH_URL }),
+        ...(NEXT_PUBLIC_SITE_URL && { NEXT_PUBLIC_SITE_URL }),
       },
       out_file: `${APP_ROOT}/shared/logs/out.log`,
       error_file: `${APP_ROOT}/shared/logs/error.log`,
