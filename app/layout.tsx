@@ -21,7 +21,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 const getBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  const raw = process.env.NEXT_PUBLIC_SITE_URL;
+  if (raw) return raw.split(",")[0].trim();
   if (process.env.NODE_ENV === "production") return "https://linknsmile.com";
   return `http://localhost:${process.env.PORT || 3004}`;
 };
