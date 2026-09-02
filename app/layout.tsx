@@ -27,8 +27,21 @@ const getBaseUrl = () => {
   return `http://localhost:${process.env.PORT || 3004}`;
 };
 
+const baseUrlString = getBaseUrl();
+let metadataBaseUrl: URL;
+try {
+  metadataBaseUrl = new URL(baseUrlString);
+} catch (err) {
+  console.error("=== METADATA_BASE_URL_DEBUG ===");
+  console.error("baseUrlString:", JSON.stringify(baseUrlString));
+  console.error("raw env NEXT_PUBLIC_SITE_URL:", JSON.stringify(process.env.NEXT_PUBLIC_SITE_URL));
+  console.error("stack:", (err as Error).stack);
+  console.error("===============================");
+  throw err;
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(getBaseUrl()),
+  metadataBase: metadataBaseUrl,
   title: "Linknsmile",
   description:
     "Discover premium skincare solutions from Linknsmile. Professional-grade products for your skin.",
