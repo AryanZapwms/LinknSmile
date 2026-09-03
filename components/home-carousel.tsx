@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { MashrabiyaPattern } from "@/components/ui/mashrabiya-pattern";
+import { IS_INDIA } from "@/lib/site-config";
 
 interface CarouselImage {
   _id: string;
@@ -72,7 +74,7 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl bg-stone-100"
+      className={`relative w-full overflow-hidden rounded-2xl bg-stone-100 ${!IS_INDIA ? "ring-1 ring-gold-200/70" : ""}`}
       onMouseEnter={() => setAutoPlay(false)}
       onMouseLeave={() => setAutoPlay(true)}
       onKeyDown={(e) => {
@@ -82,6 +84,10 @@ export function HomeCarousel({ images }: HomeCarouselProps) {
       tabIndex={0}
       aria-roledescription="carousel"
     >
+      {/* Gulf regional accent — subtle geometric texture behind the hero
+          imagery, AE only */}
+      {!IS_INDIA && <MashrabiyaPattern className="text-gold-600 z-0" opacity={0.05} />}
+
       {/* Image container */}
       <div className="relative w-full" style={{ aspectRatio: "1000 / 384", minHeight: "180px" }}>
         {currentImage && (

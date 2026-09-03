@@ -31,6 +31,43 @@ import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { MashrabiyaPattern } from "@/components/ui/mashrabiya-pattern";
+import { IS_INDIA } from "@/lib/site-config";
+
+// Warm accent color classes — amber (India) vs. gold (AE/Gulf). Same
+// shade "slots" as the amber-* Tailwind scale so every existing accent
+// spot (mega menu, badges, CTAs) retints in place without restructuring.
+const accent = IS_INDIA
+  ? {
+      bar: "from-amber-300 via-amber-400 to-amber-300",
+      bg50: "bg-amber-50",
+      bg100: "bg-amber-100",
+      hoverBg50: "hover:bg-amber-50",
+      groupHoverBg200: "group-hover:bg-amber-200",
+      text500: "text-amber-500",
+      text600: "text-amber-600",
+      text700: "text-amber-700",
+      groupHoverText700: "group-hover:text-amber-700",
+      border200: "border-amber-200",
+      hoverBorder200: "hover:border-amber-200",
+      hoverBg500: "hover:bg-amber-500",
+      ring400: "group-hover:ring-amber-400",
+    }
+  : {
+      bar: "from-gold-300 via-gold-500 to-gold-300",
+      bg50: "bg-gold-50",
+      bg100: "bg-gold-100",
+      hoverBg50: "hover:bg-gold-50",
+      groupHoverBg200: "group-hover:bg-gold-200",
+      text500: "text-gold-500",
+      text600: "text-gold-600",
+      text700: "text-gold-700",
+      groupHoverText700: "group-hover:text-gold-700",
+      border200: "border-gold-200",
+      hoverBorder200: "hover:border-gold-200",
+      hoverBg500: "hover:bg-gold-500",
+      ring400: "group-hover:ring-gold-400",
+    };
 
 /* ─── Types ─────────────────────────────────────────────── */
 interface Category {
@@ -51,12 +88,16 @@ function CategoryCard({ category, onClick }: { category: Category; onClick: () =
     <Link
       href={`/products?category=${category._id}`}
       onClick={onClick}
-      className="group flex items-center gap-2.5 rounded-xl p-2.5 transition-colors hover:bg-amber-50"
+      className={`group flex items-center gap-2.5 rounded-xl p-2.5 transition-colors ${accent.hoverBg50}`}
     >
-      <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-amber-100 transition-colors group-hover:bg-amber-200">
-        <Tag size={12} className="text-amber-600" />
+      <div
+        className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${accent.bg100} transition-colors ${accent.groupHoverBg200}`}
+      >
+        <Tag size={12} className={accent.text600} />
       </div>
-      <span className="text-sm leading-snug font-medium text-stone-700 transition-colors group-hover:text-amber-700">
+      <span
+        className={`text-sm leading-snug font-medium text-stone-700 transition-colors ${accent.groupHoverText700}`}
+      >
         {category.name}
       </span>
     </Link>
@@ -82,7 +123,7 @@ function MegaMenu({
       style={{ width: "680px" }}
     >
       {/* Accent bar */}
-      <div className="h-0.5 w-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300" />
+      <div className={`h-0.5 w-full bg-gradient-to-r ${accent.bar}`} />
 
       <div className="grid grid-cols-[200px_1fr]">
         {/* Left — Tab nav */}
@@ -103,11 +144,11 @@ function MegaMenu({
               onClick={() => setActiveTab(key as any)}
               className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-start text-sm font-medium transition-colors ${
                 activeTab === key
-                  ? "bg-white text-amber-700 shadow-sm"
+                  ? `bg-white ${accent.text700} shadow-sm`
                   : "text-stone-600 hover:bg-white/60 hover:text-stone-800"
               }`}
             >
-              <Icon size={15} className={activeTab === key ? "text-amber-500" : "text-stone-400"} />
+              <Icon size={15} className={activeTab === key ? accent.text500 : "text-stone-400"} />
               {label}
             </button>
           ))}
@@ -116,7 +157,7 @@ function MegaMenu({
             <Link
               href="/products"
               onClick={onClose}
-              className="flex items-center gap-2 rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-amber-700 transition-colors hover:bg-amber-500 hover:text-white"
+              className={`flex items-center gap-2 rounded-xl border ${accent.border200} px-3 py-2 text-sm font-semibold ${accent.text700} transition-colors ${accent.hoverBg500} hover:text-white`}
             >
               {t("viewAll")} <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
             </Link>
@@ -156,13 +197,13 @@ function MegaMenu({
                 <Link
                   href="/products?origin=made-in-india"
                   onClick={onClose}
-                  className="group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all hover:border-amber-200 hover:bg-amber-50"
+                  className={`group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all ${accent.hoverBorder200} ${accent.hoverBg50}`}
                 >
                   <div className="flex h-12 w-15 ">
                     <img src="https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/250px-Flag_of_India.svg.png" alt="indian flag" />
                   </div>
                   <div>
-                    <p className="font-bold text-stone-800 transition-colors group-hover:text-amber-700">
+                    <p className={`font-bold text-stone-800 transition-colors ${accent.groupHoverText700}`}>
                       {t("madeInIndia")}
                     </p>
                     <p className="mt-0.5 text-xs text-stone-400">
@@ -175,13 +216,13 @@ function MegaMenu({
                 {/* <Link
                   href="/products?origin=foreign-made"
                   onClick={onClose}
-                  className="group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all hover:border-amber-200 hover:bg-amber-50"
+                  className={`group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all ${accent.hoverBorder200} ${accent.hoverBg50}`}
                 >
                   <div className="flex h-12 w-15 ">
                     <img src="https://www.jegroupllc.com/wp-content/uploads/2019/03/globe.png" alt="international" />
                   </div>
                   <div>
-                    <p className="font-bold text-stone-800 transition-colors group-hover:text-amber-700">
+                    <p className={`font-bold text-stone-800 transition-colors ${accent.groupHoverText700}`}>
                       International Products
                     </p>
                     <p className="mt-0.5 text-xs text-stone-400">
@@ -194,7 +235,7 @@ function MegaMenu({
                 <Link
                   href="/products"
                   onClick={onClose}
-                  className="group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all hover:border-amber-200 hover:bg-amber-50"
+                  className={`group flex items-center gap-4 rounded-2xl border border-stone-100 p-4 transition-all ${accent.hoverBorder200} ${accent.hoverBg50}`}
                 >
 
                   <div className="flex h-12 w-15 ">
@@ -202,7 +243,7 @@ function MegaMenu({
                   </div>
 
                   <div>
-                    <p className="font-bold text-stone-800 transition-colors group-hover:text-amber-700">
+                    <p className={`font-bold text-stone-800 transition-colors ${accent.groupHoverText700}`}>
                       {t("allProducts")}
                     </p>
                     <p className="mt-0.5 text-xs text-stone-400">
@@ -231,9 +272,11 @@ function MegaMenu({
                       key={shop._id}
                       href={`/shop/${shop.slug}`}
                       onClick={onClose}
-                      className="group flex items-center gap-3 rounded-xl border border-stone-100 p-3 transition-all hover:border-amber-200 hover:bg-amber-50"
+                      className={`group flex items-center gap-3 rounded-xl border border-stone-100 p-3 transition-all ${accent.hoverBorder200} ${accent.hoverBg50}`}
                     >
-                      <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-amber-100 transition-colors group-hover:bg-amber-200">
+                      <div
+                        className={`flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg ${accent.bg100} transition-colors ${accent.groupHoverBg200}`}
+                      >
                         {shop.logo ? (
                           <img
                             src={shop.logo}
@@ -241,12 +284,14 @@ function MegaMenu({
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <span className="text-sm font-bold text-amber-600 uppercase">
+                          <span className={`text-sm font-bold uppercase ${accent.text600}`}>
                             {shop.shopName.slice(0, 2)}
                           </span>
                         )}
                       </div>
-                      <span className="line-clamp-2 text-sm leading-snug font-medium text-stone-700 transition-colors group-hover:text-amber-700">
+                      <span
+                        className={`line-clamp-2 text-sm leading-snug font-medium text-stone-700 transition-colors ${accent.groupHoverText700}`}
+                      >
                         {shop.shopName}
                       </span>
                     </Link>
@@ -257,7 +302,7 @@ function MegaMenu({
                 <Link
                   href="/sellers"
                   onClick={onClose}
-                  className="inline-flex items-center gap-2 rounded-xl border border-amber-200 px-3 py-2 text-sm font-semibold text-amber-700 transition-colors hover:bg-amber-500 hover:text-white"
+                  className={`inline-flex items-center gap-2 rounded-xl border ${accent.border200} px-3 py-2 text-sm font-semibold ${accent.text700} transition-colors ${accent.hoverBg500} hover:text-white`}
                 >
                   <Store size={14} /> {t("viewAllSellers")}{" "}
                   <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
@@ -352,7 +397,11 @@ export function Header() {
           : "border-b border-stone-100 bg-white"
       }`}
     >
-      <div className="h-0.5 w-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300" />
+      <div
+        className={`relative w-full overflow-hidden bg-gradient-to-r ${accent.bar} ${IS_INDIA ? "h-0.5" : "h-1.5"}`}
+      >
+        {!IS_INDIA && <MashrabiyaPattern className="text-white" opacity={0.35} />}
+      </div>
 
       <div className="mx-auto max-w-7xl px-4 h-20 sm:px-6">
         <div className="flex h-18  items-center justify-between gap-4">
@@ -363,7 +412,9 @@ export function Header() {
             aria-label={t("goToHome")}
           >
 
-            <div className="relative h-22 w-35 mt-4 px-2 overflow-hidden rounded-[50%] bg-white transition-all duration-200 group-hover:ring-amber-400">
+            <div
+              className={`relative h-22 w-35 mt-4 px-2 overflow-hidden rounded-[50%] bg-white transition-all duration-200 ${accent.ring400}`}
+            >
               <Image
                 src={LinkAndSmileLogo}
                 alt="LinkAndSmile"
@@ -384,7 +435,7 @@ export function Header() {
                 onClick={() => setProductsMenuOpen((v) => !v)}
                 className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
                   pathname?.startsWith("/products") || productsMenuOpen
-                    ? "bg-amber-50 text-amber-700"
+                    ? `${accent.bg50} ${accent.text700}`
                     : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
                 }`}
               >
@@ -408,7 +459,7 @@ export function Header() {
                 href={href}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
                   pathname === href
-                    ? "bg-amber-50 text-amber-700"
+                    ? `${accent.bg50} ${accent.text700}`
                     : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
                 }`}
               >
@@ -420,7 +471,7 @@ export function Header() {
             {!isVendor && !isAdmin && (
               <Link
                 href="/register-as-seller"
-                className="ms-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-all duration-150 hover:bg-amber-100"
+                className={`ms-2 rounded-lg border ${accent.border200} ${accent.bg50} px-3 py-1.5 text-sm font-medium ${accent.text700} transition-all duration-150 ${IS_INDIA ? "hover:bg-amber-100" : "hover:bg-gold-100"}`}
               >
                 {t("sellWithUs")}
               </Link>
@@ -430,7 +481,7 @@ export function Header() {
             {(isVendor || isAdmin) && (
               <Link
                 href={isAdmin ? "/admin" : "/vendor"}
-                className="ms-2 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700 transition-all duration-150 hover:bg-amber-100"
+                className={`ms-2 flex items-center gap-1.5 rounded-lg border ${accent.border200} ${accent.bg50} px-3 py-1.5 text-sm font-medium ${accent.text700} transition-all duration-150 ${IS_INDIA ? "hover:bg-amber-100" : "hover:bg-gold-100"}`}
               >
                 <LayoutDashboard className="h-3.5 w-3.5" />
                 {t("dashboard")}
@@ -451,8 +502,10 @@ export function Header() {
                     variant="ghost"
                     className="flex h-9 items-center gap-2 rounded-xl px-2 hover:bg-stone-50 sm:px-3"
                   >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
-                      <User className="h-3.5 w-3.5 text-amber-700" />
+                    <div
+                      className={`flex h-7 w-7 items-center justify-center rounded-full ${accent.bg100}`}
+                    >
+                      <User className={`h-3.5 w-3.5 ${accent.text700}`} />
                     </div>
                     <span className="hidden max-w-[100px] truncate text-sm font-medium text-stone-700 sm:inline">
                       {session.user.name?.split(" ")[0] || t("account")}

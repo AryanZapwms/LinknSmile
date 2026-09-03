@@ -8,7 +8,37 @@ import { useTranslations } from "next-intl";
 import LinkAndSmileLogo from "@/public/LinkAndSmile2.png";
 import { Divide } from "lucide-react";
 import { usePlatformSettings } from "@/hooks/usePlatformSettings";
+import { MashrabiyaPattern } from "@/components/ui/mashrabiya-pattern";
 import { IS_INDIA } from "@/lib/site-config";
+
+// Warm accent color classes — amber (India) vs. gold (AE/Gulf). Mirrors
+// the same approach as components/header.tsx: retint the existing
+// hardcoded accent classes in place rather than restructuring markup.
+const accent = IS_INDIA
+  ? {
+      hoverText600: "hover:text-amber-600",
+      ring200: "ring-amber-200",
+      groupHoverRing400: "group-hover:ring-amber-400",
+      hoverBorder300: "hover:border-amber-300",
+      hoverBg50: "hover:bg-amber-50",
+      border100: "border-amber-100",
+      bg50: "bg-amber-50",
+      text700: "text-amber-700",
+      bg400: "bg-amber-400",
+      text400: "text-amber-400",
+    }
+  : {
+      hoverText600: "hover:text-gold-600",
+      ring200: "ring-gold-200",
+      groupHoverRing400: "group-hover:ring-gold-400",
+      hoverBorder300: "hover:border-gold-300",
+      hoverBg50: "hover:bg-gold-50",
+      border100: "border-gold-100",
+      bg50: "bg-gold-50",
+      text700: "text-gold-700",
+      bg400: "bg-gold-400",
+      text400: "text-gold-400",
+    };
 
 const socials = [
   {
@@ -39,7 +69,7 @@ function FooterLink({ href, label }: { href: string; label: string }) {
     <li>
       <Link
         href={href}
-        className="text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
+        className={`text-sm text-stone-500 transition-colors duration-150 ${accent.hoverText600}`}
       >
         {label}
       </Link>
@@ -76,7 +106,13 @@ export default function Footer() {
   return (
     <footer className="border-t border-stone-100 bg-stone-50 text-stone-800">
       {/* Top accent */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-amber-300 to-transparent opacity-60" />
+      {IS_INDIA ? (
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-amber-300 to-transparent opacity-60" />
+      ) : (
+        <div className="relative h-2 w-full overflow-hidden bg-gradient-to-r from-transparent via-gold-300 to-transparent opacity-60">
+          <MashrabiyaPattern className="text-gold-700" opacity={0.5} />
+        </div>
+      )}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Main content */}
@@ -84,7 +120,9 @@ export default function Footer() {
           {/* Brand */}
           <div className="space-y-5 lg:col-span-4">
             <Link href="/" className="group inline-flex items-center gap-3">
-              <div className="relative h-10 w-10 overflow-hidden rounded-xl ring-1 ring-amber-200 transition-all duration-200 group-hover:ring-amber-400">
+              <div
+                className={`relative h-10 w-10 overflow-hidden rounded-xl ring-1 ${accent.ring200} transition-all duration-200 ${accent.groupHoverRing400}`}
+              >
                 <Image
                   src={LinkAndSmileLogo}
                   alt="LinkAndSmile Logo"
@@ -114,10 +152,10 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`LinkAndSmile ${label}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-stone-200 bg-white transition-all duration-150 hover:border-amber-300 hover:bg-amber-50"
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl border border-stone-200 bg-white transition-all duration-150 ${accent.hoverBorder300} ${accent.hoverBg50}`}
                 >
                   <svg
-                    className="h-4 w-4 text-stone-500 hover:text-amber-600"
+                    className={`h-4 w-4 text-stone-500 ${accent.hoverText600}`}
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -136,9 +174,9 @@ export default function Footer() {
               ].map((badge) => (
                 <span
                   key={badge}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700"
+                  className={`inline-flex items-center gap-1.5 rounded-full border ${accent.border100} ${accent.bg50} px-3 py-1 text-xs font-medium ${accent.text700}`}
                 >
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${accent.bg400}`} />
                   {badge}
                 </span>
               ))}
@@ -189,10 +227,10 @@ export default function Footer() {
                   <strong className="text-md">{t("customerSupport")}</strong>
                   <a
                   href={`mailto:${supportEmail}`}
-                  className="flex items-start gap-2 text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
+                  className={`flex items-start gap-2 text-sm text-stone-500 transition-colors duration-150 ${accent.hoverText600}`}
                 >
                   <svg
-                    className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
+                    className={`mt-0.5 h-4 w-4 shrink-0 ${accent.text400}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -214,10 +252,10 @@ export default function Footer() {
               <strong className="text-md">{t("vendorSupport")}</strong>
              <a
                   href={`mailto:${supportEmail}`}
-                  className="flex items-start gap-2 text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
+                  className={`flex items-start gap-2 text-sm text-stone-500 transition-colors duration-150 ${accent.hoverText600}`}
                 >
                   <svg
-                    className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
+                    className={`mt-0.5 h-4 w-4 shrink-0 ${accent.text400}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -237,7 +275,7 @@ export default function Footer() {
 
                 <div className="flex items-start gap-2">
                   <svg
-                    className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
+                    className={`mt-0.5 h-4 w-4 shrink-0 ${accent.text400}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -252,7 +290,7 @@ export default function Footer() {
                   <div className="space-y-1">
                     <a
                       href={supportPhoneHref}
-                      className="block text-sm text-stone-500 transition-colors duration-150 hover:text-amber-600"
+                      className={`block text-sm text-stone-500 transition-colors duration-150 ${accent.hoverText600}`}
                     >
                       {supportPhone}
                     </a>
@@ -262,7 +300,7 @@ export default function Footer() {
 
                 {/* <div className="flex items-start gap-2">
                   <svg
-                    className="mt-0.5 h-4 w-4 shrink-0 text-amber-400"
+                    className={`mt-0.5 h-4 w-4 shrink-0 ${accent.text400}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
