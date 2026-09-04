@@ -1,7 +1,7 @@
 // app/layout.tsx
 import type React from "react";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Cairo } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -13,12 +13,21 @@ import { Toaster } from "@/components/ui/toaster";
 import FavouritesLoader from "@/components/FavouritesLoader";
 import Footer from "@/components/footer";
 import GTMScripts from "@/components/gtm-scripts";
-import { GTM_ID } from "@/lib/site-config";
+import { GTM_ID, IS_INDIA } from "@/lib/site-config";
 import { isRtlLocale } from "@/lib/i18n-config";
 import "./globals.css";
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
+
+// Arabic-optimized pairing for the AE deployment — only registers the
+// --font-cairo CSS variable here; app/globals.css decides when it's
+// actually used (AE + RTL only), so this has zero effect on India.
+const _cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-cairo",
+});
 
 const getBaseUrl = () => {
   const raw = process.env.NEXT_PUBLIC_SITE_URL;
@@ -54,7 +63,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const dir = isRtlLocale(locale) ? "rtl" : "ltr";
 
   return (
-    <html lang={locale} dir={dir} className={`${_geist.className} ${_geistMono.className}`}>
+    <html
+      lang={locale}
+      dir={dir}
+      data-region={IS_INDIA ? "in" : "ae"}
+      className={`${_geist.className} ${_geistMono.className} ${_cairo.variable}`}
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

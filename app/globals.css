@@ -154,6 +154,69 @@
   }
 }
 
+/* ===================================================================
+   AE (UAE/Gulf) regional identity overrides — scoped entirely under
+   html[data-region="ae"], set server-side in app/layout.tsx from the
+   existing IS_INDIA flag. India's cascade is untouched by construction.
+   =================================================================== */
+html[data-region="ae"] {
+  /* Teal replaces purple as the primary brand color. */
+  --primary: oklch(0.5 0.1 165);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.95 0.03 165);
+  --secondary-foreground: oklch(0.3 0.08 165);
+  --accent: oklch(0.94 0.04 165);
+  --accent-foreground: oklch(0.3 0.08 165);
+  --ring: oklch(0.5 0.1 165);
+  --sidebar-primary: oklch(0.5 0.1 165);
+  --sidebar-accent-foreground: oklch(0.5 0.1 165);
+  --sidebar-ring: oklch(0.5 0.1 165);
+
+  /* Warm gold/sand secondary accent — decorative borders, badges,
+     vendor CTA, hero accents. Not part of the shadcn token set on
+     purpose: it's a targeted regional accent, not a UI-wide repaint. */
+  --gold-50: #fdf6ec;
+  --gold-100: #fbebd3;
+  --gold-200: #f6d9a8;
+  --gold-300: #fac775;
+  --gold-400: #e8b563;
+  --gold-500: #d49f4a;
+  --gold-600: #ba7517;
+  --gold-700: #96600f;
+}
+
+/* Arabic-optimized typography: Cairo (strong Arabic-script support)
+   takes over only when the AE deployment is actually rendering RTL
+   (Arabic) content. English/Latin text on AE keeps using Geist, so the
+   pairing is deliberate rather than one font stretched across both
+   scripts. */
+html[data-region="ae"][dir="rtl"] {
+  --font-sans: var(--font-cairo), "Geist", "Geist Fallback";
+}
+
+@theme inline {
+  --color-gold-50: var(--gold-50);
+  --color-gold-100: var(--gold-100);
+  --color-gold-200: var(--gold-200);
+  --color-gold-300: var(--gold-300);
+  --color-gold-400: var(--gold-400);
+  --color-gold-500: var(--gold-500);
+  --color-gold-600: var(--gold-600);
+  --color-gold-700: var(--gold-700);
+}
+
+/* Mashrabiya-style geometric lattice — reusable low-opacity decorative
+   texture (section dividers, hero background accent, card/banner border
+   treatment). Pure CSS, no image asset. */
+.pattern-mashrabiya {
+  background-image:
+    linear-gradient(45deg, currentColor 1px, transparent 1px),
+    linear-gradient(-45deg, currentColor 1px, transparent 1px),
+    linear-gradient(45deg, transparent 59%, currentColor 59%, currentColor 61%, transparent 61%),
+    linear-gradient(-45deg, transparent 59%, currentColor 59%, currentColor 61%, transparent 61%);
+  background-size: 24px 24px;
+}
+
 @utility bg-gradient-primary-soft {
   background: linear-gradient(135deg, oklch(0.95 0.05 285) 0%, oklch(0.98 0.02 285) 100%);
 }
