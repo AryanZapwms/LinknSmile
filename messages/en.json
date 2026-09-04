@@ -361,6 +361,7 @@
     "renewSubscription": "Renew Subscription",
     "renewNow": "Renew Now",
     "gracePeriodMsg": "Your subscription expired on {date}. Renew within {days, plural, one {# day} other {# days}} to avoid losing access.",
+    "complimentaryAccessMsg": "You have complimentary access until {date}, granted by our team. No payment needed during this period.",
     "paymentVerificationFailedContact": "Payment verification failed. Please contact {email}.",
     "paymentVerificationFailedRetry": "Payment verification failed. Please try again.",
     "renewalFailedGeneric": "Failed to start renewal. Please try again."

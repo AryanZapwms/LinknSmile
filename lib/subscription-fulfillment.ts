@@ -76,6 +76,11 @@ export async function fulfillSubscriptionPayment(
   subscription.cancelledAt = undefined;
   subscription.cancelledBy = undefined;
   subscription.cancellationReason = undefined;
+  // A real payment always wins the "current source" label, even if it
+  // stacked on top of remaining comped time.
+  subscription.source = "paid";
+  subscription.compGrantedBy = undefined;
+  subscription.compGrantedAt = undefined;
 
   const historyEntry: any = {
     amount: subscription.amount,

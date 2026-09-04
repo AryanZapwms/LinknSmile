@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
-    const shops = await Shop.find().select("shopName ownerId").populate("ownerId", "name email").lean();
+    const shops = await Shop.find()
+      .select("shopName ownerId")
+      .populate("ownerId", "name email")
+      .lean();
     const subscriptions = await VendorSubscription.find().lean();
     const subsByShopId = new Map(subscriptions.map((s) => [s.shopId.toString(), s]));
 
@@ -37,6 +40,7 @@ export async function GET(request: NextRequest) {
         owner: shop.ownerId,
         subscriptionStatus: sub?.status || "no_subscription",
         accessStatus: access.status,
+        source: sub?.source || "paid",
         expiryDate: sub?.expiryDate || null,
         daysUntilExpiry: access.daysUntilExpiry,
         isInGracePeriod: access.isInGracePeriod,
