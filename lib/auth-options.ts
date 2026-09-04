@@ -101,6 +101,17 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      try {
+        if (url.startsWith("/")) return `${baseUrl}${url}`;
+        const parsed = new URL(url);
+        const parsedBase = new URL(baseUrl);
+        if (parsed.origin === parsedBase.origin) return url;
+        return baseUrl;
+      } catch {
+        return baseUrl;
+      }
+    },
   },
   pages: { signIn: "/auth/login", error: "/auth/login" },
   session: { strategy: "jwt", maxAge: 24 * 60 * 60, updateAge: 60 * 60 },
