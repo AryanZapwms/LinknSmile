@@ -18,6 +18,7 @@ interface SubscriptionRow {
   owner: { name: string; email: string };
   subscriptionStatus: "active" | "expired" | "cancelled" | "pending" | "no_subscription";
   accessStatus: "no_subscription" | "active" | "grace_period" | "blocked";
+  source: "paid" | "comped";
   expiryDate: string | null;
   daysUntilExpiry: number | null;
   isInGracePeriod: boolean;
@@ -114,8 +115,8 @@ function FeeSettingsCard() {
           </div>
         )}
         <p className="text-muted-foreground mt-3 text-xs">
-          Applies to new subscription payments only — existing pending/active subscriptions keep
-          the amount they were created with.
+          Applies to new subscription payments only — existing pending/active subscriptions keep the
+          amount they were created with.
         </p>
       </CardContent>
     </Card>
@@ -191,7 +192,14 @@ export default function VendorSubscriptionsPage() {
                       <div className="text-muted-foreground text-xs">{row.owner?.email}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <StatusBadge row={row} />
+                      <div className="flex items-center gap-1.5">
+                        <StatusBadge row={row} />
+                        {row.source === "comped" && (
+                          <Badge variant="outline" className="border-blue-400 text-blue-600">
+                            Comp
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {row.expiryDate

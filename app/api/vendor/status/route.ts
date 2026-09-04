@@ -65,6 +65,7 @@ export async function GET(req: NextRequest) {
           daysUntilExpiry: access.daysUntilExpiry,
           isInGracePeriod: access.isInGracePeriod,
           isBlocked: access.isBlocked,
+          source: subscription?.source ?? "paid",
         },
       })
     );
@@ -77,4 +78,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

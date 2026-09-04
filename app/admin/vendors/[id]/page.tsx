@@ -47,6 +47,7 @@ export default function VendorDetailsPage() {
   const [cancelling, setCancelling] = useState(false);
   const [extendDays, setExtendDays] = useState("30");
   const [extending, setExtending] = useState(false);
+  const [granting, setGranting] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -79,7 +80,11 @@ export default function VendorDetailsPage() {
 
   const handleCancelSubscription = async () => {
     if (!cancelReason.trim()) {
-      toast({ title: "Reason required", description: "Please explain why you're cancelling this subscription.", variant: "destructive" });
+      toast({
+        title: "Reason required",
+        description: "Please explain why you're cancelling this subscription.",
+        variant: "destructive",
+      });
       return;
     }
     setCancelling(true);
@@ -90,21 +95,32 @@ export default function VendorDetailsPage() {
         body: JSON.stringify({ action: "cancel", reason: cancelReason.trim() }),
       });
       if (!res.ok) throw new Error("Cancel failed");
-      toast({ title: "Subscription cancelled", description: "Vendor dashboard access has been blocked immediately." });
+      toast({
+        title: "Subscription cancelled",
+        description: "Vendor dashboard access has been blocked immediately.",
+      });
       setShowCancelForm(false);
       setCancelReason("");
       await fetchSubscription();
     } catch (error) {
-      toast({ title: "Error", description: "Failed to cancel subscription", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to cancel subscription",
+        variant: "destructive",
+      });
     } finally {
       setCancelling(false);
     }
   };
 
-  const handleExtend = async (action: "extend" | "grant_free") => {
+  const handleExtend = async (action: "extend") => {
     const days = Number(extendDays);
     if (!days || days <= 0) {
-      toast({ title: "Invalid days", description: "Enter a positive number of days.", variant: "destructive" });
+      toast({
+        title: "Invalid days",
+        description: "Enter a positive number of days.",
+        variant: "destructive",
+      });
       return;
     }
     setExtending(true);
@@ -118,9 +134,34 @@ export default function VendorDetailsPage() {
       toast({ title: "Success", description: `Subscription extended by ${days} day(s).` });
       await fetchSubscription();
     } catch (error) {
-      toast({ title: "Error", description: "Failed to update subscription", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to update subscription",
+        variant: "destructive",
+      });
     } finally {
       setExtending(false);
+    }
+  };
+
+  const handleGrantFree = async (unit: "month" | "year") => {
+    setGranting(true);
+    try {
+      const res = await fetch(`/api/admin/vendor-subscriptions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "grant_free", unit }),
+      });
+      if (!res.ok) throw new Error("Grant failed");
+      toast({
+        title: "Complimentary access granted",
+        description: `Granted 1 ${unit} of free access.`,
+      });
+      await fetchSubscription();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to grant free access", variant: "destructive" });
+    } finally {
+      setGranting(false);
     }
   };
 
@@ -416,13 +457,17 @@ export default function VendorDetailsPage() {
                               ? `${c.discountValue}%${c.maxDiscountAmount ? ` (max ${formatCurrency(c.maxDiscountAmount)})` : ""}`
                               : formatCurrency(c.discountValue)}
                           </td>
-                          <td className="py-2">{c.minOrderValue ? formatCurrency(c.minOrderValue) : "—"}</td>
+                          <td className="py-2">
+                            {c.minOrderValue ? formatCurrency(c.minOrderValue) : "—"}
+                          </td>
                           <td className="py-2">
                             {c.usageCount}
                             {c.usageLimit ? ` / ${c.usageLimit}` : ""}
                           </td>
                           <td className="py-2">
-                            {c.validUntil ? new Date(c.validUntil).toLocaleDateString() : "No expiry"}
+                            {c.validUntil
+                              ? new Date(c.validUntil).toLocaleDateString()
+                              : "No expiry"}
                           </td>
                           <td className="py-2">
                             <Badge variant={c.isActive ? "default" : "secondary"}>
@@ -557,117 +602,149 @@ export default function VendorDetailsPage() {
         <TabsContent value="subscription" className="space-y-4">
           {subLoading ? (
             <p className="text-muted-foreground p-4 text-sm">Loading subscription...</p>
-          ) : !subscription ? (
-            <Card>
-              <CardContent className="text-muted-foreground py-8 text-center">
-                No subscription found for this vendor.
-              </CardContent>
-            </Card>
           ) : (
             <>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Subscription Status</CardTitle>
-                  <Badge
-                    variant={
-                      subscription.status === "active"
-                        ? "default"
-                        : subscription.status === "cancelled"
-                          ? "destructive"
-                          : "secondary"
-                    }
-                    className={subscription.status === "active" ? "bg-green-600" : ""}
-                  >
-                    {subscription.status}
-                  </Badge>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <div>
-                    <p className="text-muted-foreground text-xs font-medium uppercase">Start Date</p>
-                    <p className="text-sm font-semibold">
-                      {subscription.startDate
-                        ? new Date(subscription.startDate).toLocaleDateString(LOCALE)
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs font-medium uppercase">Expiry Date</p>
-                    <p className="text-sm font-semibold">
-                      {subscription.expiryDate
-                        ? new Date(subscription.expiryDate).toLocaleDateString(LOCALE)
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs font-medium uppercase">Amount</p>
-                    <p className="text-sm font-semibold">
-                      {formatCurrency(subscription.amount ?? 0)}
-                    </p>
-                  </div>
-                  {subscription.status === "cancelled" && (
-                    <div className="md:col-span-3">
+              {!subscription ? (
+                <Card>
+                  <CardContent className="text-muted-foreground py-8 text-center">
+                    No subscription found for this vendor yet — grant complimentary access below to
+                    get started.
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Subscription Status</CardTitle>
+                    <div className="flex items-center gap-2">
+                      {subscription.source === "comped" && (
+                        <Badge variant="outline" className="border-blue-400 text-blue-600">
+                          Complimentary
+                        </Badge>
+                      )}
+                      <Badge
+                        variant={
+                          subscription.status === "active"
+                            ? "default"
+                            : subscription.status === "cancelled"
+                              ? "destructive"
+                              : "secondary"
+                        }
+                        className={subscription.status === "active" ? "bg-green-600" : ""}
+                      >
+                        {subscription.status}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
                       <p className="text-muted-foreground text-xs font-medium uppercase">
-                        Cancellation
+                        Start Date
                       </p>
-                      <p className="text-sm text-gray-600">
-                        {subscription.cancellationReason} —{" "}
-                        {subscription.cancelledAt
-                          ? new Date(subscription.cancelledAt).toLocaleDateString(LOCALE)
-                          : ""}
+                      <p className="text-sm font-semibold">
+                        {subscription.startDate
+                          ? new Date(subscription.startDate).toLocaleDateString(LOCALE)
+                          : "—"}
                       </p>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <div>
+                      <p className="text-muted-foreground text-xs font-medium uppercase">
+                        Expiry Date
+                      </p>
+                      <p className="text-sm font-semibold">
+                        {subscription.expiryDate
+                          ? new Date(subscription.expiryDate).toLocaleDateString(LOCALE)
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground text-xs font-medium uppercase">Amount</p>
+                      <p className="text-sm font-semibold">
+                        {formatCurrency(subscription.amount ?? 0)}
+                      </p>
+                    </div>
+                    {subscription.source === "comped" && subscription.compGrantedAt && (
+                      <div className="md:col-span-3">
+                        <p className="text-muted-foreground text-xs font-medium uppercase">
+                          Complimentary Access Granted
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {new Date(subscription.compGrantedAt).toLocaleDateString(LOCALE)}
+                          {subscription.compGrantedBy?.name
+                            ? ` by ${subscription.compGrantedBy.name}`
+                            : ""}
+                        </p>
+                      </div>
+                    )}
+                    {subscription.status === "cancelled" && (
+                      <div className="md:col-span-3">
+                        <p className="text-muted-foreground text-xs font-medium uppercase">
+                          Cancellation
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {subscription.cancellationReason} —{" "}
+                          {subscription.cancelledAt
+                            ? new Date(subscription.cancelledAt).toLocaleDateString(LOCALE)
+                            : ""}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Payment History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-left">
-                          <th className="py-2">Date</th>
-                          <th className="py-2">Amount</th>
-                          <th className="py-2">Payment ID</th>
-                          <th className="py-2">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {subscription.paymentHistory?.length > 0 ? (
-                          subscription.paymentHistory
-                            .slice()
-                            .reverse()
-                            .map((p: any, i: number) => (
-                              <tr key={i} className="border-b">
-                                <td className="py-2">
-                                  {new Date(p.paidAt).toLocaleDateString(LOCALE)}
-                                </td>
-                                <td className="py-2">{formatCurrency(p.amount ?? 0)}</td>
-                                <td className="py-2 font-mono text-xs">
-                                  {p.razorpayPaymentId || "—"}
-                                </td>
-                                <td className="py-2 ">
-                                  <Badge className="bg-blue-100 text-blue-800 border-blue-300" variant={p.status === "success" ? "default" : "destructive"}>
-                                    {p.status}
-                                  </Badge>
-                                </td>
-                              </tr>
-                            ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="text-muted-foreground py-4 text-center">
-                              No payments yet
-                            </td>
+              {subscription && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Payment History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b text-left">
+                            <th className="py-2">Date</th>
+                            <th className="py-2">Amount</th>
+                            <th className="py-2">Payment ID</th>
+                            <th className="py-2">Status</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
+                        </thead>
+                        <tbody>
+                          {subscription.paymentHistory?.length > 0 ? (
+                            subscription.paymentHistory
+                              .slice()
+                              .reverse()
+                              .map((p: any, i: number) => (
+                                <tr key={i} className="border-b">
+                                  <td className="py-2">
+                                    {new Date(p.paidAt).toLocaleDateString(LOCALE)}
+                                  </td>
+                                  <td className="py-2">{formatCurrency(p.amount ?? 0)}</td>
+                                  <td className="py-2 font-mono text-xs">
+                                    {p.razorpayPaymentId || "—"}
+                                  </td>
+                                  <td className="py-2">
+                                    <Badge
+                                      className="border-blue-300 bg-blue-100 text-blue-800"
+                                      variant={p.status === "success" ? "default" : "destructive"}
+                                    >
+                                      {p.status}
+                                    </Badge>
+                                  </td>
+                                </tr>
+                              ))
+                          ) : (
+                            <tr>
+                              <td colSpan={4} className="text-muted-foreground py-4 text-center">
+                                No payments yet
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardHeader className="flex flex-row items-center gap-3 pb-3">
@@ -676,8 +753,32 @@ export default function VendorDetailsPage() {
                   </div>
                   <CardTitle>Admin Override</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex max-w-sm items-end gap-4">
+                <CardContent className="space-y-5">
+                  <div>
+                    <p className="mb-2 text-sm font-medium">Grant complimentary access</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => handleGrantFree("month")}
+                        disabled={granting}
+                      >
+                        {granting ? "Saving..." : "Grant 1 Month Free"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleGrantFree("year")}
+                        disabled={granting}
+                      >
+                        {granting ? "Saving..." : "Grant 1 Year Free"}
+                      </Button>
+                    </div>
+                    <p className="text-muted-foreground mt-2 text-sm">
+                      Starts today, or extends from the current expiry date if a subscription is
+                      already active. The vendor is never charged for this period.
+                    </p>
+                  </div>
+
+                  <div className="flex max-w-sm items-end gap-4 border-t pt-4">
                     <div className="grid w-full gap-2">
                       <label htmlFor="extendDays" className="text-sm font-medium">
                         Days
@@ -697,71 +798,66 @@ export default function VendorDetailsPage() {
                     >
                       {extending ? "Saving..." : "Extend"}
                     </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleExtend("grant_free")}
-                      disabled={extending}
-                    >
-                      Grant Free Access
-                    </Button>
                   </div>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    Extends from the current expiry date if still active, otherwise starts from today.
+                  <p className="text-muted-foreground -mt-3 text-sm">
+                    For paid-context goodwill extensions (e.g. service credit) — not a free grant.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-red-200">
-                <CardHeader className="flex flex-row items-center gap-3 pb-3">
-                  <div className="rounded-lg bg-red-50 p-2">
-                    <ShieldAlert className="h-5 w-5 text-red-600" />
-                  </div>
-                  <CardTitle>Cancel Subscription</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {subscription.status === "cancelled" ? (
-                    <p className="text-muted-foreground text-sm">
-                      This subscription is already cancelled.
-                    </p>
-                  ) : !showCancelForm ? (
-                    <Button variant="destructive" onClick={() => setShowCancelForm(true)}>
-                      Cancel Subscription
-                    </Button>
-                  ) : (
-                    <div className="space-y-3">
-                      <p className="text-sm text-gray-600">
-                        This immediately blocks the vendor's dashboard access (no grace period) and
-                        is <strong>non-refundable</strong>. Please provide a reason.
-                      </p>
-                      <textarea
-                        value={cancelReason}
-                        onChange={(e) => setCancelReason(e.target.value)}
-                        placeholder="Reason for cancellation..."
-                        rows={3}
-                        className="border-input w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          variant="destructive"
-                          onClick={handleCancelSubscription}
-                          disabled={cancelling}
-                        >
-                          {cancelling ? "Cancelling..." : "Confirm Cancellation"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setShowCancelForm(false);
-                            setCancelReason("");
-                          }}
-                        >
-                          Back
-                        </Button>
-                      </div>
+              {subscription && (
+                <Card className="border-red-200">
+                  <CardHeader className="flex flex-row items-center gap-3 pb-3">
+                    <div className="rounded-lg bg-red-50 p-2">
+                      <ShieldAlert className="h-5 w-5 text-red-600" />
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <CardTitle>Cancel Subscription</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {subscription.status === "cancelled" ? (
+                      <p className="text-muted-foreground text-sm">
+                        This subscription is already cancelled.
+                      </p>
+                    ) : !showCancelForm ? (
+                      <Button variant="destructive" onClick={() => setShowCancelForm(true)}>
+                        Cancel Subscription
+                      </Button>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray-600">
+                          This immediately blocks the vendor's dashboard access (no grace period)
+                          and is <strong>non-refundable</strong>. Please provide a reason.
+                        </p>
+                        <textarea
+                          value={cancelReason}
+                          onChange={(e) => setCancelReason(e.target.value)}
+                          placeholder="Reason for cancellation..."
+                          rows={3}
+                          className="border-input focus-visible:ring-ring/50 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-[3px]"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            variant="destructive"
+                            onClick={handleCancelSubscription}
+                            disabled={cancelling}
+                          >
+                            {cancelling ? "Cancelling..." : "Confirm Cancellation"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setShowCancelForm(false);
+                              setCancelReason("");
+                            }}
+                          >
+                            Back
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </>
           )}
         </TabsContent>

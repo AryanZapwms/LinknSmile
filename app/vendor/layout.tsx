@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Lock,
   Tag,
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LOCALE } from "@/lib/currency";
@@ -49,6 +50,7 @@ interface SubscriptionState {
   daysUntilExpiry: number | null;
   isInGracePeriod: boolean;
   isBlocked: boolean;
+  source: "paid" | "comped";
 }
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
@@ -112,7 +114,9 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
       // there's no in-page handler here. app/vendor-tap-return picks up
       // the return leg once Tap sends the browser back with ?tap_id=.
       try {
-        const orderRes = await fetch("/api/vendor/subscription/tap/create-order", { method: "POST" });
+        const orderRes = await fetch("/api/vendor/subscription/tap/create-order", {
+          method: "POST",
+        });
         const order = await orderRes.json();
         if (!orderRes.ok || !order.redirectUrl) {
           throw new Error(order.error || t("renewalFailedGeneric"));
@@ -306,7 +310,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" className="relative">
               <Bell className="h-4 w-4" />
-              <span className="absolute top-0 end-0 h-2 w-2 rounded-full bg-red-500"></span>
+              <span className="absolute end-0 top-0 h-2 w-2 rounded-full bg-red-500"></span>
             </Button>
 
             <DropdownMenu>
@@ -350,6 +354,24 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
             </DropdownMenu>
           </div>
         </header>
+
+        {/* Complimentary-access banner — active period sourced from an admin grant, not a payment */}
+        {subscription?.status === "active" && subscription.source === "comped" && (
+          <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 lg:px-6">
+            <Gift className="h-4 w-4 shrink-0" />
+            <span>
+              {t("complimentaryAccessMsg", {
+                date: subscription.expiryDate
+                  ? new Date(subscription.expiryDate).toLocaleDateString(LOCALE, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "",
+              })}
+            </span>
+          </div>
+        )}
 
         {/* Grace-period banner */}
         {subscription?.isInGracePeriod && (

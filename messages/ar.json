@@ -361,6 +361,7 @@
     "renewSubscription": "تجديد الاشتراك",
     "renewNow": "جدد الآن",
     "gracePeriodMsg": "انتهى اشتراكك في {date}. جدد خلال {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} لتجنب فقدان الوصول.",
+    "complimentaryAccessMsg": "لديك وصول مجاني حتى {date}، ممنوح من فريقنا. لا حاجة لأي دفع خلال هذه الفترة.",
     "paymentVerificationFailedContact": "فشل التحقق من الدفع. يرجى التواصل مع {email}.",
     "paymentVerificationFailedRetry": "فشل التحقق من الدفع. يرجى المحاولة مرة أخرى.",
     "renewalFailedGeneric": "فشل بدء التجديد. يرجى المحاولة مرة أخرى."

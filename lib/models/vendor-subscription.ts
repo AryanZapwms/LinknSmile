@@ -33,6 +33,14 @@ export interface IVendorSubscription extends Document {
   cancelledBy?: mongoose.Types.ObjectId;
   cancellationReason?: string;
   paymentHistory: IPaymentHistoryEntry[];
+  // Reflects how the CURRENT expiryDate was most recently extended — not a
+  // ledger of every past extension (that history lives in AuditLog's
+  // before/after snapshots). "comped" means admin-granted free access;
+  // any real payment or a plain "extend" flips this back to "paid". See
+  // app/api/admin/vendor-subscriptions/[shopId]/route.ts.
+  source: "paid" | "comped";
+  compGrantedBy?: mongoose.Types.ObjectId;
+  compGrantedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -81,6 +89,9 @@ const VendorSubscriptionSchema = new Schema<IVendorSubscription>(
     cancelledBy: { type: Schema.Types.ObjectId, ref: "User" },
     cancellationReason: { type: String },
     paymentHistory: { type: [PaymentHistorySchema], default: [] },
+    source: { type: String, enum: ["paid", "comped"], default: "paid" },
+    compGrantedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    compGrantedAt: { type: Date },
   },
   { timestamps: true }
 );

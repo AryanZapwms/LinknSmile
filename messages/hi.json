@@ -361,6 +361,7 @@
     "renewSubscription": "सदस्यता नवीनीकृत करें",
     "renewNow": "अभी नवीनीकृत करें",
     "gracePeriodMsg": "आपकी सदस्यता {date} को समाप्त हो गई। पहुंच खोने से बचने के लिए {days, plural, one {# दिन} other {# दिनों}} के भीतर नवीनीकरण करें।",
+    "complimentaryAccessMsg": "हमारी टीम द्वारा प्रदान की गई आपकी निःशुल्क पहुंच {date} तक मान्य है। इस अवधि के दौरान किसी भुगतान की आवश्यकता नहीं है।",
     "paymentVerificationFailedContact": "भुगतान सत्यापन विफल। कृपया {email} पर संपर्क करें।",
     "paymentVerificationFailedRetry": "भुगतान सत्यापन विफल। कृपया पुनः प्रयास करें।",
     "renewalFailedGeneric": "नवीनीकरण शुरू करने में विफल। कृपया पुनः प्रयास करें।"

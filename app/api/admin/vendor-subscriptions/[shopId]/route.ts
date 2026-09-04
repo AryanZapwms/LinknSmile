@@ -37,7 +37,9 @@ export async function GET(
       return withCORS(NextResponse.json({ error: "Shop not found" }, { status: 404 }));
     }
 
-    const subscription = await VendorSubscription.findOne({ shopId }).lean();
+    const subscription = await VendorSubscription.findOne({ shopId })
+      .populate("compGrantedBy", "name email")
+      .lean();
 
     return withCORS(NextResponse.json({ shop, subscription }));
   } catch (error) {
@@ -68,16 +70,15 @@ export async function PATCH(
     const body = await request.json();
     const { action } = body;
 
-    const subscription = await VendorSubscription.findOne({ shopId });
-    if (!subscription) {
-      return withCORS(
-        NextResponse.json({ error: "No subscription found for this shop" }, { status: 404 })
-      );
-    }
-
-    const before = subscription.toObject();
-
     if (action === "cancel") {
+      const subscription = await VendorSubscription.findOne({ shopId });
+      if (!subscription) {
+        return withCORS(
+          NextResponse.json({ error: "No subscription found for this shop" }, { status: 404 })
+        );
+      }
+
+      const before = subscription.toObject();
       const { reason } = body;
       if (!reason || typeof reason !== "string" || !reason.trim()) {
         return withCORS(
@@ -133,9 +134,18 @@ export async function PATCH(
     }
 
     if (action === "extend" || action === "grant_free") {
-      const { days } = body;
-      if (typeof days !== "number" || days <= 0) {
-        return withCORS(NextResponse.json({ error: "Invalid number of days" }, { status: 400 }));
+      // Unlike "cancel", these two upsert: an admin can comp a vendor who
+      // has never once attempted to pay (no VendorSubscription doc yet —
+      // create-order is the only other path that creates one).
+      let subscription = await VendorSubscription.findOne({ shopId });
+      const before = subscription ? subscription.toObject() : null;
+      if (!subscription) {
+        subscription = new VendorSubscription({
+          shopId,
+          status: "pending",
+          amount: 0,
+          paymentHistory: [],
+        });
       }
 
       const now = new Date();
@@ -144,23 +154,55 @@ export async function PATCH(
           ? subscription.expiryDate
           : now;
 
+      let metadata: Record<string, unknown>;
+
+      if (action === "extend") {
+        const { days } = body;
+        if (typeof days !== "number" || days <= 0) {
+          return withCORS(NextResponse.json({ error: "Invalid number of days" }, { status: 400 }));
+        }
+        subscription.expiryDate = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
+        metadata = { days };
+        // Goodwill/paid-context extension — not a comp grant.
+        subscription.source = "paid";
+        subscription.compGrantedBy = undefined;
+        subscription.compGrantedAt = undefined;
+      } else {
+        const { unit } = body;
+        if (unit !== "month" && unit !== "year") {
+          return withCORS(
+            NextResponse.json({ error: "unit must be 'month' or 'year'" }, { status: 400 })
+          );
+        }
+        // Calendar-based, not a fixed day count, so "1 month" from Jan 31
+        // lands on a sane date instead of always being exactly 30 days.
+        const newExpiry = new Date(base);
+        if (unit === "month") newExpiry.setMonth(newExpiry.getMonth() + 1);
+        else newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+        subscription.expiryDate = newExpiry;
+        metadata = { unit };
+        subscription.source = "comped";
+        subscription.compGrantedBy = session.user.id as any;
+        subscription.compGrantedAt = now;
+      }
+
       subscription.status = "active";
       subscription.startDate = subscription.startDate || now;
-      subscription.expiryDate = new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
       subscription.cancelledAt = undefined;
       subscription.cancelledBy = undefined;
       subscription.cancellationReason = undefined;
       await subscription.save();
 
       await AuditLog.create({
-        action: action === "extend" ? "VENDOR_SUBSCRIPTION_EXTENDED" : "VENDOR_SUBSCRIPTION_GRANTED_FREE",
+        action:
+          action === "extend" ? "VENDOR_SUBSCRIPTION_EXTENDED" : "VENDOR_SUBSCRIPTION_GRANTED_FREE",
         performedBy: session.user.id,
         targetEntity: "VendorSubscription",
         targetId: subscription._id,
         shopId,
         before,
         after: subscription.toObject(),
-        metadata: { days },
+        metadata,
       });
 
       return withCORS(NextResponse.json({ success: true, subscription }));
@@ -169,8 +211,6 @@ export async function PATCH(
     return withCORS(NextResponse.json({ error: "Unknown action" }, { status: 400 }));
   } catch (error) {
     console.error("Error updating vendor subscription:", error);
-    return withCORS(
-      NextResponse.json({ error: "Failed to update subscription" }, { status: 500 })
-    );
+    return withCORS(NextResponse.json({ error: "Failed to update subscription" }, { status: 500 }));
   }
 }
