@@ -11,6 +11,22 @@ import path from "path";
 import type { ImageStorageAdapter, UploadImageParams, UploadImageResult } from "./types";
 import { ImageStorageError } from "./types";
 
+const CONTENT_TYPES_BY_EXTENSION: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".avif": "image/avif",
+  ".bmp": "image/bmp",
+  ".ico": "image/x-icon",
+};
+
+function contentTypeForExtension(ext: string): string {
+  return CONTENT_TYPES_BY_EXTENSION[ext.toLowerCase()] || "application/octet-stream";
+}
+
 async function uploadImage(params: UploadImageParams): Promise<UploadImageResult> {
   const { buffer, filename, folder } = params;
 
@@ -32,7 +48,7 @@ async function uploadImage(params: UploadImageParams): Promise<UploadImageResult
     method: "PUT",
     headers: {
       AccessKey: apiKey,
-      "Content-Type": "application/octet-stream",
+      "Content-Type": contentTypeForExtension(ext),
     },
     // TS's DOM BodyInit type doesn't structurally accept Node's Buffer
     // subclass directly — a plain Uint8Array view of the same bytes does.
