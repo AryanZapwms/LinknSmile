@@ -16,22 +16,29 @@ const imageHostnames = (
   .map((h) => h.trim())
   .filter(Boolean);
 
+// Bunny.net's pull zone hostname, if configured (see lib/storage/bunny.ts).
+// Allowed unconditionally alongside res.cloudinary.com below — old
+// Cloudinary-hosted images must keep resolving regardless of which
+// provider IMAGE_PROVIDER currently selects for new uploads.
+const bunnyPullZoneHostname = process.env.BUNNY_PULL_ZONE_HOSTNAME;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-    eslint: {
+  eslint: {
     ignoreDuringBuilds: true,
   },
   images: {
-  qualities: [75, 90],
+    qualities: [75, 90],
     remotePatterns: [
       ...imageHostnames.map((hostname) => ({ protocol: "https", hostname })),
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
       },
+      ...(bunnyPullZoneHostname ? [{ protocol: "https", hostname: bunnyPullZoneHostname }] : []),
     ],
   },
 
@@ -122,39 +129,39 @@ const nextConfig = {
 };
 
 export default withSentryConfig(withNextIntl(nextConfig), {
- // For all available options, see:
- // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
- org: "zap-solutions",
+  org: "zap-solutions",
 
- project: "javascript-nextjs",
+  project: "javascript-nextjs",
 
- // Only print logs for uploading source maps in CI
- silent: !process.env.CI,
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
 
- // For all available options, see:
- // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+  // For all available options, see:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
- // Upload a larger set of source maps for prettier stack traces (increases build time)
- widenClientFileUpload: true,
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
 
- // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
- // This can increase your server load as well as your hosting bill.
- // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
- // side errors will fail.
- tunnelRoute: "/monitoring",
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+  // side errors will fail.
+  tunnelRoute: "/monitoring",
 
- webpack: {
-   // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-   // See the following for more information:
-   // https://docs.sentry.io/product/crons/
-   // https://vercel.com/docs/cron-jobs
-   automaticVercelMonitors: true,
+  webpack: {
+    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+    // See the following for more information:
+    // https://docs.sentry.io/product/crons/
+    // https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
 
-   // Tree-shaking options for reducing bundle size
-   treeshake: {
-     // Automatically tree-shake Sentry logger statements to reduce bundle size
-     removeDebugLogging: true,
-   },
- },
+    // Tree-shaking options for reducing bundle size
+    treeshake: {
+      // Automatically tree-shake Sentry logger statements to reduce bundle size
+      removeDebugLogging: true,
+    },
+  },
 });

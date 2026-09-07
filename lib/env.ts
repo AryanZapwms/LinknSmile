@@ -39,6 +39,23 @@ type PaymentGateway = keyof typeof paymentGatewayRequiredEnvVars;
 // this var yet) validates exactly the same vars it always has.
 const PAYMENT_GATEWAY = (process.env.PAYMENT_GATEWAY || "razorpay") as PaymentGateway;
 
+// Vars required only for the selected IMAGE_PROVIDER — same
+// one-var-picks-the-adapter pattern as paymentGatewayRequiredEnvVars
+// above (see lib/storage/index.ts for the adapter selection itself).
+// Cloudinary's vars move from unvalidated/optional to required here —
+// a deliberate tightening: a deployment that leaves them unset now fails
+// fast at startup instead of only failing the first time someone uploads.
+const imageProviderRequiredEnvVars = {
+  cloudinary: ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"],
+  bunny: ["BUNNY_STORAGE_ZONE", "BUNNY_STORAGE_API_KEY", "BUNNY_PULL_ZONE_HOSTNAME"],
+} as const;
+
+type ImageProvider = keyof typeof imageProviderRequiredEnvVars;
+
+// Defaults to "cloudinary" so every existing deployment (none of which set
+// this var yet) validates exactly the same vars it always has.
+const IMAGE_PROVIDER = (process.env.IMAGE_PROVIDER || "cloudinary") as ImageProvider;
+
 function validateEnv() {
   // Only run on the server
   if (typeof window !== "undefined") return;
@@ -50,7 +67,14 @@ function validateEnv() {
     );
   }
 
-  const requiredEnvVars = [...alwaysRequiredEnvVars, ...gatewayVars];
+  const imageVars = imageProviderRequiredEnvVars[IMAGE_PROVIDER];
+  if (!imageVars) {
+    throw new Error(
+      `\n\n❌ Unknown IMAGE_PROVIDER "${IMAGE_PROVIDER}". Supported: ${Object.keys(imageProviderRequiredEnvVars).join(", ")}\n\n`
+    );
+  }
+
+  const requiredEnvVars = [...alwaysRequiredEnvVars, ...gatewayVars, ...imageVars];
   const missing: string[] = [];
 
   for (const key of requiredEnvVars) {
@@ -128,9 +152,19 @@ export const env = {
   GOOGLE_ADS_ID: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID || "AW-602275335",
   GOOGLE_ADS_CONVERSION_LABEL:
     process.env.NEXT_PUBLIC_GOOGLE_ADS_CONVERSION_LABEL || "U1R3CO3tn6wbEIf8l58C",
+  // Image storage provider, added 2026-09-07 — see lib/storage/index.ts.
+  // Only "cloudinary" (required vars below) or "bunny" (BUNNY_* below)
+  // are actually required per imageProviderRequiredEnvVars above; both
+  // sets are listed here for discoverability, same reasoning as
+  // PAYMENT_GATEWAY/RAZORPAY_KEY_ID/TAP_SECRET_KEY above.
+  IMAGE_PROVIDER,
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  BUNNY_STORAGE_ZONE: process.env.BUNNY_STORAGE_ZONE,
+  BUNNY_STORAGE_API_KEY: process.env.BUNNY_STORAGE_API_KEY,
+  BUNNY_STORAGE_ENDPOINT: process.env.BUNNY_STORAGE_ENDPOINT || "storage.bunnycdn.com",
+  BUNNY_PULL_ZONE_HOSTNAME: process.env.BUNNY_PULL_ZONE_HOSTNAME,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
 } as const;

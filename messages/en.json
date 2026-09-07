@@ -1068,6 +1068,9 @@
     "vendor": "Vendor",
     "protectedByEncryption": "Protected by industry-standard encryption",
     "invalidCredentials": "Invalid email or password. Please try again.",
+    "missingCredentials": "Please enter your email and password.",
+    "emailNotVerified": "Please verify your email before signing in.",
+    "oauthAccountExists": "This email is already registered with Google. Sign in with Google, or use a different email to create a new account.",
     "unexpectedError": "An unexpected error occurred. Please try again."
   },
   "RegisterForm": {

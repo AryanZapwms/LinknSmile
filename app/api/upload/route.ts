@@ -3,7 +3,7 @@ import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import cloudinary from "@/lib/cloudinary";
+import { getImageProvider, ImageStorageError } from "@/lib/storage";
 
 export async function POST(request: NextRequest) {
   if (request.method === "OPTIONS") {
@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       return withCORS(NextResponse.json({ error: "No files provided" }, { status: 400 }));
     }
 
+    const provider = getImageProvider();
     const uploadedUrls: string[] = [];
 
     for (const file of files) {
@@ -33,21 +34,8 @@ export async function POST(request: NextRequest) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      // Upload to Cloudinary
-      const result = (await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder: folder,
-          },
-          (error: any, result: any) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-        uploadStream.end(buffer);
-      })) as any;
-
-      uploadedUrls.push(result.secure_url);
+      const result = await provider.uploadImage({ buffer, filename: file.name, folder });
+      uploadedUrls.push(result.url);
     }
 
     return withCORS(
@@ -57,10 +45,8 @@ export async function POST(request: NextRequest) {
       })
     );
   } catch (error) {
-    console.error("Error uploading files to Cloudinary:", error);
-    return withCORS(
-      NextResponse.json({ error: "Failed to upload files to Cloudinary" }, { status: 500 })
-    );
+    console.error("Error uploading files:", error);
+    const status = error instanceof ImageStorageError ? error.status : 500;
+    return withCORS(NextResponse.json({ error: "Failed to upload files" }, { status }));
   }
 }
-
