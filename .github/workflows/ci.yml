@@ -42,3 +42,12 @@ jobs:
           RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID }}
           RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET }}
           NEXT_PUBLIC_RAZORPAY_KEY_ID: ${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+          # Cloudinary vars became required at build time by lib/env.ts's
+          # imageProviderRequiredEnvVars (IMAGE_PROVIDER defaults to
+          # "cloudinary", unset here, same as production defaults) —
+          # added 2026-09-07 alongside lib/storage/. Must exist as real
+          # repo secrets (Settings → Secrets and variables → Actions) or
+          # the build fails the same way this one did.
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}

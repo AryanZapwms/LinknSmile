@@ -33,6 +33,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [isOAuthAccountError, setIsOAuthAccountError] = useState(false);
 
   const isSubmitting = isLoading || isGoogleLoading || isRedirecting;
   const router = useRouter();
@@ -73,14 +74,22 @@ export function LoginForm() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setIsOAuthAccountError(false);
     if (!validateEmail(email) || !validatePassword(password)) return;
     setIsLoading(true);
     try {
       const result = await signIn("credentials", { email, password, redirect: false });
       if (result?.error) {
-        setError(
-          result.error === "CredentialsSignin" ? t("invalidCredentials") : result.error
-        );
+        const AUTH_ERROR_MESSAGES: Record<string, string> = {
+          MissingCredentials: t("missingCredentials"),
+          InvalidCredentials: t("invalidCredentials"),
+          CredentialsSignin: t("invalidCredentials"),
+          EmailNotVerified: t("emailNotVerified"),
+          OAuthAccountExists: t("oauthAccountExists"),
+          ServerError: t("unexpectedError"),
+        };
+        setError(AUTH_ERROR_MESSAGES[result.error] ?? t("unexpectedError"));
+        setIsOAuthAccountError(result.error === "OAuthAccountExists");
         return;
       }
       if (result?.ok) {
@@ -96,6 +105,7 @@ export function LoginForm() {
 
   async function onGoogleSignIn() {
     setError("");
+    setIsOAuthAccountError(false);
     setIsGoogleLoading(true);
     try {
       await signIn("google");
@@ -170,7 +180,19 @@ export function LoginForm() {
                   {error && (
                     <div className="flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-red-700">
                       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                      <p className="text-sm font-medium">{error}</p>
+                      <div className="space-y-1.5">
+                        <p className="text-sm font-medium">{error}</p>
+                        {isOAuthAccountError && (
+                          <button
+                            type="button"
+                            onClick={onGoogleSignIn}
+                            disabled={isSubmitting}
+                            className="text-xs font-semibold text-red-700 underline underline-offset-2 hover:text-red-800 disabled:opacity-50"
+                          >
+                            {t("continueWithGoogle")}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
 

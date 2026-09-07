@@ -8,6 +8,13 @@ import { verifyPassword } from "@/lib/auth";
 import { LOCALE_COOKIE } from "@/i18n/request";
 import { resolveLocaleFromCookieValue } from "@/lib/i18n-config";
 
+const KNOWN_AUTH_ERRORS = new Set([
+  "MissingCredentials",
+  "InvalidCredentials",
+  "EmailNotVerified",
+  "OAuthAccountExists",
+]);
+
 export const authOptions: NextAuthOptions = {
   providers: [
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
@@ -26,16 +33,17 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
+          throw new Error("MissingCredentials");
         }
         const email = credentials.email.trim().toLowerCase();
         try {
           await connectDB();
           const userDoc = await User.findOne({ email });
-          if (!userDoc) throw new Error("Invalid email or password");
-          if (!userDoc.isVerified) throw new Error("Please verify your email before logging in");
+          if (!userDoc) throw new Error("InvalidCredentials");
+          if (!userDoc.password) throw new Error("OAuthAccountExists");
+          if (!userDoc.isVerified) throw new Error("EmailNotVerified");
           const isValid = await verifyPassword(credentials.password, userDoc.password);
-          if (!isValid) throw new Error("Invalid email or password");
+          if (!isValid) throw new Error("InvalidCredentials");
           let shopId = userDoc.shopId;
           if (userDoc.role === "shop_owner" && !shopId) {
             const Shop = (await import("@/lib/models/shop")).default;
@@ -54,7 +62,10 @@ export const authOptions: NextAuthOptions = {
             shopId: shopId?.toString() || null,
           };
         } catch (error: any) {
-          throw new Error("Unable to sign in. Please try again later.");
+          if (error instanceof Error && KNOWN_AUTH_ERRORS.has(error.message)) {
+            throw error;
+          }
+          throw new Error("ServerError");
         }
       },
     }),
