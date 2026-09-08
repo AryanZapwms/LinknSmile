@@ -389,13 +389,12 @@ export default function EditProductPage() {
                 </div>
                 <div>
                   <label className="text-foreground mb-2 block text-sm font-medium">
-                    Sub Category *
+                    Sub Category
                   </label>
                   <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    required
                     className="border-border bg-background text-foreground w-full rounded-md border px-3 py-2"
                   >
                     <option value="">Select Sub Category</option>
