@@ -30,6 +30,11 @@
       "shopBySeller": "Shop by Seller",
       "loadingShops": "Loading shops…",
       "viewAllSellers": "View All Sellers"
+    },
+    "countrySwitch": {
+      "toUae": "Shopping from the UAE?",
+      "toIndia": "Shopping from India?",
+      "cta": "Switch site"
     }
   },
   "Footer": {

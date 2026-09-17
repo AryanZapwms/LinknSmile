@@ -3,11 +3,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
-// can u create the image management page for the admin panel
 
-// so in the admin panel and i hv to add one more pages to manage the images in the public folders as u can see we hv the images in the public folder and also u can see we hv the other folders like arrivals blogs carousel shop-by-concern uploads
+// Extensions this route is allowed to serve. Anything outside this list is
+// rejected before the filesystem is touched — closes off exposure of stray
+// non-asset files (.env, .git/*, config/source dumps, etc.) that might end
+// up under public/, independent of the traversal check below.
+const ALLOWED_EXTENSIONS = new Set([
+  ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".ico",
+  ".woff", ".woff2", ".ttf", ".otf", ".txt",
+]);
 
-// so on our manage images we can deletes the images which are not used or related to any product or enetity
+function isAllowedRequestPath(filePath: string): boolean {
+  const segments = filePath.split("/");
+  if (segments.some((s) => s.startsWith("."))) return false; // reject dotfiles/dotfolders, e.g. .env, .git
+  const ext = path.extname(segments[segments.length - 1] ?? "").toLowerCase();
+  return ALLOWED_EXTENSIONS.has(ext);
+}
+
 export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   try {
     const params = await context.params;
@@ -22,6 +34,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
     console.log("========== FILE SERVE DEBUG ==========");
     console.log("Folder:", folder);
     console.log("File path:", filePath);
+
+    if (!folder || !isAllowedRequestPath(filePath ? `${folder}/${filePath}` : folder)) {
+      console.log("❌ Path rejected by extension/dotfile allowlist");
+      console.log("========================================");
+      return withCORS(new NextResponse("File not found", { status: 404 }));
+    }
 
     const PUBLIC_DIR = path.resolve(process.cwd(), "public");
     const fullPath = path.resolve(PUBLIC_DIR, folder, filePath);

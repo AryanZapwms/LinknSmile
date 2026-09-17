@@ -20,6 +20,15 @@ individual prompt. If a prompt conflicts with these rules, follow these rules an
   instead.
 - If either document conflicts with the current code, the **code wins** — but flag the
   discrepancy in your response instead of silently editing the doc.
+- **`README.md` (note added 2026-09-11):** after any change that adds/removes an env var, a
+  model, an API route, an admin/vendor-portal section, a payment gateway, or otherwise changes
+  something `README.md` documents, update the relevant section of `README.md` in the same
+  session — don't let it drift back out of date. This is a small, targeted edit to the affected
+  section(s) only, not a regeneration of the whole file (same spirit as the
+  don't-regenerate-wholesale rule for `PROJECT_SOURCE_OF_TRUTH.md` above). If a change is small
+  enough that it doesn't warrant a `PROJECT_SOURCE_OF_TRUTH.md` update, it may still be worth a
+  one-line `README.md` update if it touches something user/developer-facing that the README
+  documents.
 
 ## 2. One finding at a time
 - Fix exactly ONE numbered finding per session unless explicitly told to batch.
