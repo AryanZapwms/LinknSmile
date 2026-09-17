@@ -8,6 +8,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { AuthSessionProvider } from "@/components/auth/session-provider";
 import { Header } from "@/components/header";
 import { PromoBar } from "@/components/promo-bar";
+import { CountrySwitchBar } from "@/components/country-switch-bar";
 import { CartSync } from "@/components/cart-sync";
 import { Toaster } from "@/components/ui/toaster";
 import FavouritesLoader from "@/components/FavouritesLoader";
@@ -92,6 +93,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <FavouritesLoader />
 
 
+      <CountrySwitchBar />
       <PromoBar />
       <Header />
 

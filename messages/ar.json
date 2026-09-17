@@ -30,6 +30,11 @@
       "shopBySeller": "تسوق حسب البائع",
       "loadingShops": "جارٍ تحميل المتاجر…",
       "viewAllSellers": "عرض جميع البائعين"
+    },
+    "countrySwitch": {
+      "toUae": "هل تتسوق من الإمارات؟",
+      "toIndia": "هل تتسوق من الهند؟",
+      "cta": "التبديل إلى الموقع الآخر"
     }
   },
   "Footer": {

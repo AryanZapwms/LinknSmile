@@ -34,3 +34,9 @@ export const GOOGLE_ADS_CONVERSION_LABEL =
 // ticker / footer trust badges) that are factually wrong on any other
 // deployment, regardless of active UI language.
 export const IS_INDIA = (process.env.NEXT_PUBLIC_DEFAULT_COUNTRY || "India") === "India";
+
+// The OTHER deployment's live storefront URL, for the cross-site country-
+// switch bar (components/country-switch-bar.tsx). Optional — if unset, the
+// bar simply doesn't render, same no-op pattern as every other optional
+// NEXT_PUBLIC_* var here. India's env points at the AE site and vice versa.
+export const OTHER_COUNTRY_SITE_URL = process.env.NEXT_PUBLIC_OTHER_COUNTRY_SITE_URL || "";
