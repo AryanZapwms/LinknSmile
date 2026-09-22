@@ -2,7 +2,7 @@
 "use client";
 
 import { Suspense, useEffect, useState, Fragment, type ReactNode } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -148,7 +148,6 @@ function renderMouMarkdown(content: string): ReactNode[] {
 
 function VendorMouContent() {
   const t = useTranslations("VendorMouPage");
-  const router = useRouter();
   const searchParams = useSearchParams();
   const rawNext = searchParams.get("next");
   // Only ever follow an internal, single-segment-rooted path — guards
@@ -181,7 +180,12 @@ function VendorMouContent() {
 
   const handleContinue = async () => {
     if (data?.accepted) {
-      router.push(next || "/vendor");
+      // Full navigation, not router.push — the vendor layout only fetches
+      // /api/vendor/status once per session mount, so a soft client-side
+      // route change would carry its stale mouAccepted state (false) right
+      // back into the panel and re-trigger the block screen. Reloading
+      // forces it to refetch and see the acceptance that was just recorded.
+      window.location.href = next || "/vendor";
       return;
     }
     if (!checked) return;
@@ -191,7 +195,7 @@ function VendorMouContent() {
       const res = await fetch("/api/vendor/mou", { method: "POST" });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.message || t("acceptFailed"));
-      router.push(next || "/vendor");
+      window.location.href = next || "/vendor";
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("acceptFailed"));
       setSubmitting(false);
