@@ -6,6 +6,8 @@ import { connectDB } from "@/lib/db";
 import Shop from "@/lib/models/shop";
 import { VendorSubscription } from "@/lib/models/vendor-subscription";
 import { getSubscriptionAccessState } from "@/lib/vendor-subscription-status";
+import { VendorMouAcceptance } from "@/lib/models/vendor-mou-acceptance";
+import { CURRENT_MOU_VERSION } from "@/lib/mou-content";
 
 export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -54,11 +56,18 @@ export async function GET(req: NextRequest) {
     const subscription = await VendorSubscription.findOne({ shopId }).lean();
     const access = getSubscriptionAccessState(subscription);
 
+    const mouAcceptance = await VendorMouAcceptance.findOne({
+      userId: session.user.id,
+      mouVersion: CURRENT_MOU_VERSION,
+    }).select("_id");
+
     return withCORS(
       NextResponse.json({
         success: true,
         isApproved: shop.isApproved,
         isActive: shop.isActive,
+        mouAccepted: !!mouAcceptance,
+        mouVersion: CURRENT_MOU_VERSION,
         subscription: {
           status: access.status,
           expiryDate: subscription?.expiryDate ?? null,

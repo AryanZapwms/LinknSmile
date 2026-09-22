@@ -97,7 +97,7 @@ export default function VendorApplyPage() {
 
       setSuccess(true);
       await update({ role: "shop_owner", shopId: data.shopId });
-      setTimeout(() => router.push("/vendor"), 1500);
+      setTimeout(() => router.push("/vendor/mou"), 1500);
     } catch {
       setError(t("genericError"));
     } finally {

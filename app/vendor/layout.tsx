@@ -22,6 +22,7 @@ import {
   Lock,
   Tag,
   Gift,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LOCALE } from "@/lib/currency";
@@ -64,6 +65,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
   const [renewing, setRenewing] = useState(false);
+  const [mouAccepted, setMouAccepted] = useState<boolean | null>(null);
 
   const checkStatus = async () => {
     if (!session) return;
@@ -73,6 +75,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
       if (data.success) {
         setIsApproved(data.isApproved);
         setSubscription(data.subscription);
+        setMouAccepted(data.mouAccepted);
       }
     } catch (error) {
       console.error("Failed to check shop status:", error);
@@ -181,6 +184,48 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
+      </div>
+    );
+  }
+
+  // The MOU acceptance page always renders on its own, full-screen and
+  // without the sidebar/nav chrome below — same treatment as the
+  // subscription hard-block screen, and it must stay reachable regardless
+  // of mouAccepted/subscription state or a vendor blocked below could
+  // never get to the page that unblocks them.
+  if (pathname === "/vendor/mou") {
+    return <>{children}</>;
+  }
+
+  // Hard block — vendor hasn't accepted the current MOU version yet.
+  // Catches both existing vendors (never asked before this version shipped)
+  // and anyone who reaches the panel without going through the MOU step in
+  // the application/shop-creation flow. Bumping CURRENT_MOU_VERSION in
+  // lib/mou-content.ts re-triggers this for every vendor automatically.
+  if (mouAccepted === false) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-stone-50 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50">
+            <FileText className="h-7 w-7 text-amber-500" />
+          </div>
+          <h1 className="text-xl font-bold text-stone-900">{t("mouRequiredTitle")}</h1>
+          <p className="mt-2 text-sm text-stone-500">{t("mouRequiredMsg")}</p>
+          <Button
+            className="mt-6 w-full"
+            onClick={() => router.push(`/vendor/mou?next=${encodeURIComponent(pathname)}`)}
+          >
+            {t("reviewMou")}
+          </Button>
+          <Button
+            variant="ghost"
+            className="mt-2 w-full"
+            onClick={() => signOut({ callbackUrl: "/" })}
+          >
+            <LogOut className="me-2 h-4 w-4" />
+            {t("logout")}
+          </Button>
+        </div>
       </div>
     );
   }
