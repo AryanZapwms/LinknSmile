@@ -130,7 +130,9 @@ export async function POST(request: NextRequest) {
       html: await getWelcomeEmail(user.name, user.locale),
     });
 
-    return withCORS(NextResponse.json({ message: "Email verified" }, { status: 200 }));
+    return withCORS(
+      NextResponse.json({ message: "Email verified", role: user.role }, { status: 200 })
+    );
   } catch (err) {
     console.error("[verify-otp] caught:", err);
     return withCORS(NextResponse.json({ error: "Internal server error" }, { status: 500 }));

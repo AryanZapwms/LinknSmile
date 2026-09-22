@@ -2,10 +2,12 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { normalizeArabicIndicDigits } from "@/lib/normalize-digits";
+import { consumePendingVendorPassword } from "@/lib/pending-vendor-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2, Loader2, ShieldCheck, Mail, ArrowLeft } from "lucide-react";
@@ -24,6 +26,7 @@ function VerifyOtpContent() {
   const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { update } = useSession();
 
   useEffect(() => {
     if (!email) {
@@ -58,12 +61,34 @@ function VerifyOtpContent() {
 
       setSuccess(t("verifiedSuccess"));
 
-      setTimeout(() => {
+      setTimeout(async () => {
         if (isReset) {
           router.push(`/auth/reset-password?email=${email}&otp=${otp}`);
-        } else {
-          router.push("/auth/login?registered=true&verified=true");
+          return;
         }
+
+        // Vendor signups stash their password client-side (see
+        // register-vendor/page.tsx) so we can sign them straight in here
+        // instead of bouncing them through a manual login before they ever
+        // reach the MOU gate. Any failure just falls through to the
+        // pre-existing manual-login redirect below.
+        const pendingPassword =
+          data.role === "shop_owner" ? consumePendingVendorPassword(email) : null;
+
+        if (pendingPassword) {
+          const result = await signIn("credentials", {
+            email,
+            password: pendingPassword,
+            redirect: false,
+          });
+          if (result?.ok) {
+            await update();
+            router.push("/vendor/mou");
+            return;
+          }
+        }
+
+        router.push("/auth/login?registered=true&verified=true");
       }, 1500);
     } catch (err: any) {
       setError(err.message);

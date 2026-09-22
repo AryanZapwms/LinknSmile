@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
+import { stashPendingVendorPassword } from "@/lib/pending-vendor-auth";
 
 export default function RegisterVendorPage() {
   const t = useTranslations("RegisterVendorPage");
@@ -125,6 +126,8 @@ export default function RegisterVendorPage() {
         setError(data.message || data.error || t("registrationFailed"));
         return;
       }
+
+      stashPendingVendorPassword(formData.email, formData.password);
 
       setSuccess(true);
       setTimeout(() => {

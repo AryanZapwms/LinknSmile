@@ -369,7 +369,10 @@
     "complimentaryAccessMsg": "You have complimentary access until {date}, granted by our team. No payment needed during this period.",
     "paymentVerificationFailedContact": "Payment verification failed. Please contact {email}.",
     "paymentVerificationFailedRetry": "Payment verification failed. Please try again.",
-    "renewalFailedGeneric": "Failed to start renewal. Please try again."
+    "renewalFailedGeneric": "Failed to start renewal. Please try again.",
+    "mouRequiredTitle": "Accept the Vendor MOU to Continue",
+    "mouRequiredMsg": "We've updated our Vendor Memorandum of Understanding. Please review and accept it to keep using your vendor panel.",
+    "reviewMou": "Review & Accept MOU"
   },
   "VendorDashboard": {
     "welcomeBack": "Welcome back, {name}!",
@@ -1989,6 +1992,17 @@
     "termsNotice": "By submitting this application, you agree to our Vendor Terms and Conditions. Our team will review your application within 24-48 hours.",
     "submitting": "Submitting…",
     "submitApplication": "Submit Application"
+  },
+  "VendorMouPage": {
+    "pageTitle": "Vendor Memorandum of Understanding",
+    "pageSubtitle": "Please review and accept these terms to continue using your vendor panel.",
+    "loadFailed": "Failed to load the MOU. Please try again.",
+    "acceptedOn": "You accepted version {version} on {date}.",
+    "checkboxLabel": "I have read and agree to this Memorandum of Understanding.",
+    "agreeButton": "I Agree & Continue",
+    "continueButton": "Continue",
+    "submitting": "Submitting…",
+    "acceptFailed": "Failed to record your acceptance. Please try again."
   },
   "WishlistPage": {
     "loadFailed": "Could not load wishlist",
