@@ -36,6 +36,20 @@ export interface FulfillPaidOrderParams {
   shippingAddress: any;
   couponCode?: string;
   gateway: GatewayInfo;
+  /** If set, the recomputed total must equal this (the amount actually
+   *  paid, major units) or no order is created — see AmountMismatchError. */
+  expectedTotal?: number;
+}
+
+/** Thrown before anything is written when the recomputed order total no
+ *  longer matches what the customer actually paid. */
+export class AmountMismatchError extends Error {
+  constructor(
+    public expected: number,
+    public computed: number
+  ) {
+    super(`Paid amount ${expected} does not match computed order total ${computed}`);
+  }
 }
 
 export interface FulfillPaidOrderResult {
@@ -59,7 +73,8 @@ async function findExistingOrder(gateway: GatewayInfo) {
 export async function fulfillPaidOrder(
   params: FulfillPaidOrderParams
 ): Promise<FulfillPaidOrderResult> {
-  const { userId, userEmail, userName, items, shippingAddress, couponCode, gateway } = params;
+  const { userId, userEmail, userName, items, shippingAddress, couponCode, gateway, expectedTotal } =
+    params;
 
   await connectDB();
 
@@ -71,6 +86,14 @@ export async function fulfillPaidOrder(
   // Recompute pricing from the database — never trust client-sent prices/totals
   const { processedItems, vendorPayouts, totalAmount, appliedCoupon, taxRatePercent, taxAmount } =
     await computeOrderPricing(items, { couponCode: couponCode || undefined, userId });
+
+  // Compare in minor units (paise/fils) to avoid float noise.
+  if (
+    expectedTotal !== undefined &&
+    Math.round(totalAmount * 100) !== Math.round(expectedTotal * 100)
+  ) {
+    throw new AmountMismatchError(expectedTotal, totalAmount);
+  }
 
   const orderNumber = `ORD-${Date.now()}`;
   const gatewayFields =

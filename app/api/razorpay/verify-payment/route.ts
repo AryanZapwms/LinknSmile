@@ -5,16 +5,36 @@ import { type NextRequest, NextResponse } from "next/server";
 import { paymentLimiter } from "@/lib/rate-limit";
 import { razorpayAdapter } from "@/lib/payments/razorpay";
 import { PaymentGatewayError } from "@/lib/payments/types";
-import { fulfillPaidOrder, PricingError } from "@/lib/order-fulfillment";
+import { PricingError } from "@/lib/order-fulfillment";
+import { fulfilRazorpayCheckout, type RazorpayFulfilmentResult } from "@/lib/razorpay-fulfillment";
 
-// This route is now a thin, behavior-preserving wrapper: signature check
-// via lib/payments/razorpay.ts, all post-payment orchestration (pricing
-// recompute, Order.create, coupon/stock/ledger/email) via
-// lib/order-fulfillment.ts — a wrapper extraction, not a rewrite (see
-// PROJECT_SOURCE_OF_TRUTH.md §16). Response shape, idempotency behavior,
-// and every side effect are unchanged. Multi-gateway deployments should
-// call /api/payments/verify-payment instead — this URL stays
-// Razorpay-specific.
+// Browser callback after the Razorpay widget succeeds. Checks the checkout
+// signature and the session, then hands off to fulfilRazorpayCheckout(),
+// which is shared with app/api/razorpay/webhook — whichever arrives first
+// creates the order, the other gets the same orderId back.
+//
+// `items`, `couponCode` and `totalAmount` may still be sent by older
+// clients but are deliberately ignored: the order is built from the
+// RazorpayCheckout record create-order stored.
+
+const RESPONSES: Record<Exclude<RazorpayFulfilmentResult["kind"], "fulfilled">, [string, number]> = {
+  unknown_order: ["Unknown payment order", 400],
+  user_mismatch: ["This payment does not belong to you", 403],
+  previously_rejected: ["This payment could not be accepted. Please contact support.", 400],
+  second_payment: ["This order has already been paid. Please contact support.", 409],
+  payment_id_reused: ["Payment already used", 409],
+  in_progress: ["This payment is already being processed", 409],
+  lookup_failed: ["Could not confirm payment. Please retry in a moment.", 502],
+  not_captured: ["Payment not confirmed yet. Please retry in a moment or contact support.", 409],
+  order_id_mismatch: ["Payment verification failed", 400],
+  amount_mismatch: ["Payment amount mismatch", 400],
+  missing_address: ["Shipping address is required", 400],
+  refund_required: [
+    "Your cart changed after payment, so the order could not be placed. Your payment will be refunded — please contact support.",
+    409,
+  ],
+};
+
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
   const { success } = paymentLimiter(ip);
@@ -30,19 +50,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, items, shippingAddress, couponCode } =
+    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, shippingAddress } =
       await request.json();
 
-    // Same check order as before this file was refactored: missing payment
-    // details, then items, then shippingAddress, then signature.
     if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
       return withCORS(NextResponse.json({ error: "Missing payment details" }, { status: 400 }));
-    }
-    if (!Array.isArray(items) || items.length === 0) {
-      return withCORS(NextResponse.json({ error: "No items in order" }, { status: 400 }));
-    }
-    if (!shippingAddress) {
-      return withCORS(NextResponse.json({ error: "Shipping address is required" }, { status: 400 }));
     }
 
     await razorpayAdapter.verifyPayment({
@@ -56,21 +68,19 @@ export async function POST(request: NextRequest) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
 
-    const { orderId } = await fulfillPaidOrder({
-      userId: session.user.id,
-      userEmail: session.user.email,
-      userName: session.user.name,
-      items,
+    const result = await fulfilRazorpayCheckout({
+      razorpayOrderId,
+      razorpayPaymentId,
+      source: "verify",
+      expectedUserId: session.user.id,
       shippingAddress,
-      couponCode,
-      gateway: {
-        paymentMethod: "razorpay",
-        gatewayOrderId: razorpayOrderId,
-        gatewayPaymentId: razorpayPaymentId,
-      },
     });
 
-    return withCORS(NextResponse.json({ success: true, orderId }));
+    if (result.kind === "fulfilled") {
+      return withCORS(NextResponse.json({ success: true, orderId: result.orderId }));
+    }
+    const [error, status] = RESPONSES[result.kind];
+    return withCORS(NextResponse.json({ error }, { status }));
   } catch (error) {
     if (error instanceof PricingError || error instanceof PaymentGatewayError) {
       return withCORS(NextResponse.json({ error: error.message }, { status: error.status }));
