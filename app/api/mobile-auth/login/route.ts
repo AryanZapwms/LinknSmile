@@ -39,9 +39,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Google-only accounts have no password; bcrypt would throw on undefined.
+    if (!userDoc.password) {
+      return withCORS(
+        NextResponse.json(
+          { error: "This email is registered with Google sign-in. Please sign in with Google." },
+          { status: 401 }
+        )
+      );
+    }
+
     const isValid = await verifyPassword(password, userDoc.password);
     if (!isValid) {
       return withCORS(NextResponse.json({ error: "Invalid email or password" }, { status: 401 }));
+    }
+
+    // Checked after the password so it doesn't reveal account status to non-owners.
+    if (userDoc.isActive === false) {
+      return withCORS(
+        NextResponse.json(
+          { error: "This account has been deactivated. Please contact support." },
+          { status: 403 }
+        )
+      );
     }
 
     // Auto-link shop if missing for shop_owners (mirrors NextAuth authorize logic)

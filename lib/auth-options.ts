@@ -13,7 +13,12 @@ const KNOWN_AUTH_ERRORS = new Set([
   "InvalidCredentials",
   "EmailNotVerified",
   "OAuthAccountExists",
+  "AccountDisabled",
 ]);
+
+// How often a session's isActive/role is re-read from the DB — matches
+// session.updateAge below.
+const DB_RECHECK_MS = 60 * 60 * 1000;
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -44,6 +49,8 @@ export const authOptions: NextAuthOptions = {
           if (!userDoc.isVerified) throw new Error("EmailNotVerified");
           const isValid = await verifyPassword(credentials.password, userDoc.password);
           if (!isValid) throw new Error("InvalidCredentials");
+          // Checked after the password so it doesn't reveal account status to non-owners.
+          if (userDoc.isActive === false) throw new Error("AccountDisabled");
           let shopId = userDoc.shopId;
           if (userDoc.role === "shop_owner" && !shopId) {
             const Shop = (await import("@/lib/models/shop")).default;
@@ -71,7 +78,18 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account, trigger, session }) {
+    // Google sign-in bypasses authorize(), so deactivated accounts are blocked here.
+    async signIn({ user, account }) {
+      if (account?.provider === "google" && user?.email) {
+        await connectDB();
+        const existing = await User.findOne({ email: user.email.toLowerCase() })
+          .select("isActive")
+          .lean<{ isActive?: boolean }>();
+        if (existing?.isActive === false) return false;
+      }
+      return true;
+    },
+    async jwt({ token, user, account, trigger }) {
       if (account?.provider === "google" && user?.email) {
         await connectDB();
         const email = user.email.toLowerCase();
@@ -91,16 +109,43 @@ export const authOptions: NextAuthOptions = {
         token.id = dbUser._id.toString();
         token.role = dbUser.role || "user";
         token.shopId = dbUser.shopId?.toString() || null;
+        token.checkedAt = Date.now();
         return token;
       }
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.shopId = user.shopId;
+        token.checkedAt = Date.now();
+        return token;
       }
-      if (trigger === "update" && session) {
-        token.role = session.role;
-        token.shopId = session.shopId;
+
+      // Re-read isActive/role/shopId from the DB at most once per
+      // DB_RECHECK_MS, and on every update() call. update() payloads from
+      // the client are deliberately ignored — role/shopId only ever come
+      // from the DB (callers such as app/vendor-apply save them first).
+      const isStale = !token.checkedAt || Date.now() - token.checkedAt > DB_RECHECK_MS;
+      if (trigger === "update" || isStale) {
+        let dbUser: { isActive?: boolean; role?: string; shopId?: unknown } | null;
+        try {
+          await connectDB();
+          dbUser = await User.findById(token.id)
+            .select("isActive role shopId")
+            .lean<{ isActive?: boolean; role?: string; shopId?: unknown }>();
+        } catch (err) {
+          // DB unavailable: keep the current token rather than logging
+          // everyone out; the check is retried on the next request.
+          console.error("[auth] jwt re-check failed, keeping token", err);
+          return token;
+        }
+        if (!dbUser || dbUser.isActive === false) {
+          // next-auth catches this, clears the session cookie and treats the
+          // request as signed out (getServerSession() returns null).
+          throw new Error("SessionRevoked");
+        }
+        token.role = dbUser.role || "user";
+        token.shopId = dbUser.shopId ? String(dbUser.shopId) : null;
+        token.checkedAt = Date.now();
       }
       return token;
     },

@@ -46,6 +46,14 @@ export function LoginForm() {
     }
   }, [session, router]);
 
+  // NextAuth redirects here with ?error=AccessDenied when the signIn
+  // callback refuses a login (e.g. a deactivated Google account).
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("error") === "AccessDenied") {
+      setError(t("accessDenied"));
+    }
+  }, [t]);
+
   const validateEmail = (v: string) => {
     if (!v) {
       setEmailError(t("emailRequired"));
@@ -86,6 +94,7 @@ export function LoginForm() {
           CredentialsSignin: t("invalidCredentials"),
           EmailNotVerified: t("emailNotVerified"),
           OAuthAccountExists: t("oauthAccountExists"),
+          AccountDisabled: t("accountDisabled"),
           ServerError: t("unexpectedError"),
         };
         setError(AUTH_ERROR_MESSAGES[result.error] ?? t("unexpectedError"));

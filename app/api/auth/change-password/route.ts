@@ -55,6 +55,19 @@ export async function POST(req: Request) {
       return withCORS(NextResponse.json({ error: "User not found" }, { status: 404 }));
     }
 
+    // Google-only accounts have no password to verify (bcrypt would throw).
+    if (!user.password) {
+      return withCORS(
+        NextResponse.json(
+          {
+            error:
+              "This account signs in with Google and has no password. Use 'Forgot password' to set one.",
+          },
+          { status: 400 }
+        )
+      );
+    }
+
     // ── Verify current password ─────────────────────────────────────────────
     const isCorrect = await compare(currentPassword, user.password);
 

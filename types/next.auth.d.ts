@@ -21,5 +21,7 @@ declare module "next-auth/jwt" {
     id: string;
     role: string;
     shopId?: string | null;
+    /** Epoch ms of the last DB re-check of isActive/role (lib/auth-options.ts). */
+    checkedAt?: number;
   }
 }
