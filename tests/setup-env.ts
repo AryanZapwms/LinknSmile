@@ -1,3 +1,11 @@
+import { beforeEach, expect } from "vitest";
+
+// Every test must run at least one assertion, so a test can never pass
+// vacuously (e.g. because an early return skipped all its expects).
+beforeEach(() => {
+  expect.hasAssertions();
+});
+
 // Dummy values so lib/env.ts's startup validation passes in tests.
 // None of these are real credentials, and nothing here reads .env files.
 // MONGODB_URI is set per test file by tests/helpers/mongo.ts.

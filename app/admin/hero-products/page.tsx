@@ -232,7 +232,7 @@ export default function HeroProductsPage() {
     <div className="space-y-6">
       <div className="m-6">
         <h1 className="text-3xl font-bold">Hero Products</h1>
-        <p className="text-muted-foreground">Curate the homepage "Featured" spotlight</p>
+        <p className="text-muted-foreground">Curate the homepage &quot;Featured&quot; spotlight</p>
       </div>
 
       <Card className="mx-6">

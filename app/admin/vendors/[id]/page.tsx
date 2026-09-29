@@ -825,7 +825,7 @@ export default function VendorDetailsPage() {
                     ) : (
                       <div className="space-y-3">
                         <p className="text-sm text-gray-600">
-                          This immediately blocks the vendor's dashboard access (no grace period)
+                          This immediately blocks the vendor&apos;s dashboard access (no grace period)
                           and is <strong>non-refundable</strong>. Please provide a reason.
                         </p>
                         <textarea

@@ -138,7 +138,7 @@ export default function PlatformSettingsPage() {
                   className="mt-2"
                 />
                 <p className="text-muted-foreground mt-1 text-xs">
-                  Include the country code, e.g. "+91 8355991099".
+                  Include the country code, e.g. &quot;+91 8355991099&quot;.
                 </p>
               </div>
             </div>

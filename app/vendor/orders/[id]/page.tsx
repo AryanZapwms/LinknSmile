@@ -598,7 +598,7 @@ export default function VendorOrderDetailPage() {
               className="min-h-[100px]"
             />
             <p className="text-muted-foreground text-xs">
-              {t("customerWillReceiveLabel")} <em>"{t("customerMessage")}"</em>
+              {t("customerWillReceiveLabel")} <em>&quot;{t("customerMessage")}&quot;</em>
             </p>
           </div>
           <DialogFooter>

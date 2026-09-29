@@ -311,7 +311,7 @@ function ProductsContent() {
               <div className="hidden flex-wrap gap-2 sm:flex">
                 {searchQuery && (
                   <span className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                    "{searchQuery}"{" "}
+                    &quot;{searchQuery}&quot;{" "}
                     <button onClick={() => setSearchQuery("")}>
                       <X className="h-3 w-3" />
                     </button>
