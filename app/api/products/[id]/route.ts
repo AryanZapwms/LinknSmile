@@ -7,6 +7,7 @@ import "@/lib/models/company";
 import "@/lib/models/category";
 import "@/lib/models/shop";
 
+import mongoose from "mongoose";
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -95,6 +96,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       sizes,
       isActive,
     } = body;
+
+    if (category !== undefined && !mongoose.Types.ObjectId.isValid(category)) {
+      return withCORS(NextResponse.json({ error: "A valid category is required" }, { status: 400 }));
+    }
 
     const updateData = {
       name,
