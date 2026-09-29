@@ -21,9 +21,14 @@ jobs:
           node-version: "24"
           cache: "npm"
 
-      # MongoDB binary for mongodb-memory-server. Its postinstall is disabled
-      # (package.json "config") so VPS deploys never download it; tests fetch it
-      # on first run and this cache reuses it.
+      # MongoDB binary for mongodb-memory-server (used by `npm test`). By
+      # default it's stored under node_modules/.cache, which `npm ci` wipes,
+      # so point it at a folder outside node_modules and cache that. Its
+      # postinstall is disabled (package.json "config"), so tests/global-setup.ts
+      # downloads it once per cache miss, before any test file starts.
+      - name: Set MongoDB binary directory
+        run: echo "MONGOMS_DOWNLOAD_DIR=$HOME/.cache/mongodb-binaries" >> "$GITHUB_ENV"
+
       - name: Cache MongoDB binary
         uses: actions/cache@v4
         with:

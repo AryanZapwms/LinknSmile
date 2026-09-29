@@ -11,11 +11,13 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
+    // Downloads the MongoDB binary once, before any test file starts, so
+    // parallel files never race on the download lockfile.
+    globalSetup: ["tests/global-setup.ts"],
     setupFiles: ["tests/setup-env.ts"],
     // Each file gets its own process (and its own in-memory DB + mongoose connection).
     pool: "forks",
     testTimeout: 60_000,
-    // First run downloads the MongoDB binary (cached afterwards).
-    hookTimeout: 300_000,
+    hookTimeout: 120_000,
   },
 });
