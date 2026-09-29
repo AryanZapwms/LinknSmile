@@ -128,6 +128,7 @@ order.
 | `MISSING_ADDRESS` | Webhook for a checkout created before addresses were stored. | Yes | If the browser verify didn't complete it within an hour, refund or create the order by hand with the customer's address. |
 | `PAYMENT_LOOKUP_FAILED` | Couldn't reach Razorpay's API. Released for retry. | Maybe | Nothing unless it persists (check Razorpay status and our outbound network). |
 | `FULFILMENT_ERROR` | Unexpected error while creating the order; released for retry. | Maybe | Check the error; the webhook retries automatically. If it keeps failing, fix the cause, then resend the webhook. |
+| `[LedgerService] AUDIT_LOG_WRITE_FAILED` | A sale/payout WAS committed to the ledger and wallet, but its `auditlogs` row couldn't be written. | n/a (money is correct) | Nothing is lost financially. Check why Mongo writes to `auditlogs` fail; the line has action, order/payout id, actor and amounts if you want to backfill the audit row. |
 | `INVALID_SIGNATURE` (webhook) | Request to the webhook with a wrong/missing signature. | No | A few: noise/probing. Constant: the secret in `shared/.env` doesn't match the Dashboard. |
 | `RAZORPAY_WEBHOOK_SECRET is not set` | Webhook is failing closed with 503. | No | Set the secret (see Deployment.md → Razorpay webhook) and reload PM2. |
 
