@@ -25,6 +25,11 @@ import { fulfillPaidOrder, PricingError, AmountMismatchError } from "@/lib/order
 const STALE_CLAIM_MS = 5 * 60 * 1000;
 const CAPTURE_POLL_ATTEMPTS = 3;
 const CAPTURE_POLL_DELAY_MS = 1500;
+// Browser verify that loses the claim (usually to the payment.captured
+// webhook, which fires at the same moment) waits this long for the winner
+// to finish, so the customer gets their orderId instead of a 409.
+const IN_PROGRESS_WAIT_MS = 15_000;
+const IN_PROGRESS_POLL_MS = 500;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -125,10 +130,22 @@ export async function fulfilRazorpayCheckout(
     throw err;
   }
   if (!claimed) {
-    const latest = await RazorpayCheckout.findById(checkout._id);
-    if (latest?.status === "fulfilled") return alreadyDone(latest);
-    if (latest?.status === "rejected") return { kind: "previously_rejected" };
-    return { kind: "in_progress" };
+    // The webhook returns at once (Razorpay retries its 503); the browser
+    // waits while the other claim is still processing.
+    const deadline = source === "verify" ? Date.now() + IN_PROGRESS_WAIT_MS : 0;
+    for (;;) {
+      const latest = await RazorpayCheckout.findById(checkout._id);
+      if (latest?.status === "fulfilled") return alreadyDone(latest);
+      if (latest?.status === "rejected") return { kind: "previously_rejected" };
+      if (latest?.status !== "processing" || Date.now() >= deadline) {
+        console.warn("[Razorpay] IN_PROGRESS — checkout claimed by another request", {
+          ...logCtx,
+          status: latest?.status,
+        });
+        return { kind: "in_progress" };
+      }
+      await sleep(IN_PROGRESS_POLL_MS);
+    }
   }
 
   const release = () =>
