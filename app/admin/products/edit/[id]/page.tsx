@@ -270,8 +270,11 @@ export default function EditProductPage() {
     }
     setSubmitting(true);
     try {
+      const { mainCategory, ...rest } = formData;
       const bodyData = {
-        ...formData,
+        ...rest,
+        // Sub category is optional — fall back to the main category when none is picked
+        category: formData.category || mainCategory,
         image: imageUrls[0],
         images: imageUrls,
         price: Number(formData.price),
