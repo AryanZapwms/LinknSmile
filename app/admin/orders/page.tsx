@@ -229,8 +229,8 @@ export default function AdminOrdersPage() {
                             </SelectContent>
                           </Select>
                         </td>
-                        <td className="px-4 py-3 border bg-muted/50">
-                          <Badge variant={order.paymentMethod === "cod" ? "secondary" : "default"}>
+                        <td className="px-4 py-3 border ">
+                          <Badge className="text-xs border rounded-full bg-blue-400 text-white" variant={order.paymentMethod === "cod" ? "secondary" : "default"}>
                             {order.paymentMethod === "cod" ? "COD" : "Razorpay"}
                           </Badge>
                         </td>
