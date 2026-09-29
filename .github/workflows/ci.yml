@@ -21,6 +21,15 @@ jobs:
           node-version: "24"
           cache: "npm"
 
+      # MongoDB binary for mongodb-memory-server. Its postinstall is disabled
+      # (package.json "config") so VPS deploys never download it; tests fetch it
+      # on first run and this cache reuses it.
+      - name: Cache MongoDB binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install dependencies
         run: npm ci
 
@@ -30,6 +39,11 @@ jobs:
 
       - name: Run TypeScript type check
         run: npm run typecheck
+
+      # Integration tests (Vitest + in-memory MongoDB). No secrets, no
+      # network calls: Razorpay and email are mocked.
+      - name: Run tests
+        run: npm test
 
       - name: Build
         run: npm run build

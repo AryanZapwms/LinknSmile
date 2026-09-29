@@ -1,12 +1,12 @@
 import crypto from "crypto";
 import { sendEmail } from "./EmailOtp";
 
+// Cryptographically secure (crypto.randomInt), unlike Math.random().
+// May start with 0 — OTPs are always handled as strings.
 export function generateNumericOtp(length = 6) {
-  const digits = "0123456789";
   let result = "";
   for (let i = 0; i < length; i++) {
-    const idx = Math.floor(Math.random() * digits.length);
-    result += digits[idx];
+    result += crypto.randomInt(0, 10).toString();
   }
   return result;
 }

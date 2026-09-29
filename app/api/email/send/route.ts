@@ -15,18 +15,24 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    // Only allow authenticated requests
-    if (!session) {
+    if (!session?.user?.id) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
+    }
+
+    await connectDB();
+    // Admin-only: this route lets the caller pick any recipient and subject,
+    // so it must not be open to ordinary users. Role is read from the DB, not
+    // the session token, so a demoted admin loses access immediately.
+    const requester = await User.findById(session.user.id).select("locale role").lean<{
+      locale?: string;
+      role?: string;
+    }>();
+    if (requester?.role !== "admin") {
+      return withCORS(NextResponse.json({ error: "Forbidden" }, { status: 403 }));
     }
 
     const body = await request.json();
     const { type, to, subject, data } = body;
-
-    await connectDB();
-    const requester = await User.findById(session.user.id).select("locale").lean<{
-      locale?: string;
-    }>();
     const locale = resolveEmailLocale(requester?.locale);
 
     let html = "";

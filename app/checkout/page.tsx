@@ -264,6 +264,9 @@ export default function CheckoutPage() {
   body: JSON.stringify({
     items: pricingItems(),
     couponCode: appliedCoupon?.code,
+    // Stored server-side so the Razorpay webhook can complete the order
+    // even if this tab closes before verify-payment runs.
+    shippingAddress,
   }),
 });
         const rpOrder = await rpRes.json();

@@ -14,6 +14,7 @@ import { reserveStock } from "@/lib/stock-reservation";
 import { computeOrderPricing, PricingError } from "@/lib/pricing";
 import { PLATFORM_SHOP_ID } from "@/lib/constants";
 import { formatCurrency } from "@/lib/currency";
+import { escapeHtml } from "@/lib/escape-html";
 
 
    
@@ -58,16 +59,22 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const {
-      items,
-      shippingAddress,
-      totalAmount,
-      paymentMethod,
-      paymentStatus,
-      razorpayOrderId,
-      razorpayPaymentId,
-      couponCode,
-    } = body;
+    // paymentStatus / razorpayOrderId / razorpayPaymentId are deliberately NOT
+    // read from the body. This route only creates unpaid COD orders — paid
+    // orders are created exclusively by fulfillPaidOrder() (lib/order-fulfillment.ts)
+    // after a gateway route has verified the payment.
+    const { items, shippingAddress, couponCode } = body;
+
+    if (body.paymentMethod !== undefined && body.paymentMethod !== "cod") {
+      return withCORS(
+        NextResponse.json(
+          { error: "This endpoint only accepts cash on delivery orders" },
+          { status: 400 }
+        )
+      );
+    }
+    const paymentMethod = "cod";
+    const paymentStatus = "pending";
 
     // Validate required fields
     if (!items || items.length === 0) {
@@ -137,14 +144,12 @@ export async function POST(req: NextRequest) {
         : undefined,
       shippingAddress,
       paymentMethod,
-      paymentStatus: paymentStatus || "pending",
+      paymentStatus,
       orderStatus: "pending",
-      razorpayOrderId,
-      razorpayPaymentId,
       vendorPayouts: Object.values(vendorPayouts).map((v) => ({
         shopId: v.shopId,
         amount: v.amount,
-        status: paymentStatus === "completed" ? "pending" : "held",
+        status: "held",
       })),
     });
 
@@ -161,23 +166,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Credit vendor wallets via ledger (only for prepaid orders)
-    if (paymentStatus === "completed") {
-      try {
-        const { LedgerService } = await import("@/lib/services/ledger-service");
-        await LedgerService.recordSale({
-          orderId: (order._id as any).toString(),
-          items: processedItems.map((item: any) => ({
-            shopId: item.shopId.toString(),
-            vendorEarnings: item.vendorEarnings,
-            commission: item.platformCommission,
-          })),
-          performedBy: "SYSTEM",
-        });
-      } catch (ledgerError) {
-        console.error("[Orders] Ledger recordSale failed for order", order._id, ledgerError);
-      }
-    }
+    // No LedgerService.recordSale here: COD orders are unpaid at creation.
+    // Vendor wallets are only credited for gateway-verified payments, via
+    // fulfillPaidOrder() in lib/order-fulfillment.ts.
 
     // NOTE: Stock was already decremented atomically by reserveStock() above.
     // No separate stock update loop needed here.
@@ -226,15 +217,14 @@ export async function POST(req: NextRequest) {
               <tbody>
                 ${processedItems
                   .map((item) => {
-                    const product = items.find((i: any) => i.product === item.product.toString());
                     return `
                     <tr>
                       <td style="padding: 10px; border: 1px solid #ddd;">
-                        ${product?.name || "Product"}
-                        ${item.selectedSize ? `<br/><small>(${item.selectedSize.size})</small>` : ""}
-                        <br/><small style="color: #888;">by ${item.shopName}</small>
+                        ${escapeHtml(item.name || "Product")}
+                        ${item.selectedSize ? `<br/><small>(${escapeHtml(item.selectedSize.size)})</small>` : ""}
+                        <br/><small style="color: #888;">by ${escapeHtml(item.shopName)}</small>
                       </td>
-                      <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">${item.quantity}</td>
+                      <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">${escapeHtml(item.quantity)}</td>
                       <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">${formatCurrency(item.price * item.quantity)}</td>
                     </tr>
                   `;
@@ -244,17 +234,17 @@ export async function POST(req: NextRequest) {
               <tfoot>
                 <tr>
                   <td colspan="2" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Total:</strong></td>
-                  <td style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>${formatCurrency(totalAmount)}</strong></td>
+                  <td style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>${formatCurrency(computedTotal)}</strong></td>
                 </tr>
               </tfoot>
             </table>
             <h2 style="color: #555; margin-top: 30px;">Shipping Address:</h2>
             <p>
-              ${shippingAddress.name}<br/>
-              ${shippingAddress.street}<br/>
-              ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.zipCode}<br/>
-              ${shippingAddress.country}<br/>
-              Phone: ${shippingAddress.phone}
+              ${escapeHtml(shippingAddress.name)}<br/>
+              ${escapeHtml(shippingAddress.street)}<br/>
+              ${escapeHtml(shippingAddress.city)}, ${escapeHtml(shippingAddress.state)} ${escapeHtml(shippingAddress.zipCode)}<br/>
+              ${escapeHtml(shippingAddress.country)}<br/>
+              Phone: ${escapeHtml(shippingAddress.phone)}
             </p>
             <p style="margin-top: 30px; color: #666;">
               Payment Method: <strong>${paymentMethod.toUpperCase()}</strong><br/>
@@ -290,7 +280,7 @@ export async function POST(req: NextRequest) {
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #333;">New Order Received!</h1>
-                <p>You have a new order for: <strong>${shop.shopName}</strong></p>
+                <p>You have a new order for: <strong>${escapeHtml(shop.shopName)}</strong></p>
                 <p><strong>Order Number:</strong> ${orderNumber}</p>
                 <p><strong>Your Earnings:</strong> ${formatCurrency(payoutInfo.amount)}</p>
                 <p style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107;">
@@ -310,7 +300,7 @@ export async function POST(req: NextRequest) {
             <div style="font-family: Arial, sans-serif;">
               <h2>New Order Received</h2>
               <p><strong>Order Number:</strong> ${orderNumber}</p>
-              <p><strong>Total Amount:</strong> ${formatCurrency(totalAmount)}</p>
+              <p><strong>Total Amount:</strong> ${formatCurrency(computedTotal)}</p>
               <p><strong>Payment Method:</strong> ${paymentMethod}</p>
               <p><strong>Payment Status:</strong> ${paymentStatus || "Pending"}</p>
             </div>

@@ -3,7 +3,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
-import { computeOrderPricing, PricingError } from "@/lib/pricing";
+import { computeOrderPricing, PricingError, type CartItemInput } from "@/lib/pricing";
+import { RazorpayCheckout, RAZORPAY_CHECKOUT_TTL_MS } from "@/lib/models/razorpay-checkout";
+import { sanitizeShippingAddress } from "@/lib/razorpay-fulfillment";
 import { CURRENCY_CODE } from "@/lib/currency";
 import { razorpayAdapter } from "@/lib/payments/razorpay";
 import { PaymentGatewayError } from "@/lib/payments/types";
@@ -26,7 +28,19 @@ export async function POST(request: NextRequest) {
       return withCORS(NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 }));
     }
 
-    const { items, couponCode } = await request.json();
+    const { items: rawItems, couponCode, shippingAddress } = await request.json();
+
+    // Keep only the fields pricing uses — this exact list is what gets
+    // stored and later fulfilled, so nothing else from the client survives.
+    const items: CartItemInput[] = Array.isArray(rawItems)
+      ? rawItems.map((i: any) => ({
+          product: String(i?.product ?? ""),
+          quantity: Number(i?.quantity),
+          selectedSize: i?.selectedSize
+            ? { size: String(i.selectedSize.size), quantity: Number(i.selectedSize.quantity) }
+            : undefined,
+        }))
+      : [];
 
     await connectDB();
     const { totalAmount } = await computeOrderPricing(items, {
@@ -41,6 +55,21 @@ export async function POST(request: NextRequest) {
     const razorpayOrder = await razorpayAdapter.createPaymentOrder({
       amount: totalAmount,
       currency: CURRENCY_CODE,
+      metadata: { userId: session.user.id },
+    });
+
+    // verify-payment and the webhook fulfil from this record, never from
+    // their request bodies (see lib/razorpay-fulfillment.ts).
+    await RazorpayCheckout.create({
+      razorpayOrderId: razorpayOrder.gatewayOrderId,
+      userId: session.user.id,
+      items,
+      couponCode: couponCode || undefined,
+      shippingAddress: sanitizeShippingAddress(shippingAddress),
+      amount: totalAmount,
+      amountMinor: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      expiresAt: new Date(Date.now() + RAZORPAY_CHECKOUT_TTL_MS),
     });
 
     return withCORS(

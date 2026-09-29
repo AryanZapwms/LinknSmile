@@ -35,6 +35,7 @@ async function createPaymentOrder(
     amount: Math.round(params.amount * 100), // paise — smallest currency unit, computed server-side
     currency: params.currency,
     payment_capture: true,
+    ...(params.metadata ? { notes: params.metadata } : {}),
   });
 
   return {
@@ -71,6 +72,29 @@ async function verifyPayment(params: VerifyPaymentParams): Promise<VerifyPayment
     // already have the authoritative amount from computeOrderPricing().
     amount: 0,
     currency: "",
+  };
+}
+
+/**
+ * Read-only lookup of a payment as Razorpay records it — used by
+ * verify-payment to confirm the amount/currency/order actually captured,
+ * since the widget callback's signature alone doesn't prove any amount.
+ * `amount` is in minor units (paise), exactly as Razorpay returns it.
+ */
+export async function fetchRazorpayPayment(paymentId: string): Promise<{
+  id: string;
+  orderId: string | null;
+  status: string;
+  amount: number;
+  currency: string;
+}> {
+  const payment = await getClient().payments.fetch(paymentId);
+  return {
+    id: payment.id,
+    orderId: payment.order_id ?? null,
+    status: payment.status,
+    amount: typeof payment.amount === "number" ? payment.amount : Number(payment.amount),
+    currency: payment.currency,
   };
 }
 

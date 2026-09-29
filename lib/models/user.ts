@@ -41,6 +41,8 @@ const userSchema = new mongoose.Schema(
     },
     resetOtpHash: { type: String },
     resetOtpExpires: { type: Date },
+    // Wrong-guess counter for the current reset OTP — see lib/reset-otp.ts.
+    resetOtpAttempts: { type: Number, default: 0 },
 
     // ✅ ADD THESE NEW FIELDS
     shopId: {

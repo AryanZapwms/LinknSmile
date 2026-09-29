@@ -27,6 +27,46 @@ function generateIdempotencyKey(...parts: string[]): string {
   return crypto.createHash("sha256").update(parts.join("|")).digest("hex");
 }
 
+/**
+ * Error-path cleanup for a session transaction. Aborts only if the
+ * transaction is still open — never after a commit (the driver would throw
+ * "Cannot call abortTransaction after calling commitTransaction", replacing
+ * the real error). An abort failure is logged, never thrown, so callers
+ * always rethrow the ORIGINAL error.
+ */
+async function abortIfActive(session: mongoose.ClientSession, originalError: unknown) {
+  if (!session.inTransaction()) return;
+  try {
+    await session.abortTransaction();
+  } catch (abortError) {
+    console.error("[LedgerService] abortTransaction failed; rethrowing the original error", {
+      abortError,
+      originalError,
+    });
+  }
+}
+
+/**
+ * Audit-log write for an already-COMMITTED financial change. Best-effort by
+ * design: the ledger entries are the financial source of truth, so a
+ * failure here must never roll back or fail the operation — but it is
+ * logged loudly (AUDIT_LOG_WRITE_FAILED + context) so the missing audit
+ * record can be reconstructed from the ledger.
+ */
+async function writeAuditLogAfterCommit(
+  entry: Record<string, unknown>,
+  context: Record<string, unknown>
+) {
+  try {
+    await AuditLog.create(entry);
+  } catch (error) {
+    console.error(
+      "[LedgerService] AUDIT_LOG_WRITE_FAILED — financial change IS committed; audit record missing",
+      { action: entry.action, targetId: entry.targetId, performedBy: entry.performedBy, ...context, error }
+    );
+  }
+}
+
 async function getOrCreateVendorWallet(
   shopId: string,
   session: mongoose.ClientSession
@@ -139,20 +179,28 @@ export class LedgerService {
       }
 
       await session.commitTransaction();
+    } catch (error) {
+      await abortIfActive(session, error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
 
-      await AuditLog.create({
+    await writeAuditLogAfterCommit(
+      {
         action: "SALE_RECORDED",
         performedBy: params.performedBy || "SYSTEM",
         targetEntity: "Order",
         targetId: params.orderId,
         metadata: { items: params.items },
-      });
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
+      },
+      {
+        orderId: params.orderId,
+        vendorEarnings: params.items.reduce((s, i) => s + i.vendorEarnings, 0),
+        commission: params.items.reduce((s, i) => s + i.commission, 0),
+        shopIds: params.items.map((i) => i.shopId),
+      }
+    );
   }
 
   /**
@@ -178,11 +226,14 @@ export class LedgerService {
     const session = await mongoose.startSession();
     session.startTransaction();
 
+    let debitEntry;
+    let balanceBefore: number;
     try {
       const wallet = await Wallet.findOne({ shopId: params.shopId, type: "VENDOR" }).session(
         session
       );
       if (!wallet) throw new Error("Wallet not found");
+      balanceBefore = wallet.withdrawableBalance;
       if (wallet.status !== "ACTIVE")
         throw new Error(`Wallet is ${wallet.status}. Cannot process payout.`);
       if (wallet.withdrawableBalance < params.amount) {
@@ -191,7 +242,7 @@ export class LedgerService {
         );
       }
 
-      const debitEntry = new LedgerEntry({
+      debitEntry = new LedgerEntry({
         transactionId,
         accountId: wallet._id,
         shopId: params.shopId,
@@ -219,25 +270,28 @@ export class LedgerService {
       }
 
       await session.commitTransaction();
+    } catch (error) {
+      await abortIfActive(session, error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
 
-      await AuditLog.create({
+    await writeAuditLogAfterCommit(
+      {
         action: "PAYOUT_INITIATED",
         performedBy: params.adminId || "SYSTEM",
         targetEntity: "Payout",
         targetId: params.payoutId,
         shopId: new mongoose.Types.ObjectId(params.shopId),
-        before: { withdrawableBalance: wallet.withdrawableBalance },
-        after: { withdrawableBalance: wallet.withdrawableBalance - params.amount },
+        before: { withdrawableBalance: balanceBefore },
+        after: { withdrawableBalance: balanceBefore - params.amount },
         reason: `Payout of ${formatCurrency(params.amount)} initiated`,
-      });
+      },
+      { payoutId: params.payoutId, shopId: params.shopId, amount: params.amount }
+    );
 
-      return debitEntry;
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
+    return debitEntry;
   }
 
   /**
@@ -247,8 +301,9 @@ export class LedgerService {
   static async completePayout(payoutId: string, adminId?: string, transactionRef?: string) {
     const session = await mongoose.startSession();
     session.startTransaction();
+    let entry;
     try {
-      const entry = await LedgerEntry.findOne({
+      entry = await LedgerEntry.findOne({
         referenceId: payoutId,
         type: "PAYOUT",
       }).session(session);
@@ -267,21 +322,24 @@ export class LedgerService {
       );
 
       await session.commitTransaction();
+    } catch (error) {
+      await abortIfActive(session, error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
 
-      await AuditLog.create({
+    await writeAuditLogAfterCommit(
+      {
         action: "PAYOUT_COMPLETED",
         performedBy: adminId || "SYSTEM",
         targetEntity: "Payout",
         targetId: payoutId,
         shopId: entry.shopId,
         metadata: { transactionRef, amount: Math.abs(entry.amount) },
-      });
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
+      },
+      { payoutId, shopId: String(entry.shopId), amount: Math.abs(entry.amount), transactionRef }
+    );
   }
 
   /**
@@ -298,6 +356,7 @@ export class LedgerService {
   ) {
     const session = await mongoose.startSession();
     session.startTransaction();
+    let restoredTo: number;
     try {
       const reversalKey = generateIdempotencyKey("PAYOUT_REVERSAL", payoutId);
 
@@ -337,23 +396,27 @@ export class LedgerService {
         { session }
       );
 
+      restoredTo = wallet.withdrawableBalance + amount;
       await session.commitTransaction();
+    } catch (error) {
+      await abortIfActive(session, error);
+      throw error;
+    } finally {
+      session.endSession();
+    }
 
-      await AuditLog.create({
+    await writeAuditLogAfterCommit(
+      {
         action: "PAYOUT_REJECTED",
         performedBy: adminId || "SYSTEM",
         targetEntity: "Payout",
         targetId: payoutId,
         shopId: new mongoose.Types.ObjectId(shopId),
         reason: reason || "Rejected by admin",
-        metadata: { amount, restoredTo: wallet.withdrawableBalance + amount },
-      });
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
+        metadata: { amount, restoredTo },
+      },
+      { payoutId, shopId, amount }
+    );
   }
 
   /**
@@ -449,7 +512,7 @@ export class LedgerService {
 
       await session.commitTransaction();
     } catch (error) {
-      await session.abortTransaction();
+      await abortIfActive(session, error);
       throw error;
     } finally {
       session.endSession();
@@ -549,19 +612,26 @@ export class LedgerService {
         );
 
         await session.commitTransaction();
+      } catch (error) {
+        await abortIfActive(session, error);
+        console.error(`[LedgerService] Failed to clear entry ${entry._id}:`, error);
+        failed++;
+        continue;
+      } finally {
+        session.endSession();
+      }
+
+      cleared++;
+      // Committed — a notification failure must not count this entry as failed.
+      try {
         await sendPushNotificationToVendor(
           entry.shopId!.toString(), // ensure shopId is stored on LedgerEntry (it should be)
           "💰 Funds Cleared",
           `${formatCurrency(entry.amount)} from your order earnings is now available for withdrawal.`,
           { screen: "wallet" }
         );
-        cleared++;
       } catch (error) {
-        await session.abortTransaction();
-        console.error(`[LedgerService] Failed to clear entry ${entry._id}:`, error);
-        failed++;
-      } finally {
-        session.endSession();
+        console.error(`[LedgerService] Funds cleared but push notification failed for entry ${entry._id}:`, error);
       }
     }
 

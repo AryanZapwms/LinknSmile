@@ -5,10 +5,9 @@ import { User } from "@/lib/models/user";
 import { sendOtpEmail } from "@/lib/EmailOtp";
 import { resolveEmailLocale } from "@/lib/email-locale";
 import { hash } from "bcryptjs";
-
-function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
-}
+import { resetRequestLimiter } from "@/lib/rate-limit";
+import { clientIp } from "@/lib/reset-otp";
+import { generateNumericOtp } from "@/lib/otp";
 
 export async function POST(req: Request) {
   if (req.method === "OPTIONS") {
@@ -22,18 +21,29 @@ export async function POST(req: Request) {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();
-    // console.log("[FORGOT_PASSWORD] Generating OTP for:", normalizedEmail)
+
+    const byIp = resetRequestLimiter(`ip:${clientIp(req)}`);
+    const byEmail = resetRequestLimiter(`email:${normalizedEmail}`);
+    if (!byIp.success || !byEmail.success) {
+      return withCORS(
+        NextResponse.json(
+          { error: "Too many requests. Please wait a few minutes and try again." },
+          { status: 429, headers: { "Retry-After": "900" } }
+        )
+      );
+    }
+
     await connectDB();
 
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
-      return withCORS(
-        NextResponse.json({ error: "No account found with that email" }, { status: 404 })
-      );
+      // Same response as the success path, so this can't be used to check
+      // which emails have accounts.
+      return withCORS(NextResponse.json({ message: "OTP sent successfully" }));
     }
 
     // Generate OTP and expiry
-    const otp = generateOtp();
+    const otp = generateNumericOtp(6);
     // console.log("[FORGOT_PASSWORD] Generated OTP:", otp)
     const otpHash = await hash(otp, 12);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min expiry
@@ -41,6 +51,7 @@ export async function POST(req: Request) {
     // Store hashed OTP in DB
     user.resetOtpHash = otpHash;
     user.resetOtpExpires = expiresAt;
+    user.resetOtpAttempts = 0; // fresh code, fresh attempt budget (lib/reset-otp.ts)
     user.markModified("resetOtpHash");
     user.markModified("resetOtpExpires");
     const savedUser = await user.save();

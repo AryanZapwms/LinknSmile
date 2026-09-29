@@ -126,6 +126,7 @@ GMAIL_APP_PASSWORD=...
 RAZORPAY_KEY_ID=...
 RAZORPAY_KEY_SECRET=...
 NEXT_PUBLIC_RAZORPAY_KEY_ID=...
+RAZORPAY_WEBHOOK_SECRET=...
 CLOUDINARY_CLOUD_NAME=...
 CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
@@ -154,6 +155,32 @@ That's it — no manual `pm2 start`, no manual first build. The first push
 to `main` (once the GitHub Secrets below are set) will clone, build,
 health-check, and start PM2 for the first time automatically via
 `pm2 startOrReload`.
+
+### Razorpay webhook (India / any `PAYMENT_GATEWAY=razorpay` deployment)
+
+`app/api/razorpay/webhook` completes storefront orders whose browser
+callback never reached `verify-payment` (tab closed, network drop). It
+shares the same idempotent code path, so it can never create a duplicate
+order. Set it up once per Razorpay account (test and live mode separately):
+
+1. Razorpay Dashboard → Settings → Webhooks → Add New Webhook.
+2. URL: `https://linknsmile.com/api/razorpay/webhook`
+3. Secret: generate a long random value (e.g. `openssl rand -hex 32`)
+   and put the same value in `shared/.env` as `RAZORPAY_WEBHOOK_SECRET`.
+4. Active events: **`payment.captured`** only.
+5. `pm2 reload` (or the next deploy) to pick up the new env var.
+
+The app starts without `RAZORPAY_WEBHOOK_SECRET` (it's deliberately not
+in `lib/env.ts`'s required list), but the webhook then fails closed and
+answers every call with `503`, so Razorpay keeps retrying until it's set.
+Vendor-subscription payments also reach this webhook; they're
+acknowledged with `200` and ignored (renewal is still handled by
+`/api/vendor/subscription/verify-payment`). The UAE deployment uses Tap and
+doesn't need this.
+
+Payment alert log lines (`REFUND_REQUIRED`, `NOT_CAPTURED`,
+`UNKNOWN_ORDER`, …) and what to do about each:
+[docs/runbooks/razorpay-payment-alerts.md](docs/runbooks/razorpay-payment-alerts.md).
 
 ## GitHub Secrets to add
 

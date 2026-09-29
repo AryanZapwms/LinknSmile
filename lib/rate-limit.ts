@@ -81,3 +81,11 @@ export const loginLimiter = (ip: string) => rateLimit("login", ip, { limit: 10, 
 
 export const paymentLimiter = (ip: string) =>
   rateLimit("payment", ip, { limit: 5, windowMs: 60_000 }); // 5 payment attempts per minute
+
+// Password reset: requesting a code, and checking one (verify-reset-otp + reset-password).
+// Keyed by IP and by email so neither rotating IPs nor rotating emails helps an attacker.
+export const resetRequestLimiter = (key: string) =>
+  rateLimit("reset-request", key, { limit: 3, windowMs: 15 * 60_000 }); // 3 codes per 15 min
+
+export const resetCheckLimiter = (key: string) =>
+  rateLimit("reset-check", key, { limit: 10, windowMs: 15 * 60_000 }); // 10 checks per 15 min

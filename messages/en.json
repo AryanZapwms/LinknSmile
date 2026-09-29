@@ -1079,6 +1079,8 @@
     "missingCredentials": "Please enter your email and password.",
     "emailNotVerified": "Please verify your email before signing in.",
     "oauthAccountExists": "This email is already registered with Google. Sign in with Google, or use a different email to create a new account.",
+    "accountDisabled": "This account has been deactivated. Please contact support.",
+    "accessDenied": "Sign-in was not allowed for this account. If you think this is a mistake, please contact support.",
     "unexpectedError": "An unexpected error occurred. Please try again."
   },
   "RegisterForm": {
