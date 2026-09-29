@@ -229,7 +229,7 @@ export default function AdminOrdersPage() {
                             </SelectContent>
                           </Select>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 border bg-muted/50">
                           <Badge variant={order.paymentMethod === "cod" ? "secondary" : "default"}>
                             {order.paymentMethod === "cod" ? "COD" : "Razorpay"}
                           </Badge>
@@ -415,7 +415,7 @@ export default function AdminOrdersPage() {
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs">Payment Method</p>
-                    <p className="font-medium">
+                    <p className="font-medium ">
                       {selectedOrder.paymentMethod === "cod" ? "Cash on Delivery" : "Razorpay"}
                     </p>
                   </div>
