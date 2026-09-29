@@ -772,7 +772,7 @@ export default function ImagesPage() {
               {selectedUnusedCount < selectedImages.size && (
                 <div className="mt-2 font-semibold text-orange-600">
                   Warning: {selectedImages.size - selectedUnusedCount} of the selected images are
-                  marked as "used" and may be referenced in your content.
+                  marked as &quot;used&quot; and may be referenced in your content.
                 </div>
               )}
             </AlertDialogDescription>

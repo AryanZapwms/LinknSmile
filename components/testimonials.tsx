@@ -375,6 +375,9 @@ export default function Testimonials({
   }, [companySlug, items]);
 
   const [currentIndex, setCurrentIndex] = React.useState<number>(0);
+  // Used by the carousel view only, but declared here: hooks must run
+  // before any early return so every render calls the same hooks.
+  const [isExpanded, setIsExpanded] = React.useState(false);
 
   if (!testimonials || testimonials.length === 0) return null;
 
@@ -427,7 +430,6 @@ export default function Testimonials({
   };
 
   const currentTestimonial = testimonials[currentIndex];
-  const [isExpanded, setIsExpanded] = React.useState(false);
   const displayText = isExpanded
     ? currentTestimonial.quote
     : currentTestimonial.quote.slice(0, 150) + (currentTestimonial.quote.length > 150 ? "..." : "");

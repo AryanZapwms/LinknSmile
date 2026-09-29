@@ -348,7 +348,7 @@ export default function ProductApprovalsPage() {
           <DialogHeader>
             <DialogTitle>Reject Product</DialogTitle>
             <DialogDescription>
-              Please provide a reason for rejecting "{selectedProduct?.name}". This will be sent to
+              Please provide a reason for rejecting &quot;{selectedProduct?.name}&quot;. This will be sent to
               the vendor.
             </DialogDescription>
           </DialogHeader>

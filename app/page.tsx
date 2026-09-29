@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ProductCard } from "@/components/product-card";
 import { HomeCarousel } from "@/components/home-carousel";
@@ -390,7 +391,7 @@ export default function Home() {
           title={t("suggested.title")}
           subtitle={t("suggested.subtitle")}
           action={
-            <a
+            <Link
               href="/products"
               className="hidden items-center gap-1 text-sm font-medium text-amber-600 transition-colors hover:text-amber-700 sm:inline-flex"
             >
@@ -403,7 +404,7 @@ export default function Home() {
                   d="M9 5l7 7-7 7"
                 />
               </svg>
-            </a>
+            </Link>
           }
         >
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
