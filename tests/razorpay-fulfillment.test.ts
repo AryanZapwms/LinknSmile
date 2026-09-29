@@ -8,11 +8,14 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import mongoose from "mongoose";
 import { initModels, startTestDb, stopTestDb } from "./helpers/mongo";
 
-const rzp = vi.hoisted(() => ({ payments: new Map<string, any>() }));
+// `gate`, when set, holds every payments.fetch until it resolves — used to
+// keep one request mid-fulfilment (holding the claim) while another arrives.
+const rzp = vi.hoisted(() => ({ payments: new Map<string, any>(), gate: null as Promise<void> | null }));
 vi.mock("razorpay", () => ({
   default: class FakeRazorpay {
     payments = {
       fetch: async (id: string) => {
+        if (rzp.gate) await rzp.gate;
         const p = rzp.payments.get(id);
         if (!p) throw new Error(`payment ${id} not found`);
         return p;
@@ -29,6 +32,12 @@ vi.mock("nodemailer", () => {
   const transport = { createTransport: () => ({ sendMail: async () => ({ messageId: "test" }) }) };
   return { default: transport, ...transport };
 });
+// verify-payment route: session is the test buyer.
+const auth = vi.hoisted(() => ({ userId: "" }));
+vi.mock("next-auth", () => ({
+  getServerSession: async () => (auth.userId ? { user: { id: auth.userId } } : null),
+}));
+vi.mock("@/lib/auth-options", () => ({ authOptions: {} }));
 
 type Db = NonNullable<typeof mongoose.connection.db>;
 let db: Db;
@@ -37,6 +46,7 @@ let RazorpayCheckout: typeof import("@/lib/models/razorpay-checkout").RazorpayCh
 let TTL_MS: number;
 let AuditLog: typeof import("@/lib/models/audit-log").AuditLog;
 let webhookPOST: typeof import("@/app/api/razorpay/webhook/route").POST;
+let verifyPOST: typeof import("@/app/api/razorpay/verify-payment/route").POST;
 
 const userId = new mongoose.Types.ObjectId();
 const otherUserId = new mongoose.Types.ObjectId();
@@ -53,6 +63,8 @@ beforeAll(async () => {
   ({ RazorpayCheckout, RAZORPAY_CHECKOUT_TTL_MS: TTL_MS } = await import("@/lib/models/razorpay-checkout"));
   ({ AuditLog } = await import("@/lib/models/audit-log"));
   ({ POST: webhookPOST } = await import("@/app/api/razorpay/webhook/route"));
+  ({ POST: verifyPOST } = await import("@/app/api/razorpay/verify-payment/route"));
+  auth.userId = String(userId);
   await import("@/lib/models/order");
   await import("@/lib/models/wallet");
   await import("@/lib/models/ledger");
@@ -111,6 +123,29 @@ async function hook(body: string, signature: string | null) {
 }
 const verify = (orderId: string, paymentId: string, extra: Record<string, unknown> = {}) =>
   fulfil({ razorpayOrderId: orderId, razorpayPaymentId: paymentId, source: "verify", expectedUserId: String(userId), shippingAddress: address, ...extra });
+// The real browser endpoint. A fresh IP per call keeps paymentLimiter out of the way.
+let ipSeq = 0;
+async function verifyRoute(orderId: string, paymentId: string) {
+  const signature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
+    .update(`${orderId}|${paymentId}`)
+    .digest("hex");
+  const res = await verifyPOST(
+    new Request("http://localhost/api/razorpay/verify-payment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-forwarded-for": `10.0.0.${++ipSeq}` },
+      body: JSON.stringify({ razorpayOrderId: orderId, razorpayPaymentId: paymentId, razorpaySignature: signature, shippingAddress: address }),
+    }) as any
+  );
+  return { status: res.status, body: await res.json() };
+}
+async function waitForStatus(razorpayOrderId: string, status: string) {
+  for (let i = 0; i < 200; i++) {
+    if ((await RazorpayCheckout.findOne({ razorpayOrderId }).lean<any>())?.status === status) return;
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  throw new Error(`checkout ${razorpayOrderId} never reached ${status}`);
+}
 
 describe("RazorpayCheckout model", () => {
   it("has the unique and TTL indexes", async () => {
@@ -141,10 +176,14 @@ describe("idempotency across browser verify and webhook", () => {
     const doc = await RazorpayCheckout.findOne({ razorpayOrderId: orderId }).lean<any>();
     expect(doc.status).toBe("fulfilled");
     expect(doc.expiresAt).toBeUndefined();
-    for (const r of results as any[]) {
-      if ("kind" in r) expect(["fulfilled", "in_progress"]).toContain(r.kind);
-      else expect([200, 503]).toContain(r.status);
+    // Browser verifies never surface in_progress: whichever loses the claim
+    // waits and gets the winner's order. Webhook losers may get 503 (Razorpay retries).
+    const [v1, h1, v2, w, h2] = results as any[];
+    for (const v of [v1, v2]) {
+      expect(v).toMatchObject({ kind: "fulfilled", orderId: String(doc.orderId) });
     }
+    expect(["fulfilled", "in_progress"]).toContain(w.kind);
+    for (const h of [h1, h2]) expect([200, 503]).toContain(h.status);
 
     // Replays after fulfilment return the same order.
     const again = await verify(orderId, "pay_race");
@@ -168,6 +207,45 @@ describe("idempotency across browser verify and webhook", () => {
     const order = await db.collection("orders").findOne({ razorpayPaymentId: "pay_hook_first" });
     expect(order?.shippingAddress?.street).toBe("1 Test St");
     expect(order?.totalAmount).toBe(1000);
+  });
+
+  it("verify-payment route after the webhook already fulfilled: 200 with the webhook's orderId", async () => {
+    const orderId = await makeCheckout();
+    pay("pay_route_after", orderId);
+    const body = capturedEvent(orderId, "pay_route_after");
+    const first = await hook(body, sign(body));
+    expect(first).toMatchObject({ status: 200, body: { alreadyDone: false } });
+
+    const res = await verifyRoute(orderId, "pay_route_after");
+    expect(res).toEqual({ status: 200, body: { success: true, orderId: first.body.orderId } });
+    expect(await ordersFor("pay_route_after")).toBe(1);
+    expect(await salesFor("pay_route_after")).toBe(1);
+  });
+
+  it("verify-payment route while the webhook holds the claim: waits, then 200 with the webhook's orderId (not 409)", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const orderId = await makeCheckout();
+    pay("pay_route_race", orderId);
+    const body = capturedEvent(orderId, "pay_route_race");
+
+    let open!: () => void;
+    rzp.gate = new Promise<void>((r) => (open = r));
+    try {
+      const webhook = hook(body, sign(body)); // claims, then blocks in payments.fetch
+      await waitForStatus(orderId, "processing");
+      const browser = verifyRoute(orderId, "pay_route_race");
+      await new Promise((r) => setTimeout(r, 700)); // browser is now polling the held claim
+      open();
+
+      const [h, v] = await Promise.all([webhook, browser]);
+      expect(h).toMatchObject({ status: 200, body: { alreadyDone: false } });
+      expect(v).toEqual({ status: 200, body: { success: true, orderId: h.body.orderId } });
+    } finally {
+      rzp.gate = null;
+      open?.();
+    }
+    expect(await ordersFor("pay_route_race")).toBe(1);
+    expect(await salesFor("pay_route_race")).toBe(1);
   });
 });
 
