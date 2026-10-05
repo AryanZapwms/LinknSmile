@@ -8,10 +8,9 @@
 // increments coupon usage (see lib/coupon-pricing.ts redeemCoupon()).
 import { withCORS } from "@/lib/cors";
 import { type NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { computeOrderPricing, PricingError } from "@/lib/pricing";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 export async function POST(request: NextRequest) {
   if (request.method === "OPTIONS") {
@@ -19,7 +18,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(request);
     if (!session?.user?.id) {
       return withCORS(NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 }));
     }

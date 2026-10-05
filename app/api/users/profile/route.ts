@@ -1,11 +1,10 @@
 import { withCORS } from "@/lib/cors";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 export async function GET(request: Request) {
   if (request.method === "OPTIONS") {
@@ -13,7 +12,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(request);
     if (!session?.user?.email) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
@@ -51,7 +50,7 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(req);
     if (!session?.user?.email) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }

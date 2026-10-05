@@ -1,8 +1,6 @@
 // app/api/orders/route.ts
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
 import { Product } from "@/lib/models/product";
@@ -15,6 +13,8 @@ import { computeOrderPricing, PricingError } from "@/lib/pricing";
 import { PLATFORM_SHOP_ID } from "@/lib/constants";
 import { formatCurrency } from "@/lib/currency";
 import { escapeHtml } from "@/lib/escape-html";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { rejectIfPaymentMethodDisabled } from "@/lib/payment-settings";
 
 
    
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(req);
 
     if (!session?.user?.id) {
       return withCORS(
@@ -64,6 +64,9 @@ export async function POST(req: NextRequest) {
     // orders are created exclusively by fulfillPaidOrder() (lib/order-fulfillment.ts)
     // after a gateway route has verified the payment.
     const { items, shippingAddress, couponCode } = body;
+
+    const codDisabled = await rejectIfPaymentMethodDisabled("cod");
+    if (codDisabled) return codDisabled;
 
     if (body.paymentMethod !== undefined && body.paymentMethod !== "cod") {
       return withCORS(
@@ -334,7 +337,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(req);
 
     if (!session?.user?.id) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));

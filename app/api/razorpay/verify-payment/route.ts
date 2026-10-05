@@ -1,12 +1,11 @@
 import { withCORS } from "@/lib/cors";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { type NextRequest, NextResponse } from "next/server";
 import { paymentLimiter } from "@/lib/rate-limit";
 import { razorpayAdapter } from "@/lib/payments/razorpay";
 import { PaymentGatewayError } from "@/lib/payments/types";
 import { PricingError } from "@/lib/order-fulfillment";
 import { fulfilRazorpayCheckout, type RazorpayFulfilmentResult } from "@/lib/razorpay-fulfillment";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 // Browser callback after the Razorpay widget succeeds. Checks the checkout
 // signature and the session, then hands off to fulfilRazorpayCheckout(),
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
       signature: razorpaySignature,
     });
 
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(request);
     if (!session?.user?.id) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }

@@ -1,7 +1,5 @@
 import { withCORS } from "@/lib/cors";
 import { type NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { computeOrderPricing, PricingError, type CartItemInput } from "@/lib/pricing";
 import { RazorpayCheckout, RAZORPAY_CHECKOUT_TTL_MS } from "@/lib/models/razorpay-checkout";
@@ -9,6 +7,8 @@ import { sanitizeShippingAddress } from "@/lib/razorpay-fulfillment";
 import { CURRENCY_CODE } from "@/lib/currency";
 import { razorpayAdapter } from "@/lib/payments/razorpay";
 import { PaymentGatewayError } from "@/lib/payments/types";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { rejectIfPaymentMethodDisabled } from "@/lib/payment-settings";
 
 // This route is now a thin, behavior-preserving wrapper around
 // lib/payments/razorpay.ts (see PROJECT_SOURCE_OF_TRUTH.md §16 — "wrapper
@@ -23,10 +23,16 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(request);
     if (!session?.user?.id) {
       return withCORS(NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 }));
     }
+
+    // verify-payment and the webhook are deliberately NOT gated: once a
+    // payment is captured it must still be fulfilled even if online payment
+    // was switched off in between.
+    const razorpayDisabled = await rejectIfPaymentMethodDisabled("razorpay");
+    if (razorpayDisabled) return razorpayDisabled;
 
     const { items: rawItems, couponCode, shippingAddress } = await request.json();
 

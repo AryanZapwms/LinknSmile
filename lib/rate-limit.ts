@@ -79,6 +79,14 @@ export const otpLimiter = (ip: string) => rateLimit("otp", ip, { limit: 5, windo
 
 export const loginLimiter = (ip: string) => rateLimit("login", ip, { limit: 10, windowMs: 60_000 }); // 10 attempts per minute
 
+// Mobile login: per IP (loginLimiter above) AND per email, so rotating IPs
+// doesn't allow unlimited guesses at one account.
+export const loginEmailLimiter = (email: string) =>
+  rateLimit("login-email", email, { limit: 10, windowMs: 15 * 60_000 }); // 10 per 15 min
+
+export const refreshLimiter = (ip: string) =>
+  rateLimit("mobile-refresh", ip, { limit: 30, windowMs: 60_000 }); // 30 per minute
+
 export const paymentLimiter = (ip: string) =>
   rateLimit("payment", ip, { limit: 5, windowMs: 60_000 }); // 5 payment attempts per minute
 

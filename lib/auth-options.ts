@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { verifyPassword } from "@/lib/auth";
+import { readAuthState, isAuthStateRevoked, type AuthState } from "@/lib/auth-state";
 import { LOCALE_COOKIE } from "@/i18n/request";
 import { resolveLocaleFromCookieValue } from "@/lib/i18n-config";
 
@@ -126,19 +127,16 @@ export const authOptions: NextAuthOptions = {
       // from the DB (callers such as app/vendor-apply save them first).
       const isStale = !token.checkedAt || Date.now() - token.checkedAt > DB_RECHECK_MS;
       if (trigger === "update" || isStale) {
-        let dbUser: { isActive?: boolean; role?: string; shopId?: unknown } | null;
+        let dbUser: AuthState | null;
         try {
-          await connectDB();
-          dbUser = await User.findById(token.id)
-            .select("isActive role shopId")
-            .lean<{ isActive?: boolean; role?: string; shopId?: unknown }>();
+          dbUser = await readAuthState(token.id);
         } catch (err) {
           // DB unavailable: keep the current token rather than logging
           // everyone out; the check is retried on the next request.
           console.error("[auth] jwt re-check failed, keeping token", err);
           return token;
         }
-        if (!dbUser || dbUser.isActive === false) {
+        if (!dbUser || isAuthStateRevoked(dbUser)) {
           // next-auth catches this, clears the session cookie and treats the
           // request as signed out (getServerSession() returns null).
           throw new Error("SessionRevoked");

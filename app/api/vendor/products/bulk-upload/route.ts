@@ -1,13 +1,13 @@
 // app/api/vendor/products/bulk-upload/route.ts
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
 import { Category } from "@/lib/models/category";
 import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 import Papa from "papaparse";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { requireVendor } from "@/lib/vendor-guard";
 
 const VALID_ORIGINS = ["made-in-india", "foreign-made", "unspecified"] as const;
 const MAX_ROWS = 500;
@@ -38,7 +38,9 @@ export async function POST(req: NextRequest) {
   if (req.method === "OPTIONS") return withCORS(new NextResponse(null));
 
   try {
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req, { subscription: true, approval: true });
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
     if (!session) {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }

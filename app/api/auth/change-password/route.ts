@@ -5,8 +5,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { compare } from "bcryptjs";
 import { hashPassword } from "@/lib/auth";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 export async function OPTIONS() {
   return withCORS(new NextResponse(null, { status: 204 }));
@@ -37,9 +36,8 @@ export async function POST(req: Request) {
     }
 
     // ── Authenticate caller ─────────────────────────────────────────────────
-    // Mobile sends the NextAuth JWT as a Cookie header (handled by api.ts
-    // interceptor), so getServerSession works identically for web and mobile.
-    const session = await getServerSession(authOptions);
+    // Web session cookie, or mobile Bearer access token (lib/get-auth-user.ts).
+    const session = await getAuthSession(req);
 
     if (!session?.user?.email) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));

@@ -12,16 +12,19 @@
 // (including rejections, which are logged for the runbook:
 // docs/runbooks/razorpay-payment-alerts.md).
 //
-// Razorpay orders with no RazorpayCheckout record — vendor subscription
-// renewals (handled by app/api/vendor/subscription/verify-payment) and
-// storefront checkouts created before this record existed — are
-// acknowledged with 200 and ignored.
+// Vendor subscription renewals are completed here too, through their
+// SubscriptionCheckout record (lib/subscription-checkout-fulfillment.ts),
+// so a vendor who pays and closes the tab is still renewed. Orders with
+// neither record — renewals and storefront checkouts created before those
+// records existed — are acknowledged with 200 and ignored.
 
 import crypto from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import { RazorpayCheckout } from "@/lib/models/razorpay-checkout";
 import { fulfilRazorpayCheckout } from "@/lib/razorpay-fulfillment";
+import { SubscriptionCheckout } from "@/lib/models/subscription-checkout";
+import { fulfilSubscriptionCheckout } from "@/lib/subscription-checkout-fulfillment";
 
 function signatureValid(rawBody: string, signature: string | null, secret: string): boolean {
   if (!signature) return false;
@@ -76,8 +79,22 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
     if (!(await RazorpayCheckout.exists({ razorpayOrderId }))) {
-      // Expected for vendor subscription payments; for storefront payments
-      // this means a pre-deploy checkout — see the runbook.
+      // Vendor subscription renewal (lib/subscription-checkout-fulfillment.ts).
+      if (await SubscriptionCheckout.exists({ razorpayOrderId })) {
+        const sub = await fulfilSubscriptionCheckout({ razorpayOrderId, razorpayPaymentId, source: "webhook" });
+        switch (sub.kind) {
+          case "fulfilled":
+            return ok({ received: true, subscriptionId: sub.subscriptionId, alreadyDone: sub.alreadyDone });
+          case "in_progress":
+          case "lookup_failed":
+          case "not_captured":
+            return retryLater(sub.kind);
+          default:
+            return ok({ received: true, outcome: sub.kind });
+        }
+      }
+      // Subscription orders created before SubscriptionCheckout existed, and
+      // pre-deploy storefront checkouts — see the runbook.
       console.warn("[Razorpay webhook] WEBHOOK_IGNORED_UNKNOWN_ORDER", {
         razorpayOrderId,
         razorpayPaymentId,

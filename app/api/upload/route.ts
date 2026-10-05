@@ -1,9 +1,8 @@
 // app/api/upload/route.ts
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { getImageProvider, ImageStorageError } from "@/lib/storage";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 export async function POST(request: NextRequest) {
   if (request.method === "OPTIONS") {
@@ -11,7 +10,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(request);
 
     if (!session?.user || (session.user.role !== "admin" && session.user.role !== "shop_owner")) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));

@@ -4,14 +4,13 @@
 // vendor account" reminder.
 import { withCORS } from "@/lib/cors";
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
+import { getAuthSession } from "@/lib/get-auth-user";
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(req);
     if (!session?.user?.id) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }

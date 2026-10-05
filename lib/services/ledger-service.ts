@@ -435,6 +435,9 @@ export class LedgerService {
 
     const session = await mongoose.startSession();
     session.startTransaction();
+    // Wallets frozen by this refund; their audit rows are written only after
+    // commit, so a rollback can never leave an audit row without its ledger entry.
+    const frozen: Array<{ walletId: string; shopId: mongoose.Types.ObjectId; refundAmount: number }> = [];
 
     try {
       for (const item of params.items) {
@@ -474,17 +477,19 @@ export class LedgerService {
           { session }
         );
 
-        // Freeze wallet if balance goes negative
-        const newWithdrawable = wallet.withdrawableBalance - deductFromWithdrawable;
-        if (newWithdrawable < 0) {
+        // Freeze wallet if the vendor's balance goes negative (refund larger
+        // than what they still hold, i.e. after a payout). Checked on the
+        // total: the split above never takes withdrawable below zero (the
+        // excess comes out of pending), so testing withdrawable alone, as
+        // this used to, could never trigger.
+        const newTotal =
+          wallet.withdrawableBalance - deductFromWithdrawable + (wallet.pendingBalance - deductFromPending);
+        if (newTotal < 0) {
           await Wallet.findByIdAndUpdate(wallet._id, { status: "FROZEN" }, { session });
-          await AuditLog.create({
-            action: "WALLET_AUTO_FROZEN_NEGATIVE_BALANCE",
-            performedBy: "SYSTEM",
-            targetEntity: "Wallet",
-            targetId: (wallet._id as any).toString(),
+          frozen.push({
+            walletId: (wallet._id as any).toString(),
             shopId: wallet.shopId,
-            reason: `Post-payout refund caused negative balance. Amount: ${formatCurrency(item.refundAmount)}`,
+            refundAmount: item.refundAmount,
           });
         }
 
@@ -516,6 +521,21 @@ export class LedgerService {
       throw error;
     } finally {
       session.endSession();
+    }
+
+    for (const f of frozen) {
+      await writeAuditLogAfterCommit(
+        {
+          action: "WALLET_AUTO_FROZEN_NEGATIVE_BALANCE",
+          performedBy: "SYSTEM",
+          targetEntity: "Wallet",
+          targetId: f.walletId,
+          shopId: f.shopId,
+          reason: `Post-payout refund caused negative balance. Amount: ${formatCurrency(f.refundAmount)}`,
+          metadata: { refundId: params.refundId, orderId: params.orderId, refundAmount: f.refundAmount },
+        },
+        { refundId: params.refundId, orderId: params.orderId, shopId: String(f.shopId), amount: f.refundAmount }
+      );
     }
   }
 
