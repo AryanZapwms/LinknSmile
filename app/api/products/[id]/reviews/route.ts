@@ -6,8 +6,7 @@ import { Review } from "@/lib/models/review";
 import { Product } from "@/lib/models/product";
 import { Order } from "@/lib/models/order";
 import Shop from "@/lib/models/shop";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 const emptySummary = {
   total: 0,
@@ -101,7 +100,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(request);
     if (!session?.user?.id) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }

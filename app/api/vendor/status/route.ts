@@ -1,13 +1,13 @@
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import Shop from "@/lib/models/shop";
 import { VendorSubscription } from "@/lib/models/vendor-subscription";
 import { getSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 import { VendorMouAcceptance } from "@/lib/models/vendor-mou-acceptance";
 import { CURRENT_MOU_VERSION } from "@/lib/mou-content";
+import { vendorBlockCode } from "@/lib/vendor-guard";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(req);
 
     if (!session || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
@@ -68,6 +68,15 @@ export async function GET(req: NextRequest) {
         isActive: shop.isActive,
         mouAccepted: !!mouAcceptance,
         mouVersion: CURRENT_MOU_VERSION,
+        // First gate that blocks the selling features, or null — same order
+        // as lib/vendor-guard.ts. MOU_REQUIRED blocks the whole vendor area;
+        // SUBSCRIPTION_EXPIRED blocks orders/products/coupons/reviews only
+        // (wallet, payouts, bank details stay open). Selling features also
+        // need isApproved (SHOP_PENDING).
+        blockingCode: vendorBlockCode(
+          { mouAccepted: !!mouAcceptance, access, isApproved: !!shop.isApproved },
+          { subscription: true }
+        ),
         subscription: {
           status: access.status,
           expiryDate: subscription?.expiryDate ?? null,

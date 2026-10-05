@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { Order } from "@/lib/models/order";
 import mongoose from "mongoose";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { requireVendor } from "@/lib/vendor-guard";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const guard = await requireVendor(req, { subscription: true, approval: true });
+  if (!guard.ok) return guard.response;
+  const session = await getAuthSession(req);
   if (!session?.user?.shopId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

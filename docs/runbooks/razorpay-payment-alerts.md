@@ -89,10 +89,13 @@ yet".
 
 **Meaning:** a payment arrived for a Razorpay order that has no
 `razorpaycheckouts` record.
-- `WEBHOOK_IGNORED_UNKNOWN_ORDER` (a warning, from the webhook) is
-  **expected for every vendor subscription payment**: subscriptions don't
-  create checkout records and are handled by
-  `/api/vendor/subscription/verify-payment`.
+- `WEBHOOK_IGNORED_UNKNOWN_ORDER` (a warning, from the webhook) means the
+  order has neither a storefront `razorpaycheckouts` record nor a
+  `subscriptioncheckouts` record. Vendor subscription renewals started
+  after the mobile-contract deploy have a `subscriptioncheckouts` record and
+  are completed by the webhook (see "Subscription renewals" below); only
+  renewals started before that deploy still show up here, handled by
+  `/api/vendor/subscription/verify-payment` as before.
 - `UNKNOWN_ORDER` (an error, from the browser verify) is not expected
   in normal operation. Right after a deploy of this feature it means a
   customer started paying on the old code and finished on the new code.
@@ -132,6 +135,33 @@ order.
 | `[LedgerService] AUDIT_LOG_WRITE_FAILED` | A sale/payout WAS committed to the ledger and wallet, but its `auditlogs` row couldn't be written. | n/a (money is correct) | Nothing is lost financially. Check why Mongo writes to `auditlogs` fail; the line has action, order/payout id, actor and amounts if you want to backfill the audit row. |
 | `INVALID_SIGNATURE` (webhook) | Request to the webhook with a wrong/missing signature. | No | A few: noise/probing. Constant: the secret in `shared/.env` doesn't match the Dashboard. |
 | `RAZORPAY_WEBHOOK_SECRET is not set` | Webhook is failing closed with 503. | No | Set the secret (see Deployment.md → Razorpay webhook) and reload PM2. |
+
+## Subscription renewals (`[Razorpay subscription] …`)
+
+Vendor subscription renewals go through `subscriptioncheckouts` records
+(written by `/api/vendor/subscription/create-order`) and are completed by
+whichever arrives first, the browser verify or the `payment.captured`
+webhook — `lib/subscription-checkout-fulfillment.ts`. The tags mean the
+same as their storefront counterparts above, with the shop instead of an order:
+
+| Tag | Money taken? | Action |
+|---|---|---|
+| `NOT_CAPTURED`, `PAYMENT_LOOKUP_FAILED`, `IN_PROGRESS` | Maybe | Released/retried automatically (webhook 503). Check the checkout is `fulfilled` a few minutes later. |
+| `AMOUNT_MISMATCH`, `ORDER_ID_MISMATCH` | Yes | Not renewed; checkout `rejected`. Refund, then investigate the shop. |
+| `SHOP_MISMATCH` | Not by them | A vendor tried to verify another shop's renewal. The real owner is unaffected. |
+| `SECOND_PAYMENT_FOR_ORDER` | Yes (twice) | Refund the payment in the log line, not `firstPaymentId`. |
+| `PAYMENT_ID_REUSED` | — | Investigate; should not happen. |
+| `FULFILMENT_ERROR` | Yes | Claim released; the webhook retries. If it keeps failing, fix the cause and resend the webhook. |
+
+Look up a renewal: `db.subscriptioncheckouts.findOne({ razorpayOrderId: "order_XXXX" })`.
+
+## Mobile auth and push
+
+| Tag | Meaning | Action |
+|---|---|---|
+| `[mobile-auth] REFRESH_TOKEN_REUSE` | An old (already rotated) refresh token was presented again; that device login was revoked. Usually a buggy client retry, possibly a stolen token. | One-offs: nothing (the user logs in again). Many for one `userId`: ask the user to change their password. Many across users: app bug in token storage. |
+| `[push] …` | Expo push request or ticket failed. Sending is off unless `PUSH_NOTIFICATIONS_ENABLED=true`. | Never blocks orders or payouts. Check Expo status / credentials if persistent. |
+| `[account-deletion] AUDIT_LOG_WRITE_FAILED` | A user deleted their account (done), but its audit row wasn't written. | Nothing lost; the user record has `deletedAt`. |
 
 ## Abandoned checkouts
 

@@ -1,12 +1,11 @@
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import Shop from "@/lib/models/shop";
 import { VendorMouAcceptance } from "@/lib/models/vendor-mou-acceptance";
 import { CURRENT_MOU_VERSION, getMouMarkdown } from "@/lib/mou-content";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -14,7 +13,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(req);
     if (!session || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
@@ -63,7 +62,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(req);
     if (!session || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }

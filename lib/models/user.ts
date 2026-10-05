@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema(
     // before this field existed; email sending falls back to "en" in that
     // case (see lib/email-locale.ts), never assumed.
     locale: { type: String },
+
+    // Set when the user deleted their account (DELETE /api/users/me): the
+    // record is kept, anonymized and inactive, so orders keep a valid owner.
+    deletedAt: { type: Date },
   },
   { timestamps: true }
 );

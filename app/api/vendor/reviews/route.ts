@@ -1,12 +1,12 @@
 import { withCORS } from "@/lib/cors";
 import mongoose from "mongoose";
 import { NextResponse, type NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Review } from "@/lib/models/review";
 import { Product } from "@/lib/models/product";
 import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { requireVendor } from "@/lib/vendor-guard";
 
 function buildSummary(reviews: any[]) {
   if (!reviews.length) {
@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(request, { subscription: true, approval: true });
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(request);
     if (!session || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }

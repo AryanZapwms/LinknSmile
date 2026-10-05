@@ -1,12 +1,13 @@
 import { withCORS } from "@/lib/cors";
 import { type NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { VendorSubscription } from "@/lib/models/vendor-subscription";
 import { VendorSubscriptionSettings } from "@/lib/models/vendor-subscription-settings";
+import { SubscriptionCheckout, SUBSCRIPTION_CHECKOUT_TTL_MS } from "@/lib/models/subscription-checkout";
 import { CURRENCY_CODE } from "@/lib/currency";
 import { razorpayAdapter } from "@/lib/payments/razorpay";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { blockMobileSubscriptionPayment } from "@/lib/subscription-mobile";
 
 // Thin, behavior-preserving wrapper around lib/payments/razorpay.ts — see
 // app/api/razorpay/create-order for the same pattern. Response shape
@@ -19,10 +20,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(request);
     if (!session?.user?.id || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 }));
     }
+    const mobileBlocked = await blockMobileSubscriptionPayment(session.user);
+    if (mobileBlocked) return mobileBlocked;
 
     const shopId = session.user.shopId;
     if (!shopId) {
@@ -40,6 +43,18 @@ export async function POST(request: NextRequest) {
     const currency = settings.currency || CURRENCY_CODE;
 
     const razorpayOrder = await razorpayAdapter.createPaymentOrder({ amount, currency });
+
+    // Lets the Razorpay webhook renew this shop even if the vendor closes the
+    // tab before verify-payment runs (lib/subscription-checkout-fulfillment.ts).
+    await SubscriptionCheckout.create({
+      razorpayOrderId: razorpayOrder.gatewayOrderId,
+      shopId,
+      userId: session.user.id,
+      amount,
+      amountMinor: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      expiresAt: new Date(Date.now() + SUBSCRIPTION_CHECKOUT_TTL_MS),
+    });
 
     // Track the pending attempt so the admin table can see "payment initiated".
     // verify-payment remains the source of truth for actually activating access.

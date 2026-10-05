@@ -11,6 +11,7 @@ import mongoose from "mongoose";
 import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
+import { getAuthUser } from "@/lib/get-auth-user";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     // not found on the public detail endpoint so a saved link can't be used
     // to view/buy around the storefront hide. Data itself is untouched.
     if (product.hiddenBySubscription) {
+      return withCORS(NextResponse.json({ error: "Product not found" }, { status: 404 }));
+    }
+
+    // Deactivated products (admin toggle, or the vendor exited) are not
+    // public either. Admins still get them: the admin edit page loads here.
+    if (product.isActive === false && (await getAuthUser(request))?.role !== "admin") {
       return withCORS(NextResponse.json({ error: "Product not found" }, { status: 404 }));
     }
 

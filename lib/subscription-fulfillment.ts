@@ -23,6 +23,13 @@ const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 export interface FulfillSubscriptionParams {
   shopId: string;
   gateway: GatewayInfo;
+  /**
+   * The caller has already matched this gateway order to this shop through
+   * a SubscriptionCheckout record (lib/subscription-checkout-fulfillment.ts),
+   * so the order doesn't have to be the latest one stored on the
+   * subscription (a vendor may start renewal twice and pay the first).
+   */
+  checkoutVerified?: boolean;
 }
 
 export interface FulfillSubscriptionResult {
@@ -34,16 +41,17 @@ export interface FulfillSubscriptionResult {
 export async function fulfillSubscriptionPayment(
   params: FulfillSubscriptionParams
 ): Promise<FulfillSubscriptionResult> {
-  const { shopId, gateway } = params;
+  const { shopId, gateway, checkoutVerified } = params;
 
   await connectDB();
 
   const subscription = await VendorSubscription.findOne({ shopId });
   if (
     !subscription ||
-    (gateway.paymentMethod === "razorpay"
-      ? subscription.razorpayOrderId !== gateway.gatewayOrderId
-      : subscription.gatewayOrderId !== gateway.gatewayOrderId)
+    (!checkoutVerified &&
+      (gateway.paymentMethod === "razorpay"
+        ? subscription.razorpayOrderId !== gateway.gatewayOrderId
+        : subscription.gatewayOrderId !== gateway.gatewayOrderId))
   ) {
     throw new Error("No matching subscription order found");
   }

@@ -6,11 +6,10 @@
 // so admin-side approval works identically either way.
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import Shop from "@/lib/models/shop";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 export async function POST(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -18,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAuthSession(req);
     if (!session?.user?.id) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }

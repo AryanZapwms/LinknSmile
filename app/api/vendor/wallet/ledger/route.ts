@@ -1,12 +1,12 @@
 // app/api/vendor/wallet/ledger/route.ts
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { LedgerEntry } from "@/lib/models/ledger";
 import { Wallet } from "@/lib/models/wallet";
 import Shop from "@/lib/models/shop";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { requireVendor } from "@/lib/vendor-guard";
 
 export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -14,7 +14,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req);
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
     if (!session?.user?.email) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }

@@ -1,16 +1,18 @@
 // app/api/vendor/wallet/route.ts
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Shop from "@/lib/models/shop";
 import { Wallet } from "@/lib/models/wallet";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { requireVendor } from "@/lib/vendor-guard";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req);
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
     if (!session?.user?.id || session.user.role !== "shop_owner") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

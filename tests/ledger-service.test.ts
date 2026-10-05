@@ -193,3 +193,81 @@ describe("LedgerService: failures inside the transaction", () => {
     expect(await LedgerEntry.countDocuments({ referenceId: orderId })).toBe(0);
   });
 });
+
+describe("LedgerService.recordRefund: wallet auto-freeze audit row after commit", () => {
+  // Vendor already paid out: withdrawable 100, refund 300 → negative → frozen.
+  async function paidOutVendor() {
+    const shopId = newId();
+    await Wallet.create({ shopId, type: "VENDOR", withdrawableBalance: 100, pendingBalance: 0 });
+    return shopId;
+  }
+  const refund = (shopId: string, refundId = newId()) =>
+    LedgerService.recordRefund({
+      orderId: newId(),
+      refundId,
+      items: [{ shopId, refundAmount: 300, commissionReversal: 0 }],
+    });
+  const frozenAudits = (shopId: string) =>
+    AuditLog.countDocuments({ action: "WALLET_AUTO_FROZEN_NEGATIVE_BALANCE", shopId: new mongoose.Types.ObjectId(shopId) });
+
+  it("writes the audit row once, after the refund commits", async () => {
+    const shopId = await paidOutVendor();
+    const refundId = newId();
+    const tx = trackTransactionCalls();
+    const order: string[] = [];
+    const realCreate = AuditLog.create.bind(AuditLog);
+    vi.spyOn(AuditLog, "create").mockImplementation(((doc: any) => {
+      order.push(tx.events.includes("commit") ? "audit-after-commit" : "audit-before-commit");
+      return realCreate(doc);
+    }) as any);
+    try {
+      await refund(shopId, refundId);
+    } finally {
+      tx.restore();
+    }
+    expect(order).toEqual(["audit-after-commit"]);
+    expectNoAbortAfterCommit(tx.events);
+    expect((await Wallet.findOne({ shopId, type: "VENDOR" }).lean())?.status).toBe("FROZEN");
+    const audit = await AuditLog.findOne({ action: "WALLET_AUTO_FROZEN_NEGATIVE_BALANCE", shopId: new mongoose.Types.ObjectId(shopId) }).lean<any>();
+    expect(audit?.metadata).toMatchObject({ refundId, refundAmount: 300 });
+  });
+
+  it("a failure after the freeze step rolls everything back and leaves NO audit row", async () => {
+    const shopId = await paidOutVendor();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    // Fail inside the transaction, after the freeze (platform wallet lookup is next).
+    const realFindOne = Wallet.findOne.bind(Wallet);
+    vi.spyOn(Wallet, "findOne").mockImplementation(((filter: any, ...rest: any[]) => {
+      if (filter?.type === "PLATFORM_REVENUE") throw new Error("failure after freeze (test)");
+      return (realFindOne as any)(filter, ...rest);
+    }) as any);
+    const tx = trackTransactionCalls();
+    try {
+      await expect(refund(shopId)).rejects.toThrow("failure after freeze (test)");
+    } finally {
+      tx.restore();
+    }
+    expect(tx.events).toEqual(["abort"]);
+    expect(await frozenAudits(shopId)).toBe(0);
+    const wallet = await Wallet.findOne({ shopId, type: "VENDOR" }).lean();
+    expect(wallet).toMatchObject({ withdrawableBalance: 100, status: "ACTIVE" });
+    expect(await LedgerEntry.countDocuments({ shopId, type: "REFUND" })).toBe(0);
+  });
+
+  it("an audit write failure after commit keeps the refund committed and logs AUDIT_LOG_WRITE_FAILED", async () => {
+    const shopId = await paidOutVendor();
+    const refundId = newId();
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(AuditLog, "create").mockRejectedValueOnce(new Error("audit-log write failed (test)"));
+    const tx = trackTransactionCalls();
+    try {
+      await expect(refund(shopId, refundId)).resolves.toBeUndefined();
+    } finally {
+      tx.restore();
+    }
+    expectNoAbortAfterCommit(tx.events);
+    expect(await LedgerEntry.countDocuments({ shopId, type: "REFUND" })).toBe(1);
+    expect((await Wallet.findOne({ shopId, type: "VENDOR" }).lean())?.status).toBe("FROZEN");
+    auditFailureLogged(errorSpy, { refundId, shopId, amount: 300 });
+  });
+});

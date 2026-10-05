@@ -1,15 +1,17 @@
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
 import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { requireVendor } from "@/lib/vendor-guard";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req, { subscription: true, approval: true });
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
 
     if (!session || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
@@ -54,7 +56,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req, { subscription: true, approval: true });
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
 
     if (!session || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
@@ -145,7 +149,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req, { subscription: true, approval: true });
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
 
     if (!session || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));

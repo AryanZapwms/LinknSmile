@@ -1,67 +1,21 @@
 // app/api/cart/route.ts
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Cart } from "@/lib/models/cart";
 import { Product } from "@/lib/models/product";
-import jwt from "jsonwebtoken";
+import { getAuthUser } from "@/lib/get-auth-user";
 
-// // Temporary — add at top of GET handler
-// const authHeader = req.headers.get("authorization")
-// const token = authHeader?.substring(7)
-// if (token) {
-//   // Decode WITHOUT verifying to see what's inside
-//   const decoded = JSON.parse(
-//     Buffer.from(token.split('.')[1], 'base64').toString()
-//   )
-//   console.log("📦 Token payload:", decoded)
-//   console.log("🔑 Token issued at:", new Date(decoded.iat * 1000))
-//   console.log("⏰ Token expires at:", new Date(decoded.exp * 1000))
-// }
-
-// ─────────────────────────────────────────────
-// Helper: resolve user ID from either auth method
-// Supports:
-//   1. NextAuth cookie session (web app)
-//   2. JWT Bearer token (mobile app)
-// ─────────────────────────────────────────────
+// Web session cookie or mobile Bearer access token (lib/get-auth-user.ts).
+// The old HS256 Bearer path (tokens from the unused /api/auth/login,
+// signed with the raw NEXTAUTH_SECRET) is no longer accepted.
 async function getUserId(req: NextRequest): Promise<string | null> {
-  // 1. Try NextAuth session first (web)
   try {
-    const session = await getServerSession(authOptions);
-    if (session?.user?.id) {
-      console.log("✅ Auth via NextAuth session, userId:", session.user.id);
-      return session.user.id;
-    }
+    return (await getAuthUser(req))?.id ?? null;
   } catch (e) {
-    console.warn("⚠️ getServerSession failed:", e);
+    console.warn("⚠️ cart auth failed:", e);
+    return null;
   }
-
-  // 2. Try Bearer token (mobile)
-  const authHeader = req.headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.substring(7);
-    try {
-      const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
-      if (!secret) {
-        console.error("❌ No JWT_SECRET or NEXTAUTH_SECRET set in env");
-        return null;
-      }
-      const decoded = jwt.verify(token, secret) as { id: string };
-      if (decoded?.id) {
-        console.log("✅ Auth via Bearer token, userId:", decoded.id);
-        return decoded.id;
-      }
-    } catch (e) {
-      console.error("❌ JWT verification failed:", e);
-      return null;
-    }
-  }
-
-  console.warn("⚠️ No valid auth found (no session, no valid Bearer token)");
-  return null;
 }
 
 // ─────────────────────────────────────────────

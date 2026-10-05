@@ -4,34 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
 import { existsSync } from "fs";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// These are all your real API route folders under app/api/
-// The catch-all must NOT intercept these — Next.js handles them directly.
-// ─────────────────────────────────────────────────────────────────────────────
-const RESERVED_API_PREFIXES = [
-  "auth",
-  "products",
-  "categories",
-  "cart",
-  "orders",
-  "users",
-  "vendor",
-  "admin",
-  "promos",
-  "blogs",
-  "upload",
-  "razorpay",
-  "cron",
-  "setup",
-  "email",
-  "debug",
-  "test",
-  "serve-files",
-  "serve-upload",
-  "temp-update-categories",
-  "mobile-auth",
-];
+// Real API route folders under app/api/ — the catch-all must NOT treat
+// requests under these as file lookups (see lib/reserved-api-prefixes.ts).
+import { RESERVED_API_PREFIXES } from "@/lib/reserved-api-prefixes";
 
 // Extensions this route is allowed to serve. Anything outside this list is
 // rejected before the filesystem is touched — closes off exposure of stray

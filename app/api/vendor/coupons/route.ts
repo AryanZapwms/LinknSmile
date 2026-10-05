@@ -1,11 +1,11 @@
 // app/api/vendor/coupons/route.ts
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Coupon } from "@/lib/models/coupon";
 import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { requireVendor } from "@/lib/vendor-guard";
 
 async function getShopIdForUser(userId: string, sessionShopId?: string) {
   await connectDB();
@@ -63,7 +63,9 @@ export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") return withCORS(new NextResponse(null));
 
   try {
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req, { subscription: true, approval: true });
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
     if (!session || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
@@ -94,7 +96,9 @@ export async function POST(req: NextRequest) {
   if (req.method === "OPTIONS") return withCORS(new NextResponse(null));
 
   try {
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req, { subscription: true, approval: true });
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
     if (!session) {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }

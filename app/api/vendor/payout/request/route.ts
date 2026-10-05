@@ -5,12 +5,12 @@ import { Wallet } from "@/lib/models/wallet";
 import { LedgerService } from "@/lib/services/ledger-service";
 import Shop from "@/lib/models/shop";
 import Payout from "@/lib/models/payout";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server";
 import { sendPushNotificationToVendor } from "@/lib/services/push-notification";
 import crypto from "crypto";
 import { formatCurrency } from "@/lib/currency";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { requireVendor } from "@/lib/vendor-guard";
 
 export async function POST(request: Request) {
   if (request.method === "OPTIONS") {
@@ -18,7 +18,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(request);
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(request);
     if (!session?.user?.email) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }

@@ -102,6 +102,12 @@ export async function computeOrderPricing(
       throw new PricingError(`"${product.name}" is no longer available`, 404);
     }
 
+    // Deactivated (by an admin, or because its vendor left the platform):
+    // the storefront no longer lists it, so a stale cart/link can't buy it.
+    if (product.isActive === false) {
+      throw new PricingError(`"${product.name}" is no longer available`, 404);
+    }
+
     const dbShopId = product.shopId?._id || product.shopId;
     if (!dbShopId) {
       throw new PricingError(`Product "${product.name}" is missing a valid vendor assignment.`, 400);

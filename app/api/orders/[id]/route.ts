@@ -3,7 +3,6 @@ import { withCORS } from "@/lib/cors";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
 import { User } from "@/lib/models/user";
-import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
 import { sendEmail, getOrderStatusUpdateEmail } from "@/lib/email";
 import { resolveEmailLocale } from "@/lib/email-locale";
@@ -11,6 +10,7 @@ import { sendPushNotificationToMultipleVendors } from "@/lib/services/push-notif
 
 import { Product } from "@/lib/models/product";
 import { Company } from "@/lib/models/company";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 void Product;
 void Company;
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
   try {
     const { id } = await context.params;
-    const session = await getServerSession();
+    const session = await getAuthSession(request);
     if (!session?.user?.email) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }
@@ -62,7 +62,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 
   try {
     const { id } = await context.params;
-    const session = await getServerSession();
+    const session = await getAuthSession(request);
     if (!session?.user?.email) {
       return withCORS(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
     }

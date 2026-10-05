@@ -1,13 +1,13 @@
 // app/api/vendor/products/route.ts
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
 import { Company } from "@/lib/models/company";
 import { Category } from "@/lib/models/category";
 import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
+import { getAuthSession } from "@/lib/get-auth-user";
+import { requireVendor } from "@/lib/vendor-guard";
 
 const VALID_ORIGINS = ["made-in-india", "foreign-made", "unspecified"] as const;
 
@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
   if (req.method === "OPTIONS") return withCORS(new NextResponse(null));
 
   try {
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req, { subscription: true, approval: true });
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
     if (!session || session.user.role !== "shop_owner") {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }
@@ -90,7 +92,9 @@ export async function POST(req: NextRequest) {
   if (req.method === "OPTIONS") return withCORS(new NextResponse(null));
 
   try {
-    const session = await getServerSession(authOptions);
+    const guard = await requireVendor(req, { subscription: true, approval: true });
+    if (!guard.ok) return guard.response;
+    const session = await getAuthSession(req);
     if (!session) {
       return withCORS(NextResponse.json({ message: "Unauthorized" }, { status: 401 }));
     }

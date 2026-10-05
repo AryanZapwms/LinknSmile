@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Address from "@/lib/models/address";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import { getAuthSession } from "@/lib/get-auth-user";
 
 export async function GET(req: NextRequest) {
   await connectDB();
-  const session = await getServerSession(authOptions);
+  const session = await getAuthSession(req);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const addresses = await Address.find({ userId: session.user.id }).sort({
@@ -18,7 +17,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   await connectDB();
-  const session = await getServerSession(authOptions);
+  const session = await getAuthSession(req);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
