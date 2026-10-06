@@ -14,6 +14,7 @@
 export * from "./errors";
 export * from "./common";
 export * from "./auth";
+export * from "./registration";
 export * from "./products";
 export * from "./pricing";
 export * from "./users";
@@ -24,6 +25,7 @@ export * from "./vendor";
 
 import type { ZodTypeAny } from "zod";
 import * as auth from "./auth";
+import * as registration from "./registration";
 import * as products from "./products";
 import * as pricing from "./pricing";
 import * as users from "./users";
@@ -51,6 +53,14 @@ export const MOBILE_ROUTES: RouteContract[] = [
   { method: "POST", path: "/api/mobile-auth/refresh", auth: "none", request: auth.refreshRequest, response: auth.refreshResponse, errorCodes: true },
   { method: "POST", path: "/api/mobile-auth/logout", auth: "optional", request: auth.logoutRequest, response: auth.logoutResponse, errorCodes: true },
   { method: "POST", path: "/api/auth/change-password", auth: "user", request: customer.changePasswordRequest, response: customer.changePasswordResponse },
+  // sign-up, email codes, password reset (older routes: no error codes)
+  { method: "POST", path: "/api/auth/register", auth: "none", request: registration.registerRequest, response: registration.registerResponse },
+  { method: "POST", path: "/api/auth/register-vendor", auth: "none", request: registration.registerVendorRequest, response: registration.registerVendorResponse },
+  { method: "POST", path: "/api/auth/verify-otp", auth: "none", request: registration.verifyOtpRequest, response: registration.verifyOtpResponse },
+  { method: "POST", path: "/api/auth/resend-otp", auth: "none", request: registration.resendOtpRequest, response: registration.messageResponse },
+  { method: "POST", path: "/api/auth/forgot-password", auth: "none", request: registration.forgotPasswordRequest, response: registration.messageResponse },
+  { method: "POST", path: "/api/auth/verify-reset-otp", auth: "none", request: registration.verifyResetOtpRequest, response: registration.messageResponse },
+  { method: "POST", path: "/api/auth/reset-password", auth: "none", request: registration.resetPasswordRequest, response: registration.messageResponse },
   // config & catalogue
   { method: "GET", path: "/api/app-config", auth: "none", response: appConfig.appConfigResponse },
   { method: "GET", path: "/api/products", auth: "none", request: products.productListQuery, response: products.productListResponse },
@@ -65,6 +75,8 @@ export const MOBILE_ROUTES: RouteContract[] = [
   { method: "POST", path: "/api/addresses", auth: "user", request: customer.addressCreateRequest, response: customer.address },
   { method: "PUT", path: "/api/addresses/:id", auth: "user", request: customer.addressUpdateRequest, response: customer.address },
   { method: "DELETE", path: "/api/addresses/:id", auth: "user" },
+  // Makes this address the default (and the user's others not). No body.
+  { method: "PATCH", path: "/api/addresses/:id", auth: "user", response: customer.address },
   { method: "GET", path: "/api/cart", auth: "user", response: customer.cartGetResponse },
   { method: "POST", path: "/api/cart", auth: "user", request: customer.cartPutRequest, response: customer.cartPostResponse },
   { method: "GET", path: "/api/favourites", auth: "user", response: customer.favouriteListResponse },
