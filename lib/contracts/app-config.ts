@@ -10,7 +10,17 @@ export const appConfigResponse = z.object({
   region: z.literal("IN"),
   currency: z.string(),
   support: z.object({ email: z.string(), phone: z.string() }),
-  payments: z.object({ cod: z.boolean(), razorpay: z.boolean() }),
+  payments: z.object({
+    cod: z.boolean(),
+    razorpay: z.boolean(),
+    /**
+     * Razorpay key id ("rzp_live_…" / "rzp_test_…") to open the payment sheet
+     * with: the same key the server creates Razorpay orders under. Public by
+     * design (never the key secret). null when online payment is off or not
+     * configured; absent on servers older than this field.
+     */
+    razorpayKeyId: z.string().nullable().optional(),
+  }),
   links: z.object({
     website: z.string().url(),
     privacyPolicy: z.string().url(),

@@ -2,7 +2,7 @@
 // Startup config for the mobile app: the minimum app version this backend
 // still supports (the app shows a forced-update screen below it), support
 // contacts (PlatformSettings, same source as the web footer), payment
-// options, and links. Public, no auth.
+// options (with the public Razorpay key id), and links. Public, no auth.
 //
 // MOBILE_MIN_SUPPORTED_VERSION (default "1.0.0") and optional
 // MOBILE_LATEST_VERSION are env vars so an incompatible backend change can
@@ -19,6 +19,21 @@ import { CURRENCY_CODE } from "@/lib/currency";
 export const dynamic = "force-dynamic";
 
 const DEFAULT_SUPPORT = { email: "support@linknsmile.com", phone: "+91 8355991099" };
+
+/**
+ * The Razorpay key id the app opens the payment sheet with. It is public by
+ * design (the website ships the same value to every browser as
+ * NEXT_PUBLIC_RAZORPAY_KEY_ID); the key SECRET never leaves the server.
+ * Read from RAZORPAY_KEY_ID, the key lib/payments/razorpay.ts creates orders
+ * under, because a payment only succeeds with the key its order belongs to.
+ * Anything that doesn't look like a key id is withheld, so a misconfigured
+ * variable can't publish something else.
+ */
+function razorpayKeyId(): string | null {
+  if ((process.env.PAYMENT_GATEWAY || "razorpay") !== "razorpay") return null;
+  const keyId = process.env.RAZORPAY_KEY_ID?.trim() ?? "";
+  return /^rzp_(test|live)_[A-Za-z0-9]+$/.test(keyId) ? keyId : null;
+}
 
 export async function OPTIONS() {
   return withCORS(new NextResponse(null, { status: 204 }));
@@ -56,7 +71,7 @@ export async function GET() {
       region: "IN",
       currency: CURRENCY_CODE,
       support,
-      payments,
+      payments: { ...payments, razorpayKeyId: payments.razorpay ? razorpayKeyId() : null },
       links: {
         website: siteUrl,
         privacyPolicy: `${siteUrl}/privacy-policy`,

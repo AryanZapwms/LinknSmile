@@ -37,7 +37,8 @@ Token rules:
 
 Failing requests on the endpoints below return `{ "error": "<message for people>", "code": "<CODE>" }`,
 sometimes with extra fields. Switch on `code`, show `error`. A few older endpoints (profile,
-addresses, cart, favourites, orders list, change-password) still return only `{ error }` or
+addresses, cart, favourites, orders list, change-password, and everything under
+[Sign-up and password reset](#sign-up-and-password-reset)) still return only `{ error }` or
 `{ message }`; use the HTTP status there.
 
 | Code | HTTP | Meaning / what the app should do |
@@ -86,6 +87,32 @@ Auth column: – none · opt optional · user signed in · vendor shop owner.
 
 Login is limited to 10 attempts per minute per IP and 10 per 15 minutes per email.
 
+### Sign-up and password reset
+
+Schemas: [`lib/contracts/registration.ts`](../lib/contracts/registration.ts). Codes are 6 digits,
+sent by email, valid for 10 minutes.
+
+| Endpoint | Auth | Request | Response |
+|---|---|---|---|
+| `POST /api/auth/register` (customer) | – | `{ name (≥2), email, password (≥6), confirmPassword, role?: "user" }` | **201** `{ message, email }`; a code is emailed |
+| `POST /api/auth/register-vendor` (seller) | – | `{ name, email, password, shopName, street, city, state, pincode, phone?, description?, gstNumber?, panNumber? }` | **201** `{ success, message, email }`; a code is emailed |
+| `POST /api/auth/verify-otp` | – | `{ email, otp }` | `{ message, role }`; the account now exists, log in |
+| `POST /api/auth/resend-otp` | – | `{ email }` | `{ message }` |
+| `POST /api/auth/forgot-password` | – | `{ email }` | `{ message }`, the same whether or not the email has an account |
+| `POST /api/auth/verify-reset-otp` | – | `{ email, otp }` | `{ message }`; the code stays usable |
+| `POST /api/auth/reset-password` | – | `{ email, otp, newPassword (≥6) }` | `{ message }`; the code is used up |
+
+- These routes have no error codes. Validation failures are 400: `register` sends `error` as an
+  array of `{ message, path }` issues, `register-vendor` sends `{ message }`, the others
+  `{ error }`.
+- `register` accepts only `role: "user"` (or no role). Sellers use `register-vendor`; their
+  shop is created at `verify-otp` and awaits approval (see [Vendor](#vendor)).
+- A wrong sign-up code is 400; after 5 wrong attempts `verify-otp` answers 429 and a new code is
+  needed. `resend-otp` answers 429 within 30 seconds of the previous code and after 10 codes in
+  a day, and 404 when there is no sign-up waiting for that email.
+- Password reset: 3 codes per 15 minutes per email and per IP, 10 code checks per 15 minutes
+  (429 with `Retry-After`), and a code is discarded after 5 wrong attempts.
+
 ### App start
 
 `GET /api/app-config` (no auth) returns:
@@ -97,7 +124,7 @@ Login is limited to 10 attempts per minute per IP and 10 per 15 minutes per emai
   "region": "IN",
   "currency": "INR",
   "support": { "email": "…", "phone": "…" },
-  "payments": { "cod": true, "razorpay": true },
+  "payments": { "cod": true, "razorpay": true, "razorpayKeyId": "rzp_live_…" },
   "links": { "website": "…", "privacyPolicy": "…", "terms": "…", "refundPolicy": "…" }
 }
 ```
@@ -105,6 +132,12 @@ Login is limited to 10 attempts per minute per IP and 10 per 15 minutes per emai
 If the app's version is below `minSupportedAppVersion` for its platform, block with a
 forced-update screen (`isBelowVersion()` in `lib/contracts/app-config.ts`). Show only the
 payment methods that `payments` enables.
+
+`payments.razorpayKeyId` is the Razorpay **key id** to open the payment sheet with, so the app
+needs no build-time key. It is the key the server creates Razorpay orders under (a payment only
+succeeds with the key its order belongs to) and is public by design; the key secret never leaves
+the server. It is `null` when online payment is turned off or not configured: don't offer
+Razorpay then. A value starting `rzp_test_` means the server is in Razorpay test mode.
 
 ### Catalogue and pricing
 
@@ -129,6 +162,7 @@ payment methods that `payments` enables.
 | `DELETE /api/users/push-token` | user | `{ token }` | `{ success }` |
 | `DELETE /api/users/me` | user | `{ confirm: "DELETE", password? }` | `{ success }` |
 | `GET/POST /api/addresses`, `PUT/DELETE /api/addresses/:id` | user | `{ label?, name, phone, street, city, state, pincode, isDefault? }` | address(es); POST returns **201** |
+| `PATCH /api/addresses/:id` | user | – (no body) | the address, now the default; the user's other addresses stop being the default |
 | `GET/POST /api/cart` | user | POST replaces the cart: `{ items[{ productId, name, slug, quantity, selectedSize? }] }` | `{ items, cart }` / `{ cart }` |
 | `GET/POST /api/favourites` | user | POST toggles: `{ type: "product"\|"seller", refId }` | list / `{ added }` |
 
