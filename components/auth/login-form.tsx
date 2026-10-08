@@ -21,6 +21,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
+import { resolvePostLoginPath } from "@/lib/post-login-redirect";
 
 export function LoginForm() {
   const t = useTranslations("LoginForm");
@@ -39,12 +40,24 @@ export function LoginForm() {
   const router = useRouter();
   const { data: session, update } = useSession();
 
+  const signedIn = !!session?.user;
+  const role = session?.user?.role;
+
+  // Where to go is decided in lib/post-login-redirect.ts (MOU first, then
+  // ?callbackUrl=, then the role's home). Keyed on the role rather than the
+  // session object, which is replaced on every update()/refetch.
   useEffect(() => {
-    if (session?.user) {
-      setIsRedirecting(true);
-      router.push(session.user.role === "admin" ? "/admin" : "/");
-    }
-  }, [session, router]);
+    if (!signedIn) return;
+    setIsRedirecting(true);
+    let cancelled = false;
+    const callbackUrl = new URLSearchParams(window.location.search).get("callbackUrl");
+    resolvePostLoginPath(role, callbackUrl).then((path) => {
+      if (!cancelled) router.push(path);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn, role, router]);
 
   // NextAuth redirects here with ?error=AccessDenied when the signIn
   // callback refuses a login (e.g. a deactivated Google account).
