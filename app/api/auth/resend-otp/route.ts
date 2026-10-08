@@ -90,6 +90,17 @@ export async function POST(request: NextRequest) {
       pendingName: latestOtp.pendingName,
       pendingPassword: latestOtp.pendingPassword,
       pendingRole: latestOtp.pendingRole,
+      // Seller sign-ups (register-vendor): verify-otp builds the shop from
+      // these. Dropping them here created a shop owner with no shop.
+      pendingPhone: latestOtp.pendingPhone,
+      pendingShopName: latestOtp.pendingShopName,
+      pendingShopDescription: latestOtp.pendingShopDescription,
+      pendingStreet: latestOtp.pendingStreet,
+      pendingCity: latestOtp.pendingCity,
+      pendingState: latestOtp.pendingState,
+      pendingPincode: latestOtp.pendingPincode,
+      pendingGstNumber: latestOtp.pendingGstNumber,
+      pendingPanNumber: latestOtp.pendingPanNumber,
     });
 
     const locale = resolveLocaleFromCookieValue(request.cookies.get(LOCALE_COOKIE)?.value);
