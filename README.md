@@ -374,7 +374,8 @@ HTTP methods and payloads):
 `admin/home-banner(+/[id],/reorder)`, `admin/hero-products(+/[id],/reorder)`,
 `admin/payment-settings(+/public)`, `admin/platform-settings`, `admin/payouts`,
 `admin/vendor-subscription-settings`, `admin/vendor-subscriptions(+/[shopId])`,
-`admin/vendors(+/[id])`, `admin/wallet-action`, `admin/wallet-overview`,
+`admin/vendors(+/[id])`, `admin/vendors/mou(+/remind)`, `admin/wallet-action`,
+`admin/wallet-overview`,
 `admin/images/{delete,scan}`
 
 **Cron** (bearer-token gated) — `cron/clear-pending-funds`, `cron/vendor-subscription-sweep`
@@ -438,6 +439,7 @@ Access at `/admin` — requires a session with `role: "admin"` (checked per-rout
 | Products (`/admin/products`, `/add`, `/edit/[id]`) | Product CRUD, toggle active/inactive |
 | Product Approvals (`/admin/product-approvals`) | Approve/reject vendor-submitted products |
 | Vendors (`/admin/vendors`, `/[id]`, `/subscriptions`) | Manage vendor status and subscriptions |
+| Vendor MOU (`/admin/vendors/mou`) | Which active vendors have accepted the current MOU version (`lib/mou-content.ts`); email reminders to those who haven't — one per vendor per 24h, each logged to `AuditLog` (`lib/vendor-mou-tracking.ts`) |
 | Categories (`/admin/categories`) | Category CRUD |
 | Promos (`/admin/promo-bar`) | Scrolling promo banner content |
 | Home Banner / Hero Products | Homepage carousel and featured-product merchandising |
@@ -610,6 +612,7 @@ generate an App Password from Google Account → Security.
 | Order confirmation (COD / Razorpay / Tap) | `lib/email.tsx` | Customer + Admin | Yes (customer copy) |
 | Order status update | `lib/email.tsx` | Customer | Yes |
 | Vendor payout / subscription notices | `lib/email.tsx` | Vendor / Admin | Yes (vendor copy), admin-only stay English |
+| Vendor MOU reminder (sent by an admin from `/admin/vendors/mou`) | `lib/email.tsx` | Vendor | Yes |
 
 > Email failures are caught gracefully and never block the primary transaction from completing.
 

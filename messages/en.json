@@ -1407,6 +1407,16 @@
     "supportNote": "This subscription fee is non-refundable. For billing queries, contact <a>support@linknsmile.com</a>.",
     "footerCopyright": "© 2026 Linknsmile"
   },
+  "EmailVendorMouReminder": {
+    "title": "Action needed: accept the Vendor MOU",
+    "greeting": "Hello {vendorName},",
+    "body": "You have not yet accepted the current Vendor Memorandum of Understanding (version {version}) for {shopName}.",
+    "accessNote": "Until you accept it, you cannot use your vendor panel.",
+    "howTo": "Sign in to your Linknsmile account and open your vendor panel. You will be asked to review and accept the MOU there — it only takes a minute.",
+    "ctaButton": "Review and accept the MOU",
+    "supportNote": "If you have already accepted it, please ignore this email. For any questions, contact <a>support@linknsmile.com</a>.",
+    "footerCopyright": "© 2026 Linknsmile"
+  },
   "EmailOtpVerification": {
     "subject": "Your verification code",
     "tagline": "Your Online Partner",

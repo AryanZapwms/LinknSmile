@@ -25,7 +25,8 @@ import {
   GalleryHorizontal,
   Star,
   Settings2,
-  House
+  House,
+  FileCheck2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,6 +63,7 @@ const navItems: NavItem[] = [
     label: "Vendor Subscriptions",
     icon: <CreditCard className="h-5 w-5" />,
   },
+  { href: "/admin/vendors/mou", label: "Vendor MOU", icon: <FileCheck2 className="h-5 w-5" /> },
 
   { href: "/admin/wallet", label: "Finance", icon: <DollarSign className="h-5 w-5" /> },
   { href: "/admin/payouts", label: "Vendor Payouts", icon: <DollarSign className="h-5 w-5" /> },

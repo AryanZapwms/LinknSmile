@@ -2,6 +2,7 @@
 import nodemailer from "nodemailer";
 import { formatCurrency, LOCALE } from "@/lib/currency";
 import { getEmailTranslator, isRtlLocale, resolveEmailLocale } from "@/lib/email-locale";
+import { escapeHtml } from "@/lib/escape-html";
 
 // Single source of truth for absolute links/domain text in these email
 // templates — mirrors the exact pattern already used in app/robots.ts and
@@ -1656,6 +1657,52 @@ export async function getVendorSubscriptionStorefrontWarningEmail({
             <p>${t("body", { shopName: `<strong>${shopName}</strong>`, hideDate: `<span dir="ltr">${hideDate.toLocaleDateString(LOCALE, { year: "numeric", month: "long", day: "numeric" })}</span>` })}</p>
             <p>${t("closing")}</p>
             <div style="text-align:center;"><a href="${SITE_URL}/vendor/settings" style="background:#e74c3c;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">${t("ctaButton")}</a></div>
+            ${subscriptionSupportNoteHtml(
+              t.rich("supportNote", {
+                a: (chunks) => `<a href="mailto:support@linknsmile.com">${chunks}</a>`,
+              }) as string
+            )}
+          </div>
+          <div class="footer"><p dir="ltr">${t("footerCopyright")}</p></div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+// Sent by an admin from /admin/vendors/mou (lib/vendor-mou-tracking.ts) to a
+// vendor who hasn't accepted the current MOU version.
+export async function getVendorMouReminderEmail({
+  vendorName,
+  shopName,
+  mouVersion,
+  locale,
+}: {
+  vendorName: string;
+  shopName: string;
+  mouVersion: string;
+  locale?: string;
+}) {
+  const resolvedLocale = resolveEmailLocale(locale);
+  const t = await getEmailTranslator(resolvedLocale, "EmailVendorMouReminder");
+  const dir = isRtlLocale(resolvedLocale) ? "rtl" : "ltr";
+
+  return `
+    <!DOCTYPE html>
+    <html lang="${resolvedLocale}" dir="${dir}">
+      <head><meta charset="UTF-8"><style>body{font-family:sans-serif;line-height:1.6;color:#333;}.container{max-width:600px;margin:20px auto;border:1px solid #eee;padding:20px;border-radius:10px;}.header{background:#f59e0b;color:white;padding:15px;text-align:center;border-radius:10px 10px 0 0;}.content{padding:20px;}.footer{text-align:center;font-size:12px;color:#888;margin-top:20px;}</style></head>
+      <body>
+        <div class="container">
+          <div class="header"><h1>${t("title")}</h1></div>
+          <div class="content">
+            <p>${t("greeting", { vendorName: escapeHtml(vendorName) })}</p>
+            <p>${t("body", {
+              shopName: `<strong>${escapeHtml(shopName)}</strong>`,
+              version: `<span dir="ltr">${escapeHtml(mouVersion)}</span>`,
+            })}</p>
+            <p>${t("accessNote")}</p>
+            <p>${t("howTo")}</p>
+            <div style="text-align:center;"><a href="${SITE_URL}/vendor/mou" style="background:#f59e0b;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">${t("ctaButton")}</a></div>
             ${subscriptionSupportNoteHtml(
               t.rich("supportNote", {
                 a: (chunks) => `<a href="mailto:support@linknsmile.com">${chunks}</a>`,
