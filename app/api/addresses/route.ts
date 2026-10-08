@@ -23,10 +23,6 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { label, name, phone, street, city, state, pincode, isDefault } = body;
 
-  if (isDefault) {
-    await Address.updateMany({ userId: session.user.id }, { isDefault: false });
-  }
-
   const address = await Address.create({
     userId: session.user.id,
     label,
@@ -38,6 +34,11 @@ export async function POST(req: NextRequest) {
     pincode,
     isDefault,
   });
+  // Only once the new address exists: clearing first left the user with no
+  // default address whenever the create failed validation.
+  if (isDefault) {
+    await Address.updateMany({ userId: session.user.id, _id: { $ne: address._id } }, { isDefault: false });
+  }
   return NextResponse.json(address, { status: 201 });
 }
 
