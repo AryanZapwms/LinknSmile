@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import { formatCurrency, LOCALE } from "@/lib/currency";
 import { getEmailTranslator, isRtlLocale, resolveEmailLocale } from "@/lib/email-locale";
 import { escapeHtml } from "@/lib/escape-html";
+import { VENDOR_MOU_PATH, loginPathWithCallback } from "@/lib/post-login-redirect";
 
 // Single source of truth for absolute links/domain text in these email
 // templates — mirrors the exact pattern already used in app/robots.ts and
@@ -1671,7 +1672,9 @@ export async function getVendorSubscriptionStorefrontWarningEmail({
 }
 
 // Sent by an admin from /admin/vendors/mou (lib/vendor-mou-tracking.ts) to a
-// vendor who hasn't accepted the current MOU version.
+// vendor who hasn't accepted the current MOU version. The button goes
+// through the login page with a callbackUrl, so a vendor who is signed out
+// still ends up on /vendor/mou; one who is signed in is passed straight on.
 export async function getVendorMouReminderEmail({
   vendorName,
   shopName,
@@ -1702,7 +1705,7 @@ export async function getVendorMouReminderEmail({
             })}</p>
             <p>${t("accessNote")}</p>
             <p>${t("howTo")}</p>
-            <div style="text-align:center;"><a href="${SITE_URL}/vendor/mou" style="background:#f59e0b;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">${t("ctaButton")}</a></div>
+            <div style="text-align:center;"><a href="${SITE_URL}${loginPathWithCallback(VENDOR_MOU_PATH)}" style="background:#f59e0b;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">${t("ctaButton")}</a></div>
             ${subscriptionSupportNoteHtml(
               t.rich("supportNote", {
                 a: (chunks) => `<a href="mailto:support@linknsmile.com">${chunks}</a>`,

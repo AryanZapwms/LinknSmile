@@ -197,7 +197,7 @@ describe("POST /api/admin/vendors/mou/remind", () => {
     expect(mail.sent[0].subject).toContain("A&B Store");
     const html = mail.sent[0].html;
     expect(html).toContain('dir="rtl"');
-    expect(html).toContain("/vendor/mou");
+    expect(html).toContain('href="http://localhost:3000/auth/login?callbackUrl=%2Fvendor%2Fmou"');
     expect(html).toContain(CURRENT_MOU_VERSION);
     expect(html).toContain("A&amp;B Store");
     expect(html).toContain("Tom &lt;b&gt;");

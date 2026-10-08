@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, FileCheck2, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { safeCallbackPath } from "@/lib/post-login-redirect";
 
 interface MouData {
   version: string;
@@ -149,11 +150,12 @@ function renderMouMarkdown(content: string): ReactNode[] {
 function VendorMouContent() {
   const t = useTranslations("VendorMouPage");
   const searchParams = useSearchParams();
-  const rawNext = searchParams.get("next");
-  // Only ever follow an internal, single-segment-rooted path — guards
-  // against an open redirect via a crafted ?next= (e.g. "https://evil.com"
-  // or the protocol-relative "//evil.com").
-  const next = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null;
+  // Only ever follow a path on this site — guards against an open redirect
+  // via a crafted ?next=. safeCallbackPath resolves the value the way the
+  // browser will, so "/\evil.com" and "/<tab>/evil.com" (which start with a
+  // single slash but navigate off-site) are dropped along with
+  // "https://evil.com" and the protocol-relative "//evil.com".
+  const next = safeCallbackPath(searchParams.get("next"));
 
   const [data, setData] = useState<MouData | null>(null);
   const [loading, setLoading] = useState(true);

@@ -308,6 +308,9 @@ LinknSmile uses **NextAuth.js v4** with a JWT session strategy and two providers
 2. NextAuth validates against the DB (bcrypt compare for credentials) or the Google profile.
 3. A JWT session is issued, stored in an HTTP-only cookie.
 4. Session is accessible via `useSession()` client-side or `getServerSession()` server-side.
+5. The login form then sends the user on (`lib/post-login-redirect.ts`): a vendor who hasn't
+   accepted the current MOU goes to `/vendor/mou`; otherwise to `?callbackUrl=` when it is a path
+   on this site; otherwise `/admin` for admins and `/` for everyone else.
 
 ### Password Reset
 
