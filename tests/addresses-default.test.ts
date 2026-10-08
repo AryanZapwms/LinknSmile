@@ -101,6 +101,41 @@ describe("PUT /api/addresses/:id (edit)", () => {
   });
 });
 
+describe("PUT /api/addresses/:id: only address fields can be changed", () => {
+  // Regression: the body used to be passed to the database update as it was,
+  // so a request could set `userId` and move its address into someone else's
+  // account, marked as their default delivery address.
+  const ownerOf = async (id: mongoose.Types.ObjectId) => String((await db.collection("addresses").findOne({ _id: id }))!.userId);
+
+  it("cannot move the address into another user's account", async () => {
+    const body = { userId: String(ravi._id), isDefault: true, street: "1 Elsewhere" };
+    expect(await statusOf(onItem("PUT", String(work), { bearer: asha.token, body }))).toBe(200);
+
+    expect(await ownerOf(work)).toBe(String(asha._id));
+    expect((await list(asha)).find((a) => String(a._id) === String(work))).toMatchObject({ street: "1 Elsewhere", isDefault: true });
+    // Ravi's addresses are exactly as they were.
+    expect(await list(ravi)).toHaveLength(1);
+    expect(await defaultsOf(ravi)).toEqual([String(ravisHome)]);
+  });
+
+  it("ignores update operators and fields that are not part of an address", async () => {
+    const body = { $set: { userId: String(ravi._id) }, _id: String(oid()), createdAt: "2000-01-01T00:00:00.000Z", city: "Mumbai" };
+    expect(await statusOf(onItem("PUT", String(work), { bearer: asha.token, body }))).toBe(200);
+
+    const stored = await db.collection("addresses").findOne({ _id: work });
+    expect(String(stored!.userId)).toBe(String(asha._id));
+    expect(stored!.city).toBe("Mumbai"); // the one real address field was applied
+    expect(new Date(stored!.createdAt).getFullYear()).toBeGreaterThan(2000);
+    expect(await list(ravi)).toHaveLength(1);
+  });
+
+  it("ignores values that are not text", async () => {
+    const body = { name: { $ne: null }, street: ["a"], city: "Mumbai" };
+    expect(await statusOf(onItem("PUT", String(work), { bearer: asha.token, body }))).toBe(200);
+    expect(await db.collection("addresses").findOne({ _id: work })).toMatchObject({ name: fields.name, street: fields.street, city: "Mumbai" });
+  });
+});
+
 describe("POST /api/addresses (add)", () => {
   it("with isDefault: true, the new address becomes the only default", async () => {
     const res = await call(collection.POST, "/api/addresses", { bearer: asha.token, body: { ...fields, label: "Other", isDefault: true } });
