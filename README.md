@@ -377,7 +377,7 @@ HTTP methods and payloads):
 `admin/home-banner(+/[id],/reorder)`, `admin/hero-products(+/[id],/reorder)`,
 `admin/payment-settings(+/public)`, `admin/platform-settings`, `admin/payouts`,
 `admin/vendor-subscription-settings`, `admin/vendor-subscriptions(+/[shopId])`,
-`admin/vendors(+/[id])`, `admin/vendors/mou(+/remind)`, `admin/wallet-action`,
+`admin/vendors(+/[id],/[id]/finance)`, `admin/vendors/mou(+/remind)`, `admin/wallet-action`,
 `admin/wallet-overview`,
 `admin/images/{delete,scan}`
 
@@ -443,6 +443,7 @@ Access at `/admin` — requires a session with `role: "admin"` (checked per-rout
 | Product Approvals (`/admin/product-approvals`) | Approve/reject vendor-submitted products |
 | Vendors (`/admin/vendors`, `/[id]`, `/subscriptions`) | Manage vendor status and subscriptions |
 | Vendor MOU (`/admin/vendors/mou`) | Which active vendors have accepted the current MOU version (`lib/mou-content.ts`); email reminders to those who haven't — one per vendor per 24h, each logged to `AuditLog` (`lib/vendor-mou-tracking.ts`) |
+| Vendor Finance (`/admin/vendors/[id]`, Finance tab) | Read-only view of one vendor's money, from `GET /api/admin/vendors/[id]/finance` (`lib/vendor-finance.ts`): wallet balances and status, the wallet checked against the ledger, warnings for the known ways a balance can be wrong (cancelled orders still credited, COD earnings missing, sales overdue for release, paid orders missing from the ledger, rejected payouts not given back, a stuck final settlement), payouts, ledger entries, the audit log, and bank details masked on the server. It has no actions and writes nothing |
 | Categories (`/admin/categories`) | Category CRUD |
 | Promos (`/admin/promo-bar`) | Scrolling promo banner content |
 | Home Banner / Hero Products | Homepage carousel and featured-product merchandising |
