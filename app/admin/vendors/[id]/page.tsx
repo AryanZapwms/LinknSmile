@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, LOCALE } from "@/lib/currency";
+import { FinancePanel } from "./FinancePanel";
 import {
   CheckCircle,
   XCircle,
@@ -342,6 +343,7 @@ export default function VendorDetailsPage() {
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="coupons">Coupons</TabsTrigger>
           <TabsTrigger value="bank">Bank Details</TabsTrigger>
+          <TabsTrigger value="finance">Finance</TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
@@ -860,6 +862,11 @@ export default function VendorDetailsPage() {
               )}
             </>
           )}
+        </TabsContent>
+
+        {/* Read-only; loads its own data when the tab is opened. */}
+        <TabsContent value="finance">
+          <FinancePanel shopId={id} />
         </TabsContent>
 
         <TabsContent value="settings">
