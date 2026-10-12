@@ -11,6 +11,7 @@ import { sendPushNotificationToMultipleVendors } from "@/lib/services/push-notif
 import { Product } from "@/lib/models/product";
 import { Company } from "@/lib/models/company";
 import { getAuthSession } from "@/lib/get-auth-user";
+import { statusChangeUpdate } from "@/lib/order-status-tracking";
 
 void Product;
 void Company;
@@ -81,7 +82,19 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     if (orderStatus) updateData.orderStatus = orderStatus;
     if (paymentStatus) updateData.paymentStatus = paymentStatus;
 
-    const order = await Order.findByIdAndUpdate(id, updateData, { new: true })
+    // Status tracking: when the status is really changing, the history entry
+    // (and deliveredAt / cancelledAt / cancelledBy) are written in the same
+    // atomic update. Every other request is sent exactly as it was before.
+    let update: any = updateData;
+    if (orderStatus) {
+      const current = await Order.findById(id).select("orderStatus").lean<{ orderStatus?: string }>();
+      const tracking = current
+        ? statusChangeUpdate(current.orderStatus, orderStatus, { userId: String(user._id), role: user.role })
+        : null;
+      if (tracking) update = { $set: { ...updateData, ...tracking.$set }, $push: tracking.$push };
+    }
+
+    const order = await Order.findByIdAndUpdate(id, update, { new: true })
       .populate("user")
       .populate("items.product");
 
