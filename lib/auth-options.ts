@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models/user";
 import { verifyPassword } from "@/lib/auth";
 import { readAuthState, isAuthStateRevoked, type AuthState } from "@/lib/auth-state";
+import { recordLastLogin } from "@/lib/last-login";
 import { LOCALE_COOKIE } from "@/i18n/request";
 import { resolveLocaleFromCookieValue } from "@/lib/i18n-config";
 
@@ -165,6 +166,16 @@ export const authOptions: NextAuthOptions = {
       } catch {
         return baseUrl;
       }
+    },
+  },
+  events: {
+    // User.lastLoginAt. NextAuth fires this once per completed sign-in
+    // (password or Google), after the jwt callback above, so a first-time
+    // Google user already exists by now. It is not fired when a session is
+    // refreshed or read.
+    async signIn({ user, account }) {
+      if (account?.provider === "credentials" && user?.id) await recordLastLogin({ id: user.id });
+      else if (user?.email) await recordLastLogin({ email: user.email });
     },
   },
   pages: { signIn: "/auth/login", error: "/auth/login" },

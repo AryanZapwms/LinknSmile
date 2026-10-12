@@ -311,6 +311,9 @@ LinknSmile uses **NextAuth.js v4** with a JWT session strategy and two providers
 5. The login form then sends the user on (`lib/post-login-redirect.ts`): a vendor who hasn't
    accepted the current MOU goes to `/vendor/mou`; otherwise to `?callbackUrl=` when it is a path
    on this site; otherwise `/admin` for admins and `/` for everyone else.
+6. `User.lastLoginAt` is set once per completed sign-in (`lib/last-login.ts`): by NextAuth's
+   `signIn` event for password and Google sign-ins, and by `api/mobile-auth/login` for the app.
+   It is not updated when a session or token is refreshed, and it does not change `updatedAt`.
 
 ### Password Reset
 
@@ -400,13 +403,13 @@ All schemas live in `lib/models/`:
 
 | Model | Purpose |
 |---|---|
-| User | Account (customer/admin/vendor), auth, `locale` field for email language |
+| User | Account (customer/admin/vendor), auth, `locale` field for email language, `lastLoginAt` (last sign-in) |
 | Shop | Vendor storefront record — approval, commission rate, bank details, slug |
 | Product | Catalog item — price, stock, sizes, approval workflow, subscription-hide flag |
 | Category | Hierarchical product category (self-referential parent) |
 | Company | Brand/landing-page content referenced by products/blogs |
 | Cart | Server-side cart, keyed by userId, revalidated against DB on every write |
-| Order | Order record — items, tax, coupon, multi-gateway payment fields, vendor payout split |
+| Order | Order record — items, tax, coupon, multi-gateway payment fields, vendor payout split, status tracking (see below) |
 | Wishlist | Simple product-only save list (legacy, narrower than Favourite) |
 | Favourite | Generic save (product or seller) — the more current mechanism |
 | Address | Saved address book entries (no `country` field yet) |
@@ -426,6 +429,24 @@ All schemas live in `lib/models/`:
 | HeroProduct | Curated homepage "Featured" product spotlight |
 | Coupon | Per-vendor discount codes |
 | PlatformSettings | Singleton — support email/phone, tagline, tax rate |
+
+**Order status tracking** (`lib/order-status-tracking.ts`). The two routes that change an order's
+status, vendor `PATCH /api/vendor/orders/:id` and admin `PUT /api/orders/:id`, also record:
+
+| Field | Meaning |
+|---|---|
+| `statusHistory[]` | One entry per status change, oldest first: `{ status, at, by: { userId, role } }` |
+| `deliveredAt` | When the status last became `delivered` |
+| `cancelledAt`, `cancelledBy` | When the order was cancelled, and by whom (`{ userId, role }`) |
+
+- All four are optional and nothing was backfilled: orders have them only for changes made after
+  the fields were added. The status an order is created with is not a history entry.
+- `statusHistory` and `cancelledBy` name the person who made the change, so they are
+  `select: false`: no query returns them unless it asks with
+  `.select("+statusHistory +cancelledBy")`. `deliveredAt` and `cancelledAt` are returned like
+  any other order field.
+- `deliveredAt` here is the order's. `vendorPayouts[].deliveredAt` is a separate field on the
+  payout record and is not written by status tracking.
 
 ---
 

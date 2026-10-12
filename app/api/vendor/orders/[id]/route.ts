@@ -7,6 +7,7 @@ import { Order } from "@/lib/models/order";
 import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 import { getAuthSession } from "@/lib/get-auth-user";
 import { requireVendor } from "@/lib/vendor-guard";
+import { recordStatusChange } from "@/lib/order-status-tracking";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -187,6 +188,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       );
     }
 
+    const previousStatus = order.orderStatus;
     order.orderStatus = orderStatus;
 
     if (orderStatus === "cancelled" && cancellationReason) {
@@ -204,6 +206,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     await order.save();
+
+    // Who changed the status, and when (statusHistory, deliveredAt,
+    // cancelledAt, cancelledBy). A separate write on purpose: the save above
+    // is exactly what it was before tracking existed.
+    await recordStatusChange(order._id, previousStatus, orderStatus, {
+      userId: session.user.id,
+      role: session.user.role,
+    });
 
     return withCORS(
       NextResponse.json({

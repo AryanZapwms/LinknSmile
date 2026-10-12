@@ -1,6 +1,25 @@
 // lib/models/order.ts
 import mongoose from "mongoose";
 
+// Who changed an order's status. `role` is the role they had at that moment
+// (a snapshot: the user's role can change later).
+const orderActorSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    role: String,
+  },
+  { _id: false }
+);
+
+const statusChangeSchema = new mongoose.Schema(
+  {
+    status: { type: String, required: true },
+    at: { type: Date, required: true },
+    by: orderActorSchema,
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     orderNumber: { type: String, required: true, unique: true },
@@ -66,6 +85,25 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
     cancellationReason: { type: String, default: null },
+    // ── Status tracking (added 2026-10-08) ────────────────────────────────
+    // Written by lib/order-status-tracking.ts from the two routes that change
+    // an order's status (vendor PATCH /api/vendor/orders/:id, admin PUT
+    // /api/orders/:id). All optional, nothing is backfilled: an order has
+    // these only for changes made since they were added.
+    //
+    // One entry per status CHANGE, oldest first. The status an order is
+    // created with is not an entry (createdAt is when that happened).
+    // select: false, like cancelledBy below, because entries name the staff
+    // member or seller who made the change: both are left out of every query
+    // unless asked for with .select("+statusHistory +cancelledBy"), so no
+    // existing API response started returning them.
+    statusHistory: { type: [statusChangeSchema], select: false, default: undefined },
+    // When the status last became "delivered" / "cancelled". Not to be
+    // confused with vendorPayouts[].deliveredAt further down, which belongs
+    // to the payout record and is not written by status tracking.
+    deliveredAt: Date,
+    cancelledAt: Date,
+    cancelledBy: { type: orderActorSchema, select: false },
     // Frozen, Razorpay-only — never renamed, never reused by any other
     // gateway. Existing India documents already have these populated, and
     // this is a separate-database-per-country architecture, so renaming

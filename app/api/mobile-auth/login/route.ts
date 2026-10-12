@@ -17,6 +17,7 @@ import { issueTokenPair } from "@/lib/mobile-tokens";
 import { loginLimiter, loginEmailLimiter } from "@/lib/rate-limit";
 import { apiError, clientIp } from "@/lib/api-error";
 import { mobileLoginRequest } from "@/lib/contracts/auth";
+import { recordLastLogin } from "@/lib/last-login";
 
 const LEGACY_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
@@ -112,6 +113,9 @@ export async function POST(req: NextRequest) {
       secret: process.env.NEXTAUTH_SECRET!,
       maxAge: LEGACY_TOKEN_MAX_AGE,
     });
+
+    // Signed in: tokens are issued. (Refreshing them later does not count.)
+    await recordLastLogin({ id: user.id });
 
     console.log("Mobile login successful", { userId: user.id });
 

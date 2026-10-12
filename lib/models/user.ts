@@ -64,6 +64,12 @@ const userSchema = new mongoose.Schema(
     // Set when the user deleted their account (DELETE /api/users/me): the
     // record is kept, anonymized and inactive, so orders keep a valid owner.
     deletedAt: { type: Date },
+
+    // When the user last signed in (lib/last-login.ts): once per successful
+    // sign-in on the website (password or Google) and in the mobile app, never
+    // on a session or token refresh. Unset for anyone who has not signed in
+    // since this field was added (2026-10-08).
+    lastLoginAt: { type: Date },
   },
   { timestamps: true }
 );
