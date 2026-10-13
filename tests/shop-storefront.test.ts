@@ -275,6 +275,42 @@ describe("PUT /api/vendor/storefront", () => {
     expect((await shopDoc(other.shopId)).description).toBe("Theirs");
   });
 
+  it("saves the store type, and reads a shop without one as a Products shop", async () => {
+    const vendor = await makeVendor();
+    auth.session = vendor.session;
+
+    const untouched = await save({ description: "About us" });
+    expect(untouched.body.shop.storeType).toBe("products");
+    expect((await shopDoc(vendor.shopId)).storeType).toBeUndefined();
+
+    // Choosing what the shop already is writes nothing.
+    const same = await save({ storeType: "products" });
+    expect(same.status).toBe(200);
+    expect((await shopDoc(vendor.shopId)).storeType).toBeUndefined();
+
+    for (const storeType of ["services", "both", "products"]) {
+      const res = await save({ storeType });
+      expect(res.status, storeType).toBe(200);
+      expect(res.body.shop.storeType, storeType).toBe(storeType);
+      expect((await shopDoc(vendor.shopId)).storeType, storeType).toBe(storeType);
+    }
+    expect((await shopDoc(vendor.shopId)).description).toBe("About us");
+  });
+
+  it("refuses a store type that is not one of the three, and saves nothing else", async () => {
+    const vendor = await makeVendor({ shop: { storeType: "both", description: "Original" } });
+    auth.session = vendor.session;
+
+    for (const storeType of ["wholesale", "Services", ""]) {
+      const res = await save({ storeType, description: "New text", logo: image("png") });
+      expect(res.status, storeType).toBe(400);
+      expect(res.body, storeType).toMatchObject({ code: "VALIDATION_ERROR", field: "storeType", reason: "STORE_TYPE" });
+    }
+
+    expect(storage.uploads).toEqual([]);
+    expect(await shopDoc(vendor.shopId)).toMatchObject({ storeType: "both", description: "Original" });
+  });
+
   it("saves nothing when the image can't be stored", async () => {
     const vendor = await makeVendor({ shop: { description: "Original" } });
     auth.session = vendor.session;
@@ -361,6 +397,26 @@ describe("PUT /api/admin/vendors/[id]/storefront", () => {
       before: { description: "Old text", logo: null, coverImage: "https://res.cloudinary.com/test/banner.png" },
       after: { description: "New text", logo, coverImage: null },
     });
+  });
+
+  it("changes a shop's store type and records it", async () => {
+    const vendor = await makeVendor();
+    auth.session = admin;
+
+    const res = await adminSave(vendor.id, { storeType: "services" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.shop.storeType).toBe("services");
+    expect((await shopDoc(vendor.shopId)).storeType).toBe("services");
+    const rows = await auditRows(vendor.shopId);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ performedBy: ADMIN_ID });
+    expect(rows[0].before).toEqual({ storeType: "products" });
+    expect(rows[0].after).toEqual({ storeType: "services" });
+
+    // Setting it to what it already is changes nothing, so nothing is recorded.
+    await adminSave(vendor.id, { storeType: "services" });
+    expect(await auditRows(vendor.shopId)).toHaveLength(1);
   });
 
   it("records nothing when the save changes nothing", async () => {

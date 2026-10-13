@@ -405,7 +405,8 @@ All schemas live in `lib/models/`:
 | Model | Purpose |
 |---|---|
 | User | Account (customer/admin/vendor), auth, `locale` field for email language, `lastLoginAt` (last sign-in) |
-| Shop | Vendor storefront record — approval, commission rate, bank details, slug |
+| Shop | Vendor storefront record — approval, commission rate, bank details, slug, store type (see below) |
+| ShopPost | A post on a shop's public page — title, text, images, optional video link, draft/published (see below) |
 | Product | Catalog item — price, stock, sizes, approval workflow, subscription-hide flag |
 | Category | Hierarchical product category (self-referential parent) |
 | Company | Brand/landing-page content referenced by products/blogs |
@@ -449,6 +450,23 @@ status, vendor `PATCH /api/vendor/orders/:id` and admin `PUT /api/orders/:id`, a
 - `deliveredAt` here is the order's. `vendorPayouts[].deliveredAt` is a separate field on the
   payout record and is not written by status tracking.
 
+**Store type and posts** (`lib/shop-store-type.ts`, `lib/shop-page.ts`).
+
+- `Shop.storeType` is `products`, `services` or `both`. Shops created before it existed have no
+  value and are read as `products` (`storeTypeOf()`); nothing was backfilled. A vendor sets it on
+  the Store Page tab of `/vendor/settings`, an admin on the Store Page tab of
+  `/admin/vendors/[id]`; it is saved by the same storefront routes as the logo and banner.
+- The public shop page (`/shop/[slug]`) follows it: `products` shows the products section as
+  before; `services` shows a Posts section instead; `both` shows whichever of the two has
+  something. A Services or Both shop with nothing to show gets one friendly message.
+- `services` hides a shop's products on its shop page only. They stay in the catalogue, search
+  and checkout, and the vendor dashboard is the same for every store type.
+- `ShopPost` holds `shopId`, `title` (up to 150 characters), `text` (up to 5000), `images` (up
+  to 10 URLs), an optional `videoUrl` (an `https://` link, not an upload), `status`
+  (`draft`/`published`) and timestamps. The shop page shows the 20 newest published posts.
+  **Nothing creates posts yet**: there is no posts screen or route, so the Posts section stays
+  empty until one is built.
+
 ---
 
 ## 10. Admin Panel
@@ -466,7 +484,7 @@ Access at `/admin` — requires a session with `role: "admin"` (checked per-rout
 | Vendors (`/admin/vendors`, `/[id]`, `/subscriptions`) | Manage vendor status and subscriptions |
 | Vendor MOU (`/admin/vendors/mou`) | Which active vendors have accepted the current MOU version (`lib/mou-content.ts`); email reminders to those who haven't — one per vendor per 24h, each logged to `AuditLog` (`lib/vendor-mou-tracking.ts`) |
 | Vendor Finance (`/admin/vendors/[id]`, Finance tab) | Read-only view of one vendor's money, from `GET /api/admin/vendors/[id]/finance` (`lib/vendor-finance.ts`): wallet balances and status, the wallet checked against the ledger, warnings for the known ways a balance can be wrong (cancelled orders still credited, COD earnings missing, sales overdue for release, paid orders missing from the ledger, rejected payouts not given back, a stuck final settlement), payouts, ledger entries, the audit log, and bank details masked on the server. It has no actions and writes nothing |
-| Vendor Store Page (`/admin/vendors/[id]`, Store Page tab) | Edit any shop's public page (`/shop/[slug]`): logo, banner and description, through `PUT /api/admin/vendors/[id]/storefront`. Same form and rules as the vendor's own Store Page tab (`components/shop/storefront-editor.tsx`, `lib/shop-storefront.ts`): JPEG, PNG or WebP judged by file content, logo up to 2 MB, banner up to 5 MB, description up to 1000 characters. Each change is logged to `AuditLog` as `SHOP_STOREFRONT_UPDATED` |
+| Vendor Store Page (`/admin/vendors/[id]`, Store Page tab) | Edit any shop's public page (`/shop/[slug]`): store type (Products / Services / Both), logo, banner and description, through `PUT /api/admin/vendors/[id]/storefront`. Same form and rules as the vendor's own Store Page tab (`components/shop/storefront-editor.tsx`, `lib/shop-storefront.ts`): JPEG, PNG or WebP judged by file content, logo up to 2 MB, banner up to 5 MB, description up to 1000 characters. Each change is logged to `AuditLog` as `SHOP_STOREFRONT_UPDATED` |
 | Categories (`/admin/categories`) | Category CRUD |
 | Promos (`/admin/promo-bar`) | Scrolling promo banner content |
 | Home Banner / Hero Products | Homepage carousel and featured-product merchandising |
@@ -496,7 +514,7 @@ Subscription renewal is not a separate page — it's a gate baked into `app/vend
 | Wallet (`/wallet`) | Balance, ledger history, order-level earnings breakdown |
 | Payouts (`/payouts`) | Request withdrawals against the wallet balance |
 | Bank Details (`/bank-details`) | Payout bank account (IFSC for India, SWIFT/BIC available for GCC) |
-| Settings (`/settings`) | Shop profile, contact and address, bank details. The Store Page tab edits the public shop page (`/shop/[slug]`) — logo, banner and description — and saves on its own through `PUT /api/vendor/storefront`; changes are live at once, with no approval step. Images are sent as files and stored by the server; `vendor/settings` no longer accepts `logo`/`coverImage` |
+| Settings (`/settings`) | Shop profile, contact and address, bank details. The Store Page tab edits the public shop page (`/shop/[slug]`) — store type (Products / Services / Both), logo, banner and description — and saves on its own through `PUT /api/vendor/storefront`; changes are live at once, with no approval step. Images are sent as files and stored by the server; `vendor/settings` no longer accepts `logo`/`coverImage` |
 
 ---
 

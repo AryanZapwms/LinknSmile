@@ -1,14 +1,19 @@
 // lib/shop-storefront-rules.ts
 //
 // Limits for the editable part of a shop's public page: logo, banner
-// (Shop.coverImage) and description. Imported by the browser form
+// (Shop.coverImage) and description. (The store type saved alongside them
+// has its own file, lib/shop-store-type.ts.) Imported by the browser form
 // (components/shop/storefront-editor.tsx) and by the server
 // (lib/shop-storefront.ts), so both apply the same rules — the server's
 // check is the one that counts. Nothing server-only may be imported here.
 
 export type StorefrontImageKind = "logo" | "banner";
 export type StorefrontImageType = "image/jpeg" | "image/png" | "image/webp";
-export type StorefrontErrorReason = "IMAGE_TYPE" | "IMAGE_TOO_LARGE" | "DESCRIPTION_TOO_LONG";
+export type StorefrontErrorReason =
+  | "IMAGE_TYPE"
+  | "IMAGE_TOO_LARGE"
+  | "DESCRIPTION_TOO_LONG"
+  | "STORE_TYPE";
 
 export const STOREFRONT_IMAGE_MAX_BYTES: Record<StorefrontImageKind, number> = {
   logo: 2 * 1024 * 1024,
@@ -24,9 +29,9 @@ export const STOREFRONT_IMAGE_EXTENSION: Record<StorefrontImageType, string> = {
 };
 
 /**
- * Multipart field names of a storefront PUT: "description", a file under
- * each image's own name ("logo", "banner"), and these set to "true" to
- * clear an image.
+ * Multipart field names of a storefront PUT: "description", "storeType", a
+ * file under each image's own name ("logo", "banner"), and these set to
+ * "true" to clear an image.
  */
 export const STOREFRONT_REMOVE_FIELD: Record<StorefrontImageKind, string> = {
   logo: "removeLogo",

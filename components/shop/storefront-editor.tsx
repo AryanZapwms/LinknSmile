@@ -1,9 +1,9 @@
 // components/shop/storefront-editor.tsx
 //
-// Edits what customers see at the top of a shop's public page
-// (app/shop/[slug]): banner, logo and description. Used by the vendor for
-// their own shop (app/vendor/settings) and by an admin for any shop
-// (app/admin/vendors/[id]) — only the endpoint differs.
+// Edits what customers see on a shop's public page (app/shop/[slug]): the
+// store type (products, services or both), banner, logo and description.
+// Used by the vendor for their own shop (app/vendor/settings) and by an
+// admin for any shop (app/admin/vendors/[id]) — only the endpoint differs.
 //
 // A chosen image is checked here and previewed from the local file; nothing
 // is uploaded until Save. The server (lib/shop-storefront.ts) repeats every
@@ -27,10 +27,13 @@ import {
   type StorefrontErrorReason,
   type StorefrontImageKind,
 } from "@/lib/shop-storefront-rules";
+import { STORE_TYPES, storeTypeOf, type StoreType } from "@/lib/shop-store-type";
 
 export interface StorefrontShop {
   shopName: string;
   slug?: string;
+  /** Missing on shops saved before store types existed; read as "products". */
+  storeType?: string | null;
   description?: string | null;
   logo?: string | null;
   coverImage?: string | null;
@@ -39,6 +42,7 @@ export interface StorefrontShop {
 }
 
 export interface StorefrontSaved {
+  storeType: StoreType;
   description: string;
   logo: string | null;
   coverImage: string | null;
@@ -53,10 +57,20 @@ interface StorefrontEditorProps {
 
 // A newly chosen file, a pending removal, or null for "as saved".
 type ImageEdit = { file: File; previewUrl: string } | "remove" | null;
-type Field = StorefrontImageKind | "description";
+type Field = StorefrontImageKind | "description" | "storeType";
 
 const KINDS: StorefrontImageKind[] = ["banner", "logo"];
 const SAVED_FIELD = { logo: "logo", banner: "coverImage" } as const;
+const STORE_TYPE_LABEL = {
+  products: "storeTypeProducts",
+  services: "storeTypeServices",
+  both: "storeTypeBoth",
+} as const;
+const STORE_TYPE_DESCRIPTION = {
+  products: "storeTypeProductsDesc",
+  services: "storeTypeServicesDesc",
+  both: "storeTypeBothDesc",
+} as const;
 const megabytes = (bytes: number) => bytes / (1024 * 1024);
 
 export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorProps) {
@@ -64,10 +78,12 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
   const { toast } = useToast();
 
   const [saved, setSaved] = useState<StorefrontSaved>({
+    storeType: storeTypeOf(shop),
     description: shop.description ?? "",
     logo: shop.logo ?? null,
     coverImage: shop.coverImage ?? null,
   });
+  const [storeType, setStoreType] = useState<StoreType>(saved.storeType);
   const [description, setDescription] = useState(saved.description);
   const [edits, setEdits] = useState<Record<StorefrontImageKind, ImageEdit>>({
     logo: null,
@@ -100,7 +116,8 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
     if (reason === "DESCRIPTION_TOO_LONG") {
       return t("errorDescriptionTooLong", { max: STOREFRONT_DESCRIPTION_MAX_LENGTH });
     }
-    if (reason === "IMAGE_TOO_LARGE" && field !== "description") {
+    if (reason === "STORE_TYPE") return t("errorStoreType");
+    if (reason === "IMAGE_TOO_LARGE" && (field === "logo" || field === "banner")) {
       return t("errorImageTooLarge", { maxMb: megabytes(STOREFRONT_IMAGE_MAX_BYTES[field]) });
     }
     return t("errorImageType");
@@ -131,13 +148,18 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
     return edit ? edit.previewUrl : saved[SAVED_FIELD[kind]];
   };
 
-  const isDirty = description !== saved.description || edits.logo !== null || edits.banner !== null;
+  const isDirty =
+    storeType !== saved.storeType ||
+    description !== saved.description ||
+    edits.logo !== null ||
+    edits.banner !== null;
 
   const handleSave = async () => {
     setSaving(true);
     setErrors({});
     try {
       const body = new FormData();
+      if (storeType !== saved.storeType) body.append("storeType", storeType);
       if (description !== saved.description) body.append("description", description);
       for (const kind of KINDS) {
         const edit = edits[kind];
@@ -158,6 +180,7 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
       }
 
       const next: StorefrontSaved = {
+        storeType: storeTypeOf(json.shop),
         description: json.shop.description ?? "",
         logo: json.shop.logo ?? null,
         coverImage: json.shop.coverImage ?? null,
@@ -165,6 +188,7 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
       KINDS.forEach((kind) => release(edits[kind]));
       setEdits({ logo: null, banner: null });
       setSaved(next);
+      setStoreType(next.storeType);
       setDescription(next.description);
       onSaved?.(next);
       toast({ title: t("saved") });
@@ -262,6 +286,55 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
         <CardDescription>{t("subtitle")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Store type — decides which sections the public page shows (lib/shop-store-type.ts) */}
+        <div role="radiogroup" aria-labelledby="storefront-store-type-label" className="space-y-2">
+          <p id="storefront-store-type-label" className="text-sm font-medium">
+            {t("storeTypeLabel")}
+          </p>
+          <p className="text-muted-foreground text-xs">{t("storeTypeHint")}</p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {STORE_TYPES.map((type) => (
+              <label
+                key={type}
+                className={`has-[:focus-visible]:ring-ring/50 cursor-pointer rounded-xl border p-3 transition-colors has-[:focus-visible]:ring-[3px] ${
+                  storeType === type ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="storefront-store-type"
+                  value={type}
+                  checked={storeType === type}
+                  onChange={() => {
+                    setStoreType(type);
+                    setErrors((prev) => ({ ...prev, storeType: undefined, form: undefined }));
+                  }}
+                  disabled={saving}
+                  className="sr-only"
+                />
+                <span className="block text-sm font-semibold">{t(STORE_TYPE_LABEL[type])}</span>
+                <span className="text-muted-foreground mt-0.5 block text-xs">
+                  {t(STORE_TYPE_DESCRIPTION[type])}
+                </span>
+              </label>
+            ))}
+          </div>
+          {/* Choosing Services is allowed even with products on sale; say what it does. */}
+          {storeType === "services" && (
+            <p
+              role="status"
+              className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800"
+            >
+              {t("servicesWarning")}
+            </p>
+          )}
+          {errors.storeType && (
+            <p role="alert" className="text-sm text-red-600">
+              {errors.storeType}
+            </p>
+          )}
+        </div>
+
         {/* Preview — the same arrangement as the header of app/shop/[slug]/page.tsx */}
         <div className="space-y-2">
           <p className="text-sm font-medium">{t("preview")}</p>

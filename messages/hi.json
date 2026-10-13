@@ -985,7 +985,17 @@
     "errorImageTooLarge": "यह छवि बहुत बड़ी है। सीमा {maxMb} MB है।",
     "errorDescriptionTooLong": "विवरण अधिकतम {max} अक्षरों का हो सकता है।",
     "viewPublicPage": "सार्वजनिक पेज देखें",
-    "notPublicYet": "दुकान के स्वीकृत और सक्रिय होने पर यह पेज सार्वजनिक हो जाएगा।"
+    "notPublicYet": "दुकान के स्वीकृत और सक्रिय होने पर यह पेज सार्वजनिक हो जाएगा।",
+    "storeTypeLabel": "यह दुकान क्या प्रदान करती है?",
+    "storeTypeHint": "इससे तय होता है कि दुकान के सार्वजनिक पेज पर क्या दिखेगा।",
+    "storeTypeProducts": "उत्पाद",
+    "storeTypeProductsDesc": "दुकान के पेज पर उत्पाद दिखते हैं।",
+    "storeTypeServices": "सेवाएं",
+    "storeTypeServicesDesc": "दुकान के पेज पर उत्पादों की जगह पोस्ट दिखती हैं।",
+    "storeTypeBoth": "दोनों",
+    "storeTypeBothDesc": "दुकान के पेज पर उत्पाद और पोस्ट दोनों दिखते हैं।",
+    "servicesWarning": "स्टोर प्रकार “सेवाएं” होने पर दुकान के पेज पर उत्पाद नहीं दिखते। अगर यह दुकान उत्पाद भी बेचती है, तो “दोनों” चुनें।",
+    "errorStoreType": "कृपया उत्पाद, सेवाएं या दोनों में से एक चुनें।"
   },
   "VendorCouponsPage": {
     "title": "कूपन",
@@ -1865,7 +1875,13 @@
     "browseMoreTitle": "और ब्राउज़ करें",
     "allProductsLink": "🛍️ सभी उत्पाद",
     "madeInIndiaLink": "🇮🇳 मेड इन इंडिया",
-    "internationalLink": "🌍 अंतरराष्ट्रीय"
+    "internationalLink": "🌍 अंतरराष्ट्रीय",
+    "postsTitle": "पोस्ट",
+    "noPostsTitle": "अभी तक कोई पोस्ट नहीं",
+    "noPostsBody": "इस विक्रेता ने अभी तक कोई पोस्ट साझा नहीं की है। कृपया बाद में फिर देखें।",
+    "nothingYetTitle": "अभी यहां कुछ नहीं है",
+    "nothingYetBody": "इस विक्रेता ने अभी तक कोई उत्पाद या पोस्ट नहीं जोड़ी है। कृपया बाद में फिर देखें।",
+    "watchVideo": "वीडियो देखें"
   },
   "SellersPage": {
     "eyebrow": "Linknsmile मार्केटप्लेस",

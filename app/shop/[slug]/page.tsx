@@ -1,48 +1,34 @@
 // app/shop/[slug]/page.tsx
-import { connectDB } from "@/lib/db";
-import Shop from "@/lib/models/shop";
-import { Product } from "@/lib/models/product";
+import { getShopPageData } from "@/lib/shop-page";
+import { LOCALE } from "@/lib/currency";
 import { ProductCard } from "@/components/product-card";
+import { ShopPostCard } from "@/components/shop/shop-post-card";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, Globe, Phone, Mail, MapPin, Package, ArrowLeft, ShieldCheck } from "lucide-react";
+import {
+  Star,
+  Globe,
+  Phone,
+  Mail,
+  MapPin,
+  Package,
+  ArrowLeft,
+  ShieldCheck,
+  Newspaper,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import SellerFavouriteButton from "@/components/SellerFavouriteButton";
 
-async function getShopData(slug: string) {
-  await connectDB();
-
-  const shop = (await Shop.findOne({ slug, isActive: true, isApproved: true }).lean()) as any;
-  if (!shop) return null;
-
-  const products = (await Product.find({
-    shopId: shop._id,
-    isActive: true,
-    $or: [
-      { approvalStatus: "approved" },
-      { approvalStatus: { $exists: false } },
-      { approvalStatus: null },
-    ],
-  })
-    .populate("category", "name slug")
-    .select("name slug price discountPrice image images stock category origin")
-    .sort({ createdAt: -1 })
-    .lean()) as any[];
-
-  return {
-    shop: JSON.parse(JSON.stringify(shop)),
-    products: JSON.parse(JSON.stringify(products)),
-  };
-}
-
 export default async function ShopPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const data = await getShopData(slug);
+  const data = await getShopPageData(slug);
 
   if (!data) notFound();
 
-  const { shop, products } = data;
+  // products is empty for a Services shop and posts for a Products shop;
+  // sections says which of the two the page shows (lib/shop-store-type.ts).
+  const { shop, storeType, products, posts, sections } = data;
   const initials = shop.shopName?.slice(0, 2)?.toUpperCase() ?? "SH";
   const t = await getTranslations("ShopPage");
 
@@ -113,10 +99,12 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
             </div>
 
             <div className="flex flex-wrap items-center gap-3 text-sm text-stone-500">
-              <span className="flex items-center gap-1">
-                <Package className="h-4 w-4 text-amber-400" />
-                {t("productsCount", { count: products.length })}
-              </span>
+              {storeType !== "services" && (
+                <span className="flex items-center gap-1">
+                  <Package className="h-4 w-4 text-amber-400" />
+                  {t("productsCount", { count: products.length })}
+                </span>
+              )}
               {shop.ratings?.count > 0 && (
                 <span className="flex items-center gap-1">
                   <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
@@ -158,40 +146,82 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
       {/* Content */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-10">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_280px]">
-          {/* Products grid */}
-          <section>
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-stone-800">{t("allProducts")}</h2>
-              <span className="text-sm font-medium text-stone-400">
-                {t("itemsCount", { count: products.length })}
-              </span>
-            </div>
-
-            {products.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white py-20">
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
-                  <Package className="h-7 w-7 text-stone-300" />
+          {/* Main column: products and/or posts, depending on the store type */}
+          <div className="min-w-0 space-y-10">
+            {/* Products grid */}
+            {sections.products && (
+              <section>
+                <div className="mb-5 flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-stone-800">{t("allProducts")}</h2>
+                  <span className="text-sm font-medium text-stone-400">
+                    {t("itemsCount", { count: products.length })}
+                  </span>
                 </div>
-                <p className="mb-1 font-bold text-stone-600">{t("noProductsTitle")}</p>
-                <p className="text-sm text-stone-400">{t("noProductsBody")}</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                {products.map((p: any) => (
-                  <ProductCard
-                    key={p._id}
-                    id={p._id}
-                    name={p.name}
-                    price={p.price}
-                    discountPrice={p.discountPrice}
-                    image={p.image}
-                    slug={p.slug}
-                    stock={p.stock}
-                  />
-                ))}
+
+                {products.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white py-20">
+                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
+                      <Package className="h-7 w-7 text-stone-300" />
+                    </div>
+                    <p className="mb-1 font-bold text-stone-600">{t("noProductsTitle")}</p>
+                    <p className="text-sm text-stone-400">{t("noProductsBody")}</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                    {products.map((p: any) => (
+                      <ProductCard
+                        key={p._id}
+                        id={p._id}
+                        name={p.name}
+                        price={p.price}
+                        discountPrice={p.discountPrice}
+                        image={p.image}
+                        slug={p.slug}
+                        stock={p.stock}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Posts — published only, newest first */}
+            {sections.posts && (
+              <section>
+                <h2 className="mb-5 text-lg font-bold text-stone-800">{t("postsTitle")}</h2>
+                <div className="space-y-4">
+                  {posts.map((post) => (
+                    <ShopPostCard
+                      key={post._id}
+                      post={post}
+                      date={new Date(post.createdAt).toLocaleDateString(LOCALE, {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                      watchVideoLabel={t("watchVideo")}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* A Services or Both shop with nothing to show yet: one friendly
+                message. (A Products shop has its own, in the section above.) */}
+            {sections.nothingYet && (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white px-6 py-20 text-center">
+                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-stone-100">
+                  <Newspaper className="h-7 w-7 text-stone-300" />
+                </div>
+                <p className="mb-1 font-bold text-stone-600">
+                  {t(storeType === "services" ? "noPostsTitle" : "nothingYetTitle")}
+                </p>
+                <p className="text-sm text-stone-400">
+                  {t(storeType === "services" ? "noPostsBody" : "nothingYetBody")}
+                </p>
               </div>
             )}
-          </section>
+          </div>
 
           {/* Sidebar */}
           <aside className="space-y-5">

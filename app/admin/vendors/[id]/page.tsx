@@ -376,9 +376,9 @@ export default function VendorDetailsPage() {
           </Card>
         </TabsContent>
 
-        {/* Logo, banner and description of the public shop page — the same form
-            the vendor has under /vendor/settings. Stays mounted so a chosen
-            image survives a tab switch. */}
+        {/* Store type, logo, banner and description of the public shop page —
+            the same form the vendor has under /vendor/settings. Stays mounted
+            so a chosen image survives a tab switch. */}
         <TabsContent value="store" forceMount className="data-[state=inactive]:hidden">
           <StorefrontEditor
             endpoint={`/api/admin/vendors/${id}/storefront`}
