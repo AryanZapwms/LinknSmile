@@ -1,7 +1,9 @@
 // lib/account-deletion.ts
 //
 // Self-service account deletion (App Store 5.1.1(v), Google Play account
-// deletion policy), used by DELETE /api/users/me.
+// deletion policy), used by DELETE /api/users/me. The admin "delete user"
+// action (DELETE /api/users/:id) uses deleteAccount() too, for a user who has
+// orders.
 //
 // The User document is kept but anonymized and deactivated, because Orders
 // reference it and are kept as tax/accounting records. Personal data that
@@ -42,7 +44,15 @@ export async function openOrderCount(userId: string, shopId: string | null): Pro
  * Deletes/anonymizes. Personal data is removed first and the User record
  * last, so a failure part-way leaves a still-usable account that can retry.
  */
-export async function deleteAccount(params: { userId: string; shopId: string | null; email: string }) {
+export async function deleteAccount(params: {
+  userId: string;
+  shopId: string | null;
+  email: string;
+  /** Who did it, when that is not the account holder (an admin). Audit log only. */
+  performedBy?: string;
+  /** Audit log reason. Defaults to self-service deletion. */
+  reason?: string;
+}) {
   const { userId, shopId, email } = params;
   // A vendor's shop/wallet must already be closed by exitVendor().
   await connectDB();
@@ -82,11 +92,11 @@ export async function deleteAccount(params: { userId: string; shopId: string | n
   try {
     await AuditLog.create({
       action: "ACCOUNT_DELETED",
-      performedBy: userId,
+      performedBy: params.performedBy ?? userId,
       targetEntity: "User",
       targetId: userId,
       ...(shopId ? { shopId } : {}),
-      reason: "Self-service account deletion",
+      reason: params.reason ?? "Self-service account deletion",
     });
   } catch (err) {
     // The deletion itself is done; the audit row is best-effort.
