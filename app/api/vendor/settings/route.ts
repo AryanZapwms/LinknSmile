@@ -81,6 +81,17 @@ export async function PUT(req: NextRequest) {
       }
     });
 
+    // The web settings form sends bankDetails on every save, with every
+    // field blank until the vendor has entered some. All-blank means "not
+    // provided": leave what is on file alone rather than reject the save.
+    if (
+      updates.bankDetails &&
+      typeof updates.bankDetails === "object" &&
+      Object.values(updates.bankDetails).every((value) => !String(value ?? "").trim())
+    ) {
+      delete updates.bankDetails;
+    }
+
     // Simple validation for bank details if provided
     if (updates.bankDetails) {
       const { accountNumber, ifscCode, swiftCode, accountHolderName, bankName } =
