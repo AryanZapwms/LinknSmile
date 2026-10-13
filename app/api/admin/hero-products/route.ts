@@ -1,6 +1,9 @@
 import { withCORS } from "@/lib/cors";
 import { connectDB } from "@/lib/db";
 import { HeroProduct } from "@/lib/models/hero-product";
+// Registers the Product model for populate("productId") below. Nothing else
+// this route imports does.
+import "@/lib/models/product";
 import { NextResponse, type NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -20,6 +23,16 @@ export async function GET(request: NextRequest) {
     const heroProducts = await HeroProduct.find()
       .sort({ sortOrder: 1, createdAt: 1 })
       .populate("productId", "name image price discountPrice slug");
+
+    // populate() leaves null where the featured product was deleted. The entry
+    // is still returned so the admin page can offer to remove it.
+    for (const heroProduct of heroProducts) {
+      if (!heroProduct.productId) {
+        console.warn(
+          `[admin/hero-products] Entry ${heroProduct._id} points to a product that no longer exists`
+        );
+      }
+    }
 
     return withCORS(NextResponse.json(heroProducts));
   } catch (error) {
