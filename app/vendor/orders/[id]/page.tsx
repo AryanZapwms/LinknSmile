@@ -430,11 +430,12 @@ import { formatCurrency, LOCALE } from "@/lib/currency";
 interface Order {
   _id: string;
   orderNumber: string;
+  // Populated reference: null when the customer account no longer exists.
   user: {
     name: string;
     email: string;
-    phone: string;
-  };
+    phone?: string;
+  } | null;
   items: any[];
   vendorSubtotal: number;
   vendorEarnings: number;
@@ -453,6 +454,8 @@ interface Order {
 
 export default function VendorOrderDetailPage() {
   const t = useTranslations("VendorOrderDetail");
+  // For the "Unknown customer" label shared with the orders list.
+  const tOrders = useTranslations("VendorOrdersPage");
   const params = useParams();
   const router = useRouter();
   const orderId = params.id as string;
@@ -557,6 +560,11 @@ export default function VendorOrderDetailPage() {
       </Alert>
     );
   }
+
+  // Same fallback as the orders list: the account name, then the name the
+  // order was shipped to, then a generic label.
+  const customerName =
+    order.user?.name || order.shippingAddress?.name || tOrders("unknownCustomer");
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { variant: any; className: string }> = {
@@ -826,15 +834,15 @@ export default function VendorOrderDetailPage() {
             <CardContent className="space-y-4">
               <div>
                 <p className="text-muted-foreground text-sm font-medium">{t("name")}</p>
-                <p className="font-medium">{order.user?.name}</p>
+                <p className="font-medium">{customerName}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-sm font-medium">{t("email")}</p>
-                <p className="font-medium">{order.user?.email}</p>
+                <p className="font-medium">{order.user?.email || "—"}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-sm font-medium">{t("phone")}</p>
-                <p className="font-medium">{order.user?.phone}</p>
+                <p className="font-medium">{order.user?.phone || "—"}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-sm font-medium">{t("orderDate")}</p>

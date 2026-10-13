@@ -4,6 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
+// Registers the Product model for populate("items.product") below. Nothing
+// else this route imports does, so without it the query throws
+// MissingSchemaError until some other route has loaded the model.
+import "@/lib/models/product";
 import { getShopSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 import { getAuthSession } from "@/lib/get-auth-user";
 import { requireVendor } from "@/lib/vendor-guard";
@@ -81,11 +85,25 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       0
     );
 
+    // As in the list route: populate() leaves null where the customer account
+    // or a product no longer exists. The response keeps that null; the warning
+    // names the order so the record can be found.
+    const missingRefs: string[] = [];
+    if (!order.user) missingRefs.push("user");
+    vendorItems.forEach((item: any) => {
+      if (!item.product) missingRefs.push(`items.product (item ${item._id})`);
+    });
+    if (missingRefs.length > 0) {
+      console.warn(
+        `[vendor/orders] Order ${order._id} has missing references: ${missingRefs.join(", ")}`
+      );
+    }
+
     const vendorOrder = {
       _id: order._id,
       orderNumber: order.orderNumber,
-      user: order.user,
-      items: vendorItems,
+      user: order.user ?? null,
+      items: vendorItems.map((item: any) => ({ ...item, product: item.product ?? null })),
       vendorSubtotal,
       vendorEarnings: vendorEarnings || vendorPayout?.amount || 0,
       platformCommission: vendorSubtotal - (vendorEarnings || vendorPayout?.amount || 0),
