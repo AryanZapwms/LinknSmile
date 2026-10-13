@@ -628,7 +628,8 @@
     "cancellationReasonTooltip": "रद्द करने का कारण: {reason}",
     "reasonLabel": "कारण: {reason}",
     "view": "देखें",
-    "loadFailed": "ऑर्डर लोड करने में विफल"
+    "loadFailed": "ऑर्डर लोड करने में विफल",
+    "unknownCustomer": "अज्ञात ग्राहक"
   },
   "VendorOrderDetail": {
     "orderDetails": "ऑर्डर विवरण",

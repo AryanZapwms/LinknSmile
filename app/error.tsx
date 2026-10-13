@@ -10,6 +10,7 @@
  * a user-friendly page instead of a raw Next.js crash screen.
  */
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -23,7 +24,9 @@ export default function GlobalError({ error, reset }: ErrorProps) {
   const t = useTranslations("ErrorBoundaryPage");
 
   useEffect(() => {
-    // Log to your error tracking service here (e.g. Sentry)
+    // React hands errors caught by this boundary to us instead of letting them
+    // reach window.onerror, so they have to be reported explicitly.
+    Sentry.captureException(error);
     console.error("[GlobalError]", error);
   }, [error]);
 

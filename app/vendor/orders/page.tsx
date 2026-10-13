@@ -28,15 +28,33 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/currency";
 
+// `user` and `items[].product` are populated references. The API returns null
+// for one whose document no longer exists (customer account or product deleted
+// after the order was placed), so both are typed as possibly null.
+interface OrderCustomer {
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+interface OrderItemProduct {
+  _id: string;
+  name: string;
+  image?: string;
+}
+
+interface OrderItem {
+  product?: OrderItemProduct | null;
+  quantity: number;
+  price: number;
+}
+
 interface Order {
   _id: string;
   orderNumber: string;
-  user: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  items: any[];
+  user: OrderCustomer | null;
+  items?: OrderItem[] | null;
+  shippingAddress?: { name?: string } | null;
   vendorSubtotal: number;
   vendorEarnings: number;
   payoutStatus: string;
@@ -134,11 +152,16 @@ export default function VendorOrdersPage() {
     }
   };
 
+  // The customer's account can be gone while the order remains: fall back to
+  // the name the order was shipped to, then to a generic label.
+  const getCustomerName = (order: Order) =>
+    order.user?.name || order.shippingAddress?.name || t("unknownCustomer");
+
   const filteredOrders = orders.filter(
     (order) =>
       order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
-      order.user.name.toLowerCase().includes(search.toLowerCase()) ||
-      order.user.email.toLowerCase().includes(search.toLowerCase())
+      getCustomerName(order).toLowerCase().includes(search.toLowerCase()) ||
+      (order.user?.email ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -281,13 +304,15 @@ export default function VendorOrdersPage() {
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{order.user.name}</p>
-                        <p className="text-muted-foreground text-sm">{order.user.email}</p>
+                        <p className="font-medium">{getCustomerName(order)}</p>
+                        {order.user?.email && (
+                          <p className="text-muted-foreground text-sm">{order.user.email}</p>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {order.items.slice(0, 3).map((item: any, idx: number) => (
+                        {(order.items ?? []).slice(0, 3).map((item, idx) => (
                           <div key={idx} className="relative h-8 w-8">
                             {item.product?.image ? (
                               <Image
@@ -304,9 +329,9 @@ export default function VendorOrdersPage() {
                             )}
                           </div>
                         ))}
-                        {order.items.length > 3 && (
+                        {(order.items ?? []).length > 3 && (
                           <span className="text-muted-foreground text-xs">
-                            +{order.items.length - 3}
+                            +{(order.items ?? []).length - 3}
                           </span>
                         )}
                       </div>
