@@ -371,7 +371,7 @@ HTTP methods and payloads):
 `vendor/bank-details`, `vendor/exit`, `vendor/orders(+/[id])`, `vendor/payout/request`,
 `vendor/payouts`, `vendor/products(+/[id],/bulk-upload,/reviews,/stats)`,
 `vendor/reviews(+/[id],/[id]/reply)`, `vendor/settings`, `vendor/stats`, `vendor/status`,
-`vendor/subscription/{create-order,verify-payment}`,
+`vendor/storefront`, `vendor/subscription/{create-order,verify-payment}`,
 `vendor/subscription/tap/{create-order,verify-payment,webhook}`,
 `vendor/wallet(+/ledger,/orders)`, `vendor/coupons(+/[id])`
 
@@ -380,7 +380,8 @@ HTTP methods and payloads):
 `admin/home-banner(+/[id],/reorder)`, `admin/hero-products(+/[id],/reorder)`,
 `admin/payment-settings(+/public)`, `admin/platform-settings`, `admin/payouts`,
 `admin/vendor-subscription-settings`, `admin/vendor-subscriptions(+/[shopId])`,
-`admin/vendors(+/[id],/[id]/finance)`, `admin/vendors/mou(+/remind)`, `admin/wallet-action`,
+`admin/vendors(+/[id],/[id]/finance,/[id]/storefront)`, `admin/vendors/mou(+/remind)`,
+`admin/wallet-action`,
 `admin/wallet-overview`,
 `admin/images/{delete,scan}`
 
@@ -465,6 +466,7 @@ Access at `/admin` — requires a session with `role: "admin"` (checked per-rout
 | Vendors (`/admin/vendors`, `/[id]`, `/subscriptions`) | Manage vendor status and subscriptions |
 | Vendor MOU (`/admin/vendors/mou`) | Which active vendors have accepted the current MOU version (`lib/mou-content.ts`); email reminders to those who haven't — one per vendor per 24h, each logged to `AuditLog` (`lib/vendor-mou-tracking.ts`) |
 | Vendor Finance (`/admin/vendors/[id]`, Finance tab) | Read-only view of one vendor's money, from `GET /api/admin/vendors/[id]/finance` (`lib/vendor-finance.ts`): wallet balances and status, the wallet checked against the ledger, warnings for the known ways a balance can be wrong (cancelled orders still credited, COD earnings missing, sales overdue for release, paid orders missing from the ledger, rejected payouts not given back, a stuck final settlement), payouts, ledger entries, the audit log, and bank details masked on the server. It has no actions and writes nothing |
+| Vendor Store Page (`/admin/vendors/[id]`, Store Page tab) | Edit any shop's public page (`/shop/[slug]`): logo, banner and description, through `PUT /api/admin/vendors/[id]/storefront`. Same form and rules as the vendor's own Store Page tab (`components/shop/storefront-editor.tsx`, `lib/shop-storefront.ts`): JPEG, PNG or WebP judged by file content, logo up to 2 MB, banner up to 5 MB, description up to 1000 characters. Each change is logged to `AuditLog` as `SHOP_STOREFRONT_UPDATED` |
 | Categories (`/admin/categories`) | Category CRUD |
 | Promos (`/admin/promo-bar`) | Scrolling promo banner content |
 | Home Banner / Hero Products | Homepage carousel and featured-product merchandising |
@@ -494,7 +496,7 @@ Subscription renewal is not a separate page — it's a gate baked into `app/vend
 | Wallet (`/wallet`) | Balance, ledger history, order-level earnings breakdown |
 | Payouts (`/payouts`) | Request withdrawals against the wallet balance |
 | Bank Details (`/bank-details`) | Payout bank account (IFSC for India, SWIFT/BIC available for GCC) |
-| Settings (`/settings`) | Shop profile settings |
+| Settings (`/settings`) | Shop profile, contact and address, bank details. The Store Page tab edits the public shop page (`/shop/[slug]`) — logo, banner and description — and saves on its own through `PUT /api/vendor/storefront`; changes are live at once, with no approval step. Images are sent as files and stored by the server; `vendor/settings` no longer accepts `logo`/`coverImage` |
 
 ---
 

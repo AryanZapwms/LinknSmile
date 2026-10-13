@@ -64,11 +64,11 @@ export async function PUT(req: NextRequest) {
     const shopId = session.user.shopId;
     const body = await req.json();
 
+    // logo and coverImage are not here on purpose: they are set only from
+    // uploaded files, by PUT /api/vendor/storefront (lib/shop-storefront.ts).
     const allowedUpdates = [
       "shopName",
       "description",
-      "logo",
-      "coverImage",
       "address",
       "contactInfo",
       "bankDetails",

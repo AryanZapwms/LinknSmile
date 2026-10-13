@@ -59,7 +59,9 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
             src={shop.coverImage}
             alt={shop.shopName}
             fill
-            className="object-cover opacity-60"
+            priority
+            sizes="100vw"
+            className="object-cover"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -79,7 +81,13 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
           {/* Logo */}
           <div className="relative -mt-10 h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-4 border-white bg-amber-50 shadow-md md:-mt-14 md:h-24 md:w-24">
             {shop.logo ? (
-              <Image src={shop.logo} alt={shop.shopName} fill className="object-cover" />
+              <Image
+                src={shop.logo}
+                alt={shop.shopName}
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-2xl font-bold text-amber-600">
                 {initials}
@@ -190,7 +198,7 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
             {/* About */}
             <div className="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
               <h3 className="mb-3 text-base font-bold text-stone-800">{t("aboutSellerTitle")}</h3>
-              <p className="text-sm leading-relaxed text-stone-500">
+              <p className="text-sm leading-relaxed break-words whitespace-pre-line text-stone-500">
                 {shop.description || t("noDescription")}
               </p>
               <div className="mt-4 space-y-2.5 border-t border-stone-100 pt-4">

@@ -6,9 +6,9 @@ import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { StorefrontEditor, type StorefrontShop } from "@/components/shop/storefront-editor";
 import {
   Store,
   MapPin,
@@ -21,11 +21,11 @@ import {
   Loader2,
   Info,
   AlertCircle,
+  Image as ImageIcon,
 } from "lucide-react";
 
 interface ShopSettings {
   shopName: string;
-  description: string;
   contactInfo: {
     phone: string;
     email: string;
@@ -51,6 +51,10 @@ interface ShopSettings {
 export default function VendorSettingsPage() {
   const t = useTranslations("VendorSettings");
   const [settings, setSettings] = useState<ShopSettings | null>(null);
+  // The Store Page tab (logo, banner, description) saves on its own, through
+  // /api/vendor/storefront — it is not part of the form below.
+  const [storefront, setStorefront] = useState<StorefrontShop | null>(null);
+  const [tab, setTab] = useState("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -67,7 +71,6 @@ export default function VendorSettingsPage() {
         const shop = json.shop;
         setSettings({
           shopName: shop.shopName || "",
-          description: shop.description || "",
           contactInfo: shop.contactInfo || { phone: "", email: "" },
           address: shop.address || {
             street: "",
@@ -85,6 +88,15 @@ export default function VendorSettingsPage() {
             upiId: "",
           },
           commissionRate: shop.commissionRate || 10,
+        });
+        setStorefront({
+          shopName: shop.shopName || "",
+          slug: shop.slug,
+          description: shop.description,
+          logo: shop.logo,
+          coverImage: shop.coverImage,
+          isApproved: shop.isApproved,
+          isActive: shop.isActive,
         });
       } else {
         toast.error(t("loadFailed"));
@@ -134,11 +146,15 @@ export default function VendorSettingsPage() {
       </div>
 
       <form onSubmit={handleUpdate}>
-        <Tabs defaultValue="profile" className="w-full space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs value={tab} onValueChange={setTab} className="w-full space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <Store className="h-4 w-4" />{" "}
               <span className="hidden sm:inline">{t("tabShopProfile")}</span>
+            </TabsTrigger>
+            <TabsTrigger value="store" className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" />{" "}
+              <span className="hidden sm:inline">{t("tabStorePage")}</span>
             </TabsTrigger>
             <TabsTrigger value="address" className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />{" "}
@@ -167,15 +183,6 @@ export default function VendorSettingsPage() {
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t("description")}</label>
-                  <Textarea
-                    value={settings.description}
-                    onChange={(e) => setSettings({ ...settings, description: e.target.value })}
-                    placeholder={t("descriptionPlaceholder")}
-                    rows={4}
-                  />
-                </div>
                 <div className="bg-muted/50 flex gap-3 rounded-lg p-4">
                   <Info className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
                   <p className="text-muted-foreground text-xs leading-relaxed">
@@ -187,6 +194,16 @@ export default function VendorSettingsPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Store Page Tab — stays mounted so a chosen image survives a tab switch */}
+          <TabsContent value="store" forceMount className="data-[state=inactive]:hidden">
+            {storefront && (
+              <StorefrontEditor
+                endpoint="/api/vendor/storefront"
+                shop={{ ...storefront, shopName: settings.shopName }}
+              />
+            )}
           </TabsContent>
 
           {/* Address & Contact Tab */}
@@ -449,7 +466,7 @@ export default function VendorSettingsPage() {
           </TabsContent>
         </Tabs>
 
-        <div className="mt-8 flex justify-end">
+        <div className={`mt-8 justify-end ${tab === "store" ? "hidden" : "flex"}`}>
           <Button type="submit" size="lg" disabled={saving}>
             {saving ? (
               <>
