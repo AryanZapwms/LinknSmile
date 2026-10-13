@@ -628,7 +628,8 @@
     "cancellationReasonTooltip": "سبب الإلغاء: {reason}",
     "reasonLabel": "السبب: {reason}",
     "view": "عرض",
-    "loadFailed": "فشل تحميل الطلبات"
+    "loadFailed": "فشل تحميل الطلبات",
+    "unknownCustomer": "عميل غير معروف"
   },
   "VendorOrderDetail": {
     "orderDetails": "تفاصيل الطلب",

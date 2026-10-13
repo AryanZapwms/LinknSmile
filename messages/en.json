@@ -628,7 +628,8 @@
     "cancellationReasonTooltip": "Cancellation reason: {reason}",
     "reasonLabel": "Reason: {reason}",
     "view": "View",
-    "loadFailed": "Failed to load orders"
+    "loadFailed": "Failed to load orders",
+    "unknownCustomer": "Unknown customer"
   },
   "VendorOrderDetail": {
     "orderDetails": "Order Details",
