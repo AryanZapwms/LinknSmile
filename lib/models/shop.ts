@@ -1,10 +1,14 @@
 // lib/models/shop.ts
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { STORE_TYPES, type StoreType } from "@/lib/shop-store-type";
 
 export interface IShop extends Document {
   ownerId: mongoose.Types.ObjectId;
   shopName: string;
   slug: string;
+  // Absent on shops created before store types existed — read it with
+  // storeTypeOf() (lib/shop-store-type.ts), which treats those as "products".
+  storeType: StoreType;
   description: string;
   logo?: string;
   coverImage?: string;
@@ -53,6 +57,7 @@ const ShopSchema = new Schema<IShop>(
     ownerId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },
     shopName: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true },
+    storeType: { type: String, enum: [...STORE_TYPES], default: "products" },
     description: { type: String, default: "" },
     logo: { type: String },
     coverImage: { type: String },

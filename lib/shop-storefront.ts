@@ -1,8 +1,8 @@
 // lib/shop-storefront.ts
 //
 // Saves the editable part of a shop's public page (app/shop/[slug]) — logo,
-// banner (Shop.coverImage) and description — for both the vendor route
-// (app/api/vendor/storefront) and the admin route
+// banner (Shop.coverImage), description and store type — for both the
+// vendor route (app/api/vendor/storefront) and the admin route
 // (app/api/admin/vendors/[id]/storefront).
 //
 // Images arrive as files and are stored here; a client never supplies an
@@ -25,6 +25,7 @@ import {
   type StorefrontErrorReason,
   type StorefrontImageKind,
 } from "@/lib/shop-storefront-rules";
+import { isStoreType, storeTypeOf, type StoreType } from "@/lib/shop-store-type";
 
 const KINDS: StorefrontImageKind[] = ["logo", "banner"];
 const SHOP_FIELD: Record<StorefrontImageKind, "logo" | "coverImage"> = {
@@ -32,7 +33,7 @@ const SHOP_FIELD: Record<StorefrontImageKind, "logo" | "coverImage"> = {
   banner: "coverImage",
 };
 const LABEL: Record<StorefrontImageKind, string> = { logo: "Logo", banner: "Banner" };
-const STOREFRONT_SELECT = "shopName slug description logo coverImage";
+const STOREFRONT_SELECT = "shopName slug storeType description logo coverImage";
 
 // Both images at their limit, plus room for the description and the
 // multipart framing.
@@ -42,6 +43,8 @@ const MAX_REQUEST_BYTES =
 export interface StorefrontInput {
   /** undefined leaves the description as it is. */
   description?: string;
+  /** As sent; checked in saveStorefront. undefined leaves the store type as it is. */
+  storeType?: string;
   /** A file replaces the image, null removes it, undefined leaves it. */
   logo?: File | null;
   banner?: File | null;
@@ -51,6 +54,7 @@ export interface StorefrontFields {
   _id: string;
   shopName: string;
   slug: string;
+  storeType: StoreType;
   description: string;
   logo: string | null;
   coverImage: string | null;
@@ -61,7 +65,7 @@ export interface StorefrontFailure {
   status: number;
   code: ErrorCode;
   message: string;
-  field?: StorefrontImageKind | "description";
+  field?: StorefrontImageKind | "description" | "storeType";
   reason?: StorefrontErrorReason;
 }
 
@@ -95,6 +99,7 @@ function toFields(doc: any): StorefrontFields {
     _id: String(doc._id),
     shopName: doc.shopName,
     slug: doc.slug,
+    storeType: storeTypeOf(doc),
     description: doc.description ?? "",
     logo: doc.logo ?? null,
     coverImage: doc.coverImage ?? null,
@@ -131,6 +136,8 @@ export async function readStorefrontForm(
   const input: StorefrontInput = {};
   const description = form.get("description");
   if (typeof description === "string") input.description = description;
+  const storeType = form.get("storeType");
+  if (typeof storeType === "string") input.storeType = storeType;
 
   for (const kind of KINDS) {
     const entry = form.get(kind);
@@ -160,6 +167,22 @@ export async function saveStorefront(
 
   const set: Record<string, string> = {};
   const unset: Record<string, 1> = {};
+
+  if (input.storeType !== undefined) {
+    if (!isStoreType(input.storeType)) {
+      return {
+        ok: false,
+        status: 400,
+        code: "VALIDATION_ERROR",
+        message: "Store type must be products, services or both",
+        field: "storeType",
+        reason: "STORE_TYPE",
+      };
+    }
+    // A shop saved before store types existed reads as "products"; choosing
+    // what it already is writes nothing.
+    if (input.storeType !== before.storeType) set.storeType = input.storeType;
+  }
 
   if (input.description !== undefined) {
     // Browsers send a textarea's line breaks as CRLF in multipart bodies;

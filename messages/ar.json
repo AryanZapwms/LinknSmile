@@ -985,7 +985,17 @@
     "errorImageTooLarge": "هذه الصورة كبيرة جدًا. الحد الأقصى {maxMb} ميجابايت.",
     "errorDescriptionTooLong": "يمكن أن يتكون الوصف من {max} حرف كحد أقصى.",
     "viewPublicPage": "عرض الصفحة العامة",
-    "notPublicYet": "تصبح هذه الصفحة عامة بعد الموافقة على المتجر وتفعيله."
+    "notPublicYet": "تصبح هذه الصفحة عامة بعد الموافقة على المتجر وتفعيله.",
+    "storeTypeLabel": "ماذا يقدّم هذا المتجر؟",
+    "storeTypeHint": "يحدد هذا ما يظهر في صفحة المتجر العامة.",
+    "storeTypeProducts": "منتجات",
+    "storeTypeProductsDesc": "تعرض صفحة المتجر المنتجات.",
+    "storeTypeServices": "خدمات",
+    "storeTypeServicesDesc": "تعرض صفحة المتجر المنشورات بدلًا من المنتجات.",
+    "storeTypeBoth": "كلاهما",
+    "storeTypeBothDesc": "تعرض صفحة المتجر المنتجات والمنشورات.",
+    "servicesWarning": "لا تظهر المنتجات في صفحة المتجر عندما يكون نوع المتجر «خدمات». إذا كان هذا المتجر يبيع منتجات أيضًا، فاختر «كلاهما».",
+    "errorStoreType": "يُرجى اختيار منتجات أو خدمات أو كلاهما."
   },
   "VendorCouponsPage": {
     "title": "الكوبونات",
@@ -1865,7 +1875,13 @@
     "browseMoreTitle": "تصفح المزيد",
     "allProductsLink": "🛍️ جميع المنتجات",
     "madeInIndiaLink": "🇮🇳 صنع في الهند",
-    "internationalLink": "🌍 دولي"
+    "internationalLink": "🌍 دولي",
+    "postsTitle": "المنشورات",
+    "noPostsTitle": "لا توجد منشورات بعد",
+    "noPostsBody": "لم يشارك هذا البائع أي منشورات بعد. يُرجى العودة لاحقًا.",
+    "nothingYetTitle": "لا يوجد شيء هنا بعد",
+    "nothingYetBody": "لم يضف هذا البائع أي منتجات أو منشورات بعد. يُرجى العودة لاحقًا.",
+    "watchVideo": "شاهد الفيديو"
   },
   "SellersPage": {
     "eyebrow": "سوق Linknsmile",

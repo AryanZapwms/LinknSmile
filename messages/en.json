@@ -985,7 +985,17 @@
     "errorImageTooLarge": "This image is too large. The limit is {maxMb} MB.",
     "errorDescriptionTooLong": "The description can be at most {max} characters.",
     "viewPublicPage": "View public page",
-    "notPublicYet": "This page becomes public once the shop is approved and active."
+    "notPublicYet": "This page becomes public once the shop is approved and active.",
+    "storeTypeLabel": "What does this shop offer?",
+    "storeTypeHint": "This decides what the public shop page shows.",
+    "storeTypeProducts": "Products",
+    "storeTypeProductsDesc": "The shop page shows products.",
+    "storeTypeServices": "Services",
+    "storeTypeServicesDesc": "The shop page shows posts instead of products.",
+    "storeTypeBoth": "Both",
+    "storeTypeBothDesc": "The shop page shows products and posts.",
+    "servicesWarning": "Products are not shown on the shop page while the store type is Services. If this shop also sells products, choose Both.",
+    "errorStoreType": "Please choose Products, Services or Both."
   },
   "VendorCouponsPage": {
     "title": "Coupons",
@@ -1865,7 +1875,13 @@
     "browseMoreTitle": "Browse More",
     "allProductsLink": "🛍️ All Products",
     "madeInIndiaLink": "🇮🇳 Made in India",
-    "internationalLink": "🌍 International"
+    "internationalLink": "🌍 International",
+    "postsTitle": "Posts",
+    "noPostsTitle": "No posts yet",
+    "noPostsBody": "This seller hasn't shared any posts yet. Please check back soon.",
+    "nothingYetTitle": "Nothing here yet",
+    "nothingYetBody": "This seller hasn't added any products or posts yet. Please check back soon.",
+    "watchVideo": "Watch video"
   },
   "SellersPage": {
     "eyebrow": "Linknsmile Marketplace",

@@ -51,8 +51,8 @@ interface ShopSettings {
 export default function VendorSettingsPage() {
   const t = useTranslations("VendorSettings");
   const [settings, setSettings] = useState<ShopSettings | null>(null);
-  // The Store Page tab (logo, banner, description) saves on its own, through
-  // /api/vendor/storefront — it is not part of the form below.
+  // The Store Page tab (store type, logo, banner, description) saves on its
+  // own, through /api/vendor/storefront — it is not part of the form below.
   const [storefront, setStorefront] = useState<StorefrontShop | null>(null);
   const [tab, setTab] = useState("profile");
   const [loading, setLoading] = useState(true);
@@ -92,6 +92,7 @@ export default function VendorSettingsPage() {
         setStorefront({
           shopName: shop.shopName || "",
           slug: shop.slug,
+          storeType: shop.storeType,
           description: shop.description,
           logo: shop.logo,
           coverImage: shop.coverImage,
