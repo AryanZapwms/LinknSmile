@@ -30,8 +30,11 @@ export async function call<T = any>(handler: Handler, path: string, opts: CallOp
     ...opts.headers,
   };
   if (opts.bearer) headers.authorization = `Bearer ${opts.bearer}`;
-  let body: string | undefined;
-  if (opts.body !== undefined) {
+  let body: string | FormData | undefined;
+  if (opts.body instanceof FormData) {
+    // Sent as multipart; the runtime sets the content type and its boundary.
+    body = opts.body;
+  } else if (opts.body !== undefined) {
     body = typeof opts.body === "string" ? opts.body : JSON.stringify(opts.body);
     headers["content-type"] ??= "application/json";
   }

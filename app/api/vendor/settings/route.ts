@@ -64,11 +64,11 @@ export async function PUT(req: NextRequest) {
     const shopId = session.user.shopId;
     const body = await req.json();
 
+    // logo and coverImage are not here on purpose: they are set only from
+    // uploaded files, by PUT /api/vendor/storefront (lib/shop-storefront.ts).
     const allowedUpdates = [
       "shopName",
       "description",
-      "logo",
-      "coverImage",
       "address",
       "contactInfo",
       "bankDetails",
@@ -80,6 +80,17 @@ export async function PUT(req: NextRequest) {
         updates[key] = body[key];
       }
     });
+
+    // The web settings form sends bankDetails on every save, with every
+    // field blank until the vendor has entered some. All-blank means "not
+    // provided": leave what is on file alone rather than reject the save.
+    if (
+      updates.bankDetails &&
+      typeof updates.bankDetails === "object" &&
+      Object.values(updates.bankDetails).every((value) => !String(value ?? "").trim())
+    ) {
+      delete updates.bankDetails;
+    }
 
     // Simple validation for bank details if provided
     if (updates.bankDetails) {

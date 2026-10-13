@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, LOCALE } from "@/lib/currency";
 import { FinancePanel } from "./FinancePanel";
+import { StorefrontEditor } from "@/components/shop/storefront-editor";
 import {
   CheckCircle,
   XCircle,
@@ -340,6 +341,7 @@ export default function VendorDetailsPage() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="store">Store Page</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="coupons">Coupons</TabsTrigger>
           <TabsTrigger value="bank">Bank Details</TabsTrigger>
@@ -372,6 +374,17 @@ export default function VendorDetailsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Logo, banner and description of the public shop page — the same form
+            the vendor has under /vendor/settings. Stays mounted so a chosen
+            image survives a tab switch. */}
+        <TabsContent value="store" forceMount className="data-[state=inactive]:hidden">
+          <StorefrontEditor
+            endpoint={`/api/admin/vendors/${id}/storefront`}
+            shop={vendor}
+            onSaved={(saved) => setVendor((prev: any) => ({ ...prev, ...saved }))}
+          />
         </TabsContent>
 
         <TabsContent value="products">
