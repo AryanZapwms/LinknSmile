@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, GripVertical, Search } from "lucide-react";
+import { Trash2, GripVertical, Search, PackageX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   DndContext,
@@ -53,7 +53,46 @@ function SortableHeroRow({
     id: entry._id,
   });
 
-  if (!entry.productId) return null;
+  // The product was deleted after it was featured. The row stays visible so
+  // the entry can be removed; there is nothing to show, reorder or switch on.
+  if (!entry.productId) {
+    return (
+      <Card
+        ref={setNodeRef}
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition,
+          opacity: isDragging ? 0.6 : 1,
+        }}
+        className="border-dashed"
+      >
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className="bg-muted text-muted-foreground flex h-14 w-14 flex-shrink-0 items-center justify-center rounded">
+            <PackageX className="h-6 w-6" />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium">Product deleted</p>
+            <p className="text-muted-foreground text-sm">
+              This product no longer exists and is not shown on the homepage. Remove this entry.
+            </p>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-3">
+            <Badge variant="destructive">Deleted</Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onRemove(entry._id)}
+              aria-label="Remove deleted product"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card

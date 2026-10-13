@@ -2,7 +2,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db"; // ✅ named export
 import Wishlist from "@/lib/models/wishlist";
-import { Product } from "@/lib/models/product";
+// Registers the Product model for populate("productId") below. A named import
+// that is never used is dropped at compile time and registers nothing.
+import "@/lib/models/product";
 import { getAuthSession } from "@/lib/get-auth-user";
 
 
@@ -14,13 +16,24 @@ export async function GET(req: NextRequest) {
   }
 
   const wishlist = await Wishlist.find({ userId: session.user.id }).populate("productId");
-  const items = wishlist.map((item) => ({
-    _id: item._id,
-    productId: item.productId._id,
-    name: item.productId.name,
-    price: item.productId.price,
-    image: item.productId.images?.[0] || "/placeholder.jpg",
-  }));
+  // populate() leaves null where the product was deleted after it was
+  // wishlisted. Those entries are left out of the response.
+  const items = [];
+  for (const item of wishlist) {
+    if (!item.productId) {
+      console.warn(
+        `[wishlist] Skipping wishlist item ${item._id} of user ${session.user.id}: its product no longer exists`
+      );
+      continue;
+    }
+    items.push({
+      _id: item._id,
+      productId: item.productId._id,
+      name: item.productId.name,
+      price: item.productId.price,
+      image: item.productId.images?.[0] || "/placeholder.jpg",
+    });
+  }
   return NextResponse.json(items);
 }
 

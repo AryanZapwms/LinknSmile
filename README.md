@@ -477,7 +477,7 @@ Access at `/admin` — requires a session with `role: "admin"` (checked per-rout
 | Section | Purpose |
 |---|---|
 | Dashboard (`/admin`) | Revenue chart, KPI cards (orders, revenue, products, users), top-category breakdown |
-| Users (`/admin/users`) | View/search customers, edit role, delete users |
+| Users (`/admin/users`) | View/search customers, edit role, delete users (a user who has orders is anonymized and deactivated instead, so the orders keep their customer) |
 | Orders (`/admin/orders`) | Full order list, update order status |
 | Products (`/admin/products`, `/add`, `/edit/[id]`) | Product CRUD, toggle active/inactive |
 | Product Approvals (`/admin/product-approvals`) | Approve/reject vendor-submitted products |

@@ -1,6 +1,10 @@
 import { withCORS } from "@/lib/cors";
 import { connectDB } from "@/lib/db";
 import { Order } from "@/lib/models/order";
+// Registers the Product model for populate("items.product") below. Nothing
+// else this route imports does, so without it the query throws
+// MissingSchemaError until some other route has loaded the model.
+import "@/lib/models/product";
 import { User } from "@/lib/models/user";
 import { getServerSession } from "next-auth";
 import { type NextRequest, NextResponse } from "next/server";
