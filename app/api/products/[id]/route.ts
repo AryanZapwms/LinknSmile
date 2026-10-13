@@ -2,6 +2,8 @@
 import { withCORS } from "@/lib/cors";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/lib/models/product";
+import { HeroProduct } from "@/lib/models/hero-product";
+import Wishlist from "@/lib/models/wishlist";
 
 import "@/lib/models/company";
 import "@/lib/models/category";
@@ -179,6 +181,19 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     }
 
     console.log("✅ Product deleted:", product._id);
+
+    // Featured-product and wishlist entries mean nothing once the product is
+    // gone. Orders are deliberately left alone: they are kept as records and
+    // may go on referencing a deleted product.
+    try {
+      await Promise.all([
+        HeroProduct.deleteMany({ productId: product._id }),
+        Wishlist.deleteMany({ productId: product._id }),
+      ]);
+    } catch (cleanupError) {
+      // The product itself is deleted; readers skip any entry left behind.
+      console.error("Hero/wishlist cleanup failed for deleted product:", product._id, cleanupError);
+    }
 
     return NextResponse.json({
       message: "Product deleted successfully",
