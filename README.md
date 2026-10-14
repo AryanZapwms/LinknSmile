@@ -369,7 +369,7 @@ HTTP methods and payloads):
 
 **Vendor portal** (`shop_owner`-gated) — `vendor/apply`, `vendor/apply/intent`,
 `vendor/bank-details`, `vendor/exit`, `vendor/orders(+/[id])`, `vendor/payout/request`,
-`vendor/payouts`, `vendor/products(+/[id],/bulk-upload,/reviews,/stats)`,
+`vendor/payouts`, `vendor/posts(+/[id],/[id]/images)`, `vendor/products(+/[id],/bulk-upload,/reviews,/stats)`,
 `vendor/reviews(+/[id],/[id]/reply)`, `vendor/settings`, `vendor/stats`, `vendor/status`,
 `vendor/storefront`, `vendor/subscription/{create-order,verify-payment}`,
 `vendor/subscription/tap/{create-order,verify-payment,webhook}`,
@@ -380,7 +380,7 @@ HTTP methods and payloads):
 `admin/home-banner(+/[id],/reorder)`, `admin/hero-products(+/[id],/reorder)`,
 `admin/payment-settings(+/public)`, `admin/platform-settings`, `admin/payouts`,
 `admin/vendor-subscription-settings`, `admin/vendor-subscriptions(+/[shopId])`,
-`admin/vendors(+/[id],/[id]/finance,/[id]/storefront)`, `admin/vendors/mou(+/remind)`,
+`admin/vendors(+/[id],/[id]/finance,/[id]/storefront,/[id]/posts,/[id]/posts/[postId])`, `admin/vendors/mou(+/remind)`,
 `admin/wallet-action`,
 `admin/wallet-overview`,
 `admin/images/{delete,scan}`
@@ -406,7 +406,7 @@ All schemas live in `lib/models/`:
 |---|---|
 | User | Account (customer/admin/vendor), auth, `locale` field for email language, `lastLoginAt` (last sign-in) |
 | Shop | Vendor storefront record — approval, commission rate, bank details, slug, store type (see below) |
-| ShopPost | A post on a shop's public page — title, text, images, optional video link, draft/published (see below) |
+| ShopPost | A post on a shop's public page — title, text, pictures, optional YouTube/Vimeo link, draft/published/removed (see below) |
 | Product | Catalog item — price, stock, sizes, approval workflow, subscription-hide flag |
 | Category | Hierarchical product category (self-referential parent) |
 | Company | Brand/landing-page content referenced by products/blogs |
@@ -461,11 +461,29 @@ status, vendor `PATCH /api/vendor/orders/:id` and admin `PUT /api/orders/:id`, a
   something. A Services or Both shop with nothing to show gets one friendly message.
 - `services` hides a shop's products on its shop page only. They stay in the catalogue, search
   and checkout, and the vendor dashboard is the same for every store type.
-- `ShopPost` holds `shopId`, `title` (up to 150 characters), `text` (up to 5000), `images` (up
-  to 10 URLs), an optional `videoUrl` (an `https://` link, not an upload), `status`
-  (`draft`/`published`) and timestamps. The shop page shows the 20 newest published posts.
-  **Nothing creates posts yet**: there is no posts screen or route, so the Posts section stays
-  empty until one is built.
+- `ShopPost` holds `shopId`, `title` (up to 150 characters), `text` (up to 5000, plain text),
+  `images` (up to 10), an optional `videoUrl`, `status` (`draft`, `published` or `removed`),
+  `moderation` (what an admin last did and why), `hiddenBySubscription` and timestamps. Rules:
+  `lib/shop-post-rules.ts`; reads and writes: `lib/shop-posts.ts`.
+- A vendor writes posts on `/vendor/posts` (same gate as products: MOU accepted, shop approved,
+  subscription active), up to 100 per shop. A post is created as a draft and published when the
+  vendor chooses; there is no approval step. Pictures are sent as files, one per request
+  (`POST /api/vendor/posts/[id]/images`), and stored by the server: JPEG, PNG or WebP judged by
+  file content, up to 5 MB each, the same rules as the store page banner. A client never supplies
+  an image URL; a PUT can only reorder or drop the post's own pictures. The video link must be an
+  `https://` YouTube or Vimeo address and is shown as a "Watch video" button, not an embedded
+  player. The Posts link is in every vendor's menu; a Products shop is told its posts are not
+  shown on the shop page.
+- An admin sees a shop's posts on the Posts tab of `/admin/vendors/[id]` and can **unpublish**
+  one (back to draft; the vendor may fix it and publish again) or **remove** it (status
+  `removed`, final; the vendor can only delete it). Both need a reason, which the vendor sees,
+  and both are written to `AuditLog` (`SHOP_POST_UNPUBLISHED`, `SHOP_POST_REMOVED`) in the same
+  transaction as the change.
+- The shop page shows the 20 newest posts that are `published` and not `hiddenBySubscription`.
+  The subscription sweep sets `hiddenBySubscription` on a shop's posts together with its
+  products once the subscription has been expired for more than 30 days; renewal clears both.
+- Pictures of a deleted post, or one dropped from a post, stay in image storage (the storage
+  layer has no delete), as replaced logos and banners do.
 
 ---
 
@@ -484,6 +502,7 @@ Access at `/admin` — requires a session with `role: "admin"` (checked per-rout
 | Vendors (`/admin/vendors`, `/[id]`, `/subscriptions`) | Manage vendor status and subscriptions |
 | Vendor MOU (`/admin/vendors/mou`) | Which active vendors have accepted the current MOU version (`lib/mou-content.ts`); email reminders to those who haven't — one per vendor per 24h, each logged to `AuditLog` (`lib/vendor-mou-tracking.ts`) |
 | Vendor Finance (`/admin/vendors/[id]`, Finance tab) | Read-only view of one vendor's money, from `GET /api/admin/vendors/[id]/finance` (`lib/vendor-finance.ts`): wallet balances and status, the wallet checked against the ledger, warnings for the known ways a balance can be wrong (cancelled orders still credited, COD earnings missing, sales overdue for release, paid orders missing from the ledger, rejected payouts not given back, a stuck final settlement), payouts, ledger entries, the audit log, and bank details masked on the server. It has no actions and writes nothing |
+| Vendor Posts (`/admin/vendors/[id]`, Posts tab) | Every post of one shop, from `GET /api/admin/vendors/[id]/posts`. Unpublish (back to the vendor's drafts) or Remove (final) through `PATCH /api/admin/vendors/[id]/posts/[postId]`; both need a reason, which the vendor sees, and are logged to `AuditLog` as `SHOP_POST_UNPUBLISHED` / `SHOP_POST_REMOVED` |
 | Vendor Store Page (`/admin/vendors/[id]`, Store Page tab) | Edit any shop's public page (`/shop/[slug]`): store type (Products / Services / Both), logo, banner and description, through `PUT /api/admin/vendors/[id]/storefront`. Same form and rules as the vendor's own Store Page tab (`components/shop/storefront-editor.tsx`, `lib/shop-storefront.ts`): JPEG, PNG or WebP judged by file content, logo up to 2 MB, banner up to 5 MB, description up to 1000 characters. Each change is logged to `AuditLog` as `SHOP_STOREFRONT_UPDATED` |
 | Categories (`/admin/categories`) | Category CRUD |
 | Promos (`/admin/promo-bar`) | Scrolling promo banner content |
@@ -508,6 +527,7 @@ Subscription renewal is not a separate page — it's a gate baked into `app/vend
 |---|---|
 | Dashboard / Stats | Vendor-scoped sales stats |
 | Products (`/products`, `/add`, `/edit/[id]`, `/bulk-upload`) | Product CRUD + CSV bulk upload |
+| Posts (`/posts`) | Write, edit, publish, unpublish and delete posts for the public shop page: title, text, up to 10 pictures and an optional YouTube/Vimeo link. Shows an admin's reason when a post was unpublished or removed. See "Store type and posts" under Database Models |
 | Orders (`/orders`, `/[id]`) | Fulfill orders placed for this vendor's products |
 | Coupons (`/coupons`, `/add`, `/edit/[id]`) | Per-vendor discount codes |
 | Reviews (`/reviews`) | View and reply to reviews on this vendor's products |
