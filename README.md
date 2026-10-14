@@ -358,7 +358,7 @@ HTTP methods and payloads):
 `mobile-auth/login`
 
 **Catalog (public read)** — `products`, `products/[id]`, `products/[id]/reviews`,
-`products/reviews/all`, `categories`, `categories/[id]`, `companies`, `shops`, `blogs`,
+`products/reviews/all`, `categories`, `categories/[id]`, `companies`, `shops`, `shops/[slug]/posts`, `blogs`,
 `blogs/[slug]`, `promos`, `promos/[id]`, `home-banner`, `hero-products`,
 `platform-settings/public`
 
@@ -479,7 +479,14 @@ status, vendor `PATCH /api/vendor/orders/:id` and admin `PUT /api/orders/:id`, a
   `removed`, final; the vendor can only delete it). Both need a reason, which the vendor sees,
   and both are written to `AuditLog` (`SHOP_POST_UNPUBLISHED`, `SHOP_POST_REMOVED`) in the same
   transaction as the change.
-- The shop page shows the 20 newest posts that are `published` and not `hiddenBySubscription`.
+- The shop page shows posts that are `published` and not `hiddenBySubscription`, newest first,
+  as a grid of square tiles (`components/shop/shop-posts-grid.tsx`): the first picture, or the
+  title and start of the text for a post without one. The page renders the first 12; "Load
+  more" fetches 12 more at a time from the public `GET /api/shops/[slug]/posts?cursor=…`. A tile
+  opens the full post in a dialog (`components/shop/shop-post-modal.tsx`) with all pictures,
+  the text and previous / next post. The open post is kept in the address as `?post=<id>`, so
+  the link can be shared; an older post is fetched with `GET /api/shops/[slug]/posts?post=<id>`.
+  The route only ever returns what the page would show (`lib/shop-page.ts`).
   The subscription sweep sets `hiddenBySubscription` on a shop's posts together with its
   products once the subscription has been expired for more than 30 days; renewal clears both.
 - Pictures of a deleted post, or one dropped from a post, stay in image storage (the storage
