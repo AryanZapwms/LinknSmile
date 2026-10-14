@@ -20,7 +20,7 @@ import {
 const SHOP_PAGE_SELECT =
   "shopName slug storeType description logo coverImage address contactInfo isApproved ratings";
 
-/** Newest posts shown; paging comes with the posts screen. */
+/** Newest posts shown; the page has no paging. */
 const POSTS_ON_PAGE = 20;
 
 export interface ShopPagePost {
@@ -28,7 +28,7 @@ export interface ShopPagePost {
   title: string;
   text: string;
   images: string[];
-  /** Already checked: an https:// address, or null. */
+  /** Already checked: an https:// YouTube or Vimeo address, or null. */
   videoUrl: string | null;
   createdAt: string;
 }
@@ -71,7 +71,13 @@ export async function getShopPageData(slug: string): Promise<ShopPageData | null
           .lean() as Promise<any[]>),
     storeType === "products"
       ? []
-      : (ShopPost.find({ shopId: shop._id, status: "published" })
+      : // Published only (never a draft or a post an admin removed), and not
+        // while the subscription sweep has the storefront hidden.
+        (ShopPost.find({
+          shopId: shop._id,
+          status: "published",
+          hiddenBySubscription: { $ne: true },
+        })
           .select("title text images videoUrl createdAt")
           .sort({ createdAt: -1 })
           .limit(POSTS_ON_PAGE)

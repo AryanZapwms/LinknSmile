@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, LOCALE } from "@/lib/currency";
 import { FinancePanel } from "./FinancePanel";
+import { PostsPanel } from "./PostsPanel";
 import { StorefrontEditor } from "@/components/shop/storefront-editor";
 import {
   CheckCircle,
@@ -342,6 +343,7 @@ export default function VendorDetailsPage() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="store">Store Page</TabsTrigger>
+          <TabsTrigger value="posts">Posts</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="coupons">Coupons</TabsTrigger>
           <TabsTrigger value="bank">Bank Details</TabsTrigger>
@@ -385,6 +387,12 @@ export default function VendorDetailsPage() {
             shop={vendor}
             onSaved={(saved) => setVendor((prev: any) => ({ ...prev, ...saved }))}
           />
+        </TabsContent>
+
+        {/* The shop's posts, with unpublish / remove; loads its own data when
+            the tab is opened. */}
+        <TabsContent value="posts">
+          <PostsPanel shopId={id} />
         </TabsContent>
 
         <TabsContent value="products">
