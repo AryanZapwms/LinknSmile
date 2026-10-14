@@ -2,7 +2,10 @@
 //
 // One published post on the public shop page (app/shop/[slug]). Read-only:
 // what it shows comes from lib/shop-page.ts, which has already dropped any
-// video link that is not a plain https:// address.
+// video link that is not an https:// YouTube or Vimeo address. The video is a
+// link that opens on YouTube or Vimeo, not an embedded player, so the shop
+// page loads nothing from those sites.
+import Image from "next/image";
 import { PlayCircle } from "lucide-react";
 import type { ShopPagePost } from "@/lib/shop-page";
 
@@ -27,19 +30,24 @@ export function ShopPostCard({ post, date, watchVideoLabel }: ShopPostCardProps)
         </p>
       )}
 
-      {/* Plain <img>, not next/image: until the posts screen stores these
-          itself, a post's image can sit on any host, and next/image throws
-          for a host that next.config.mjs does not list. */}
+      {/* next/image sends each reader a resized copy (a picture can be up to
+          5 MB). Post pictures are only ever URLs our own storage returned
+          (lib/shop-posts.ts), on hosts next.config.mjs allows. */}
       {post.images.length > 0 && (
         <div className={`mt-4 grid gap-2 ${single ? "grid-cols-1" : "grid-cols-2 sm:grid-cols-3"}`}>
           {post.images.map((src, index) => (
-            <img
+            <div
               key={index}
-              src={src}
-              alt={post.title}
-              loading="lazy"
-              className={`w-full rounded-xl bg-stone-100 object-cover ${single ? "max-h-96" : "aspect-square"}`}
-            />
+              className={`relative overflow-hidden rounded-xl bg-stone-100 ${single ? "aspect-video max-h-96" : "aspect-square"}`}
+            >
+              <Image
+                src={src}
+                alt={post.title}
+                fill
+                sizes={single ? "(max-width: 768px) 100vw, 640px" : "(max-width: 640px) 50vw, 220px"}
+                className="object-cover"
+              />
+            </div>
           ))}
         </div>
       )}

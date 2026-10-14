@@ -86,9 +86,9 @@ describe("shopPageSections", () => {
 });
 
 describe("safeVideoUrl", () => {
-  it("passes an https link and nothing else", () => {
+  it("passes an https YouTube or Vimeo link and nothing else", () => {
     expect(safeVideoUrl(" https://www.youtube.com/watch?v=abc ")).toBe("https://www.youtube.com/watch?v=abc");
-    for (const value of ["http://example.com/v", "javascript:alert(1)", "data:text/html,<script>alert(1)</script>", "//example.com/v", "www.youtube.com/watch", "", undefined, null, 5]) {
+    for (const value of ["https://example.com/v", "http://example.com/v", "javascript:alert(1)", "data:text/html,<script>alert(1)</script>", "//example.com/v", "www.youtube.com/watch", "", undefined, null, 5]) {
       expect(safeVideoUrl(value), String(value)).toBeNull();
     }
   });
@@ -133,9 +133,9 @@ describe("ShopPost model", () => {
     expect(invalidFields({ shopId, title: "T", status: "archived" })).toEqual(["status"]);
   });
 
-  it("accepts only an https video link", () => {
+  it("accepts only an https YouTube or Vimeo video link", () => {
     expect(invalidFields({ shopId, title: "T", videoUrl: "https://vimeo.com/123" })).toEqual([]);
-    for (const videoUrl of ["http://vimeo.com/123", "javascript:alert(1)", "vimeo.com/123"]) {
+    for (const videoUrl of ["https://example.com/v.mp4", "http://vimeo.com/123", "javascript:alert(1)", "vimeo.com/123"]) {
       expect(invalidFields({ shopId, title: "T", videoUrl }), videoUrl).toEqual(["videoUrl"]);
     }
   });

@@ -23,6 +23,7 @@ import {
   Tag,
   Gift,
   FileText,
+  Newspaper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LOCALE } from "@/lib/currency";
@@ -274,6 +275,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
   const navigation = [
     { name: t("dashboard"), href: "/vendor", icon: LayoutDashboard },
     { name: t("products"), href: "/vendor/products", icon: Package, requiresApproval: true },
+    { name: t("posts"), href: "/vendor/posts", icon: Newspaper, requiresApproval: true },
     { name: t("coupons"), href: "/vendor/coupons", icon: Tag, requiresApproval: true },
     { name: t("orders"), href: "/vendor/orders", icon: ShoppingCart, requiresApproval: true },
     { name: t("wallet"), href: "/vendor/wallet", icon: Wallet },
