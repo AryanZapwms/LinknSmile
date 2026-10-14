@@ -1977,7 +1977,19 @@
     "noPostsBody": "لم يشارك هذا البائع أي منشورات بعد. يُرجى العودة لاحقًا.",
     "nothingYetTitle": "لا يوجد شيء هنا بعد",
     "nothingYetBody": "لم يضف هذا البائع أي منتجات أو منشورات بعد. يُرجى العودة لاحقًا.",
-    "watchVideo": "شاهد الفيديو"
+    "watchVideo": "شاهد الفيديو",
+    "loadMorePosts": "عرض المزيد",
+    "loadingMorePosts": "جارٍ التحميل…",
+    "loadMorePostsFailed": "تعذّر تحميل المزيد من المنشورات. يرجى المحاولة مرة أخرى.",
+    "openPost": "فتح المنشور: {title}",
+    "closePost": "إغلاق",
+    "previousPost": "المنشور السابق",
+    "nextPost": "المنشور التالي",
+    "previousImage": "الصورة السابقة",
+    "nextImage": "الصورة التالية",
+    "showImage": "عرض الصورة {number}",
+    "imageCounter": "الصورة {current} من {total}",
+    "postImageAlt": "{title}، الصورة {number}"
   },
   "SellersPage": {
     "eyebrow": "سوق Linknsmile",

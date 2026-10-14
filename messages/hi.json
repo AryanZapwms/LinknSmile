@@ -1977,7 +1977,19 @@
     "noPostsBody": "इस विक्रेता ने अभी तक कोई पोस्ट साझा नहीं की है। कृपया बाद में फिर देखें।",
     "nothingYetTitle": "अभी यहां कुछ नहीं है",
     "nothingYetBody": "इस विक्रेता ने अभी तक कोई उत्पाद या पोस्ट नहीं जोड़ी है। कृपया बाद में फिर देखें।",
-    "watchVideo": "वीडियो देखें"
+    "watchVideo": "वीडियो देखें",
+    "loadMorePosts": "और देखें",
+    "loadingMorePosts": "लोड हो रहा है…",
+    "loadMorePostsFailed": "और पोस्ट लोड नहीं हो सकीं। कृपया फिर से कोशिश करें।",
+    "openPost": "पोस्ट खोलें: {title}",
+    "closePost": "बंद करें",
+    "previousPost": "पिछली पोस्ट",
+    "nextPost": "अगली पोस्ट",
+    "previousImage": "पिछली तस्वीर",
+    "nextImage": "अगली तस्वीर",
+    "showImage": "तस्वीर {number} दिखाएँ",
+    "imageCounter": "तस्वीर {current} / {total}",
+    "postImageAlt": "{title}, तस्वीर {number}"
   },
   "SellersPage": {
     "eyebrow": "Linknsmile मार्केटप्लेस",

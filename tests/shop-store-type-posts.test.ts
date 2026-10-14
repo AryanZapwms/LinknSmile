@@ -229,18 +229,20 @@ describe("getShopPageData", () => {
     expect((await getShopPageData(empty.slug))!.sections).toEqual({ products: false, posts: false, nothingYet: true });
   });
 
-  it("drops an unsafe video link, and caps a post's images and the number of posts", async () => {
+  it("drops an unsafe video link, caps a post's images, and shows the first 12 posts with a cursor for the rest", async () => {
     const shop = await makeShop({ storeType: "services" });
     for (let i = 0; i < 22; i++) await addPost(shop.shopId, `Post ${String(i).padStart(2, "0")}`, i);
     await addPost(shop.shopId, "Hand-edited post", -1, { videoUrl: "javascript:alert(1)", images: Array.from({ length: 14 }, (_, i) => `https://res.cloudinary.com/test/${i}.png`) });
 
     const data = (await getShopPageData(shop.slug))!;
 
-    expect(data.posts).toHaveLength(20);
+    expect(data.posts).toHaveLength(12);
     expect(data.posts[0].title).toBe("Hand-edited post");
     expect(data.posts[0].videoUrl).toBeNull();
     expect(data.posts[0].images).toHaveLength(10);
     expect(data.posts[1].title).toBe("Post 00");
-    expect(data.posts.at(-1)!.title).toBe("Post 18");
+    expect(data.posts.at(-1)!.title).toBe("Post 10");
+    expect(data.nextPostsCursor).toEqual(expect.any(String));
+    expect(data.sections.posts).toBe(true);
   });
 });

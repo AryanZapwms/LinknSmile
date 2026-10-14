@@ -1,8 +1,7 @@
 // app/shop/[slug]/page.tsx
 import { getShopPageData } from "@/lib/shop-page";
-import { LOCALE } from "@/lib/currency";
 import { ProductCard } from "@/components/product-card";
-import { ShopPostCard } from "@/components/shop/shop-post-card";
+import { ShopPostsGrid } from "@/components/shop/shop-posts-grid";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -28,7 +27,7 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
 
   // products is empty for a Services shop and posts for a Products shop;
   // sections says which of the two the page shows (lib/shop-store-type.ts).
-  const { shop, storeType, products, posts, sections } = data;
+  const { shop, storeType, products, posts, nextPostsCursor, sections } = data;
   const initials = shop.shopName?.slice(0, 2)?.toUpperCase() ?? "SH";
   const t = await getTranslations("ShopPage");
 
@@ -185,24 +184,17 @@ export default async function ShopPage({ params }: { params: Promise<{ slug: str
               </section>
             )}
 
-            {/* Posts — published only, newest first */}
+            {/* Posts — published only, newest first, as a grid; a post opens
+                in a dialog. The first page is rendered here, the rest load on
+                request (components/shop/shop-posts-grid.tsx). */}
             {sections.posts && (
               <section>
                 <h2 className="mb-5 text-lg font-bold text-stone-800">{t("postsTitle")}</h2>
-                <div className="space-y-4">
-                  {posts.map((post) => (
-                    <ShopPostCard
-                      key={post._id}
-                      post={post}
-                      date={new Date(post.createdAt).toLocaleDateString(LOCALE, {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                      watchVideoLabel={t("watchVideo")}
-                    />
-                  ))}
-                </div>
+                <ShopPostsGrid
+                  shopSlug={shop.slug}
+                  initialPosts={posts}
+                  initialCursor={nextPostsCursor}
+                />
               </section>
             )}
 
