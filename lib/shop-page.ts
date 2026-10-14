@@ -59,6 +59,10 @@ export async function getShopPageData(slug: string): Promise<ShopPageData | null
       : (Product.find({
           shopId: shop._id,
           isActive: true,
+          // Hidden by the subscription sweep (expired more than 30 days):
+          // the catalogue, product page, cart and checkout already leave
+          // these out, so the shop page must too.
+          hiddenBySubscription: { $ne: true },
           $or: [
             { approvalStatus: "approved" },
             { approvalStatus: { $exists: false } },
