@@ -453,3 +453,56 @@ describe("admin: a vendor's posts", () => {
     expect(await audit(id)).toEqual([]);
   });
 });
+
+describe("public shop page and the subscription sweep", () => {
+  it("shows only published posts that are not hidden for an expired subscription", async () => {
+    const { getShopPageData } = await import("@/lib/shop-page");
+    const v = await makeVendor({ storeType: "services" });
+    const at = (ago: number) => new Date(Date.now() - ago * 1000);
+    await seedPost(v.shopId, { title: "Visible", status: "published", createdAt: at(1) });
+    await seedPost(v.shopId, { title: "Hidden by the sweep", status: "published", hiddenBySubscription: true, createdAt: at(2) });
+    await seedPost(v.shopId, { title: "Draft", status: "draft", createdAt: at(3) });
+    await seedPost(v.shopId, { title: "Unpublished by admin", status: "draft", moderation: { action: "unpublished", reason: "R", at: new Date() }, createdAt: at(4) });
+    await seedPost(v.shopId, { title: "Removed by admin", status: "removed", moderation: { action: "removed", reason: "R", at: new Date() }, createdAt: at(5) });
+
+    const data = await getShopPageData(v.slug);
+    expect(data?.posts.map((p) => p.title)).toEqual(["Visible"]);
+  });
+
+  it("the sweep hides a long-expired shop's posts with its products, and leaves other shops alone", async () => {
+    const { GET: sweep } = await import("@/app/api/cron/vendor-subscription-sweep/route");
+    const { getShopPageData } = await import("@/lib/shop-page");
+    const expired = await makeVendor({ storeType: "both", expiredDaysAgo: 40 });
+    const active = await makeVendor({ storeType: "services" });
+    await seedPost(expired.shopId, { title: "Live", status: "published" });
+    await seedPost(expired.shopId, { title: "Draft", status: "draft" });
+    await db.collection("products").insertOne({ name: "P", slug: `p-${seq}`, price: 1, shopId: expired.shopId, isActive: true, hiddenBySubscription: false });
+    const untouched = await seedPost(active.shopId, { title: "Still live", status: "published" });
+
+    expect((await call(sweep, "/api/cron/vendor-subscription-sweep")).status).toBe(200);
+
+    expect(await db.collection("shopposts").countDocuments({ shopId: expired.shopId, hiddenBySubscription: true })).toBe(2);
+    expect(await db.collection("products").countDocuments({ shopId: expired.shopId, hiddenBySubscription: true })).toBe(1);
+    expect(await stored(untouched)).toMatchObject({ hiddenBySubscription: false });
+    expect((await getShopPageData(expired.slug))?.posts).toEqual([]);
+    expect((await getShopPageData(active.slug))?.posts.map((p) => p.title)).toEqual(["Still live"]);
+
+    const hideLog = await db.collection("auditlogs").find({ action: "SUBSCRIPTION_STOREFRONT_HIDE", shopId: expired.shopId }).toArray();
+    expect(hideLog).toHaveLength(1);
+    expect(hideLog[0].metadata).toMatchObject({ productsHidden: 1, postsHidden: 2 });
+
+    // A second run has nothing left to hide and logs nothing new for the shop.
+    await call(sweep, "/api/cron/vendor-subscription-sweep");
+    expect(await db.collection("auditlogs").countDocuments({ action: "SUBSCRIPTION_STOREFRONT_HIDE", shopId: expired.shopId })).toBe(1);
+  });
+
+  it("the sweep also hides a Services shop that has posts but no products", async () => {
+    const { GET: sweep } = await import("@/app/api/cron/vendor-subscription-sweep/route");
+    const v = await makeVendor({ storeType: "services", expiredDaysAgo: 45 });
+    await seedPost(v.shopId, { status: "published" });
+    await call(sweep, "/api/cron/vendor-subscription-sweep");
+    expect(await db.collection("shopposts").countDocuments({ shopId: v.shopId, hiddenBySubscription: true })).toBe(1);
+    const hideLog = await db.collection("auditlogs").findOne({ action: "SUBSCRIPTION_STOREFRONT_HIDE", shopId: v.shopId });
+    expect(hideLog?.metadata).toMatchObject({ productsHidden: 0, postsHidden: 1 });
+  });
+});

@@ -17,9 +17,9 @@
  *   1. Flips `status: "active"` → `"expired"` once expiryDate has passed.
  *   2. Sends the 7-day-before reminder, daily grace-period reminders, and
  *      the day-27 final storefront warning.
- *   3. Hides (`hiddenBySubscription: true`) all of a shop's products once
- *      more than 30 days have passed since expiryDate — data is untouched,
- *      renewal (see verify-payment route) unhides them immediately.
+ *   3. Hides (`hiddenBySubscription: true`) all of a shop's products and
+ *      posts once more than 30 days have passed since expiryDate — data is
+ *      untouched, renewal (see verify-payment route) unhides them immediately.
  */
 import { withCORS } from "@/lib/cors";
 import { NextRequest, NextResponse } from "next/server";
@@ -27,6 +27,7 @@ import { connectDB } from "@/lib/db";
 import { VendorSubscription } from "@/lib/models/vendor-subscription";
 import Shop from "@/lib/models/shop";
 import { Product } from "@/lib/models/product";
+import { ShopPost } from "@/lib/models/shop-post";
 import { AuditLog } from "@/lib/models/audit-log";
 import { getSubscriptionAccessState } from "@/lib/vendor-subscription-status";
 import {
@@ -135,11 +136,14 @@ export async function GET(req: NextRequest) {
       }
 
       if (needsStorefrontHide) {
-        const updateResult = await Product.updateMany(
-          { shopId: sub.shopId, hiddenBySubscription: { $ne: true } },
-          { $set: { hiddenBySubscription: true } }
-        );
-        if (updateResult.modifiedCount > 0) {
+        // Posts follow the same rule as products: a Services shop shows posts
+        // where a Products shop shows products.
+        const notYetHidden = { shopId: sub.shopId, hiddenBySubscription: { $ne: true } };
+        const [updateResult, postsResult] = await Promise.all([
+          Product.updateMany(notYetHidden, { $set: { hiddenBySubscription: true } }),
+          ShopPost.updateMany(notYetHidden, { $set: { hiddenBySubscription: true } }),
+        ]);
+        if (updateResult.modifiedCount > 0 || postsResult.modifiedCount > 0) {
           result.shopsHidden++;
           await AuditLog.create({
             action: "SUBSCRIPTION_STOREFRONT_HIDE",
@@ -147,7 +151,11 @@ export async function GET(req: NextRequest) {
             targetEntity: "Shop",
             targetId: sub.shopId,
             shopId: sub.shopId,
-            metadata: { productsHidden: updateResult.modifiedCount, expiryDate: sub.expiryDate },
+            metadata: {
+              productsHidden: updateResult.modifiedCount,
+              postsHidden: postsResult.modifiedCount,
+              expiryDate: sub.expiryDate,
+            },
           });
         }
       }

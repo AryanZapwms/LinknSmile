@@ -10,6 +10,7 @@ import { connectDB } from "@/lib/db";
 import { VendorSubscription } from "@/lib/models/vendor-subscription";
 import Shop from "@/lib/models/shop";
 import { Product } from "@/lib/models/product";
+import { ShopPost } from "@/lib/models/shop-post";
 import {
   sendEmail,
   getVendorSubscriptionPaymentEmail,
@@ -108,9 +109,10 @@ export async function fulfillSubscriptionPayment(
   subscription.paymentHistory.push(historyEntry);
   await subscription.save();
 
-  // Renewal reactivates any storefront-hidden products immediately —
-  // don't make the vendor wait for the next cron run.
+  // Renewal reactivates any storefront-hidden products and posts
+  // immediately — don't make the vendor wait for the next cron run.
   await Product.updateMany({ shopId, hiddenBySubscription: true }, { hiddenBySubscription: false });
+  await ShopPost.updateMany({ shopId, hiddenBySubscription: true }, { hiddenBySubscription: false });
 
   const shop = await Shop.findById(shopId).populate("ownerId", "name email locale").lean<any>();
   const ownerEmail = shop?.ownerId?.email;

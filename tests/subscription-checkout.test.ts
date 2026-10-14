@@ -41,9 +41,10 @@ async function makeVendor() {
   n++;
   await db.collection("users").insertOne({ _id: userId, email: `sv${n}@e.com`, name: "SV", role: "shop_owner", isActive: true, shopId });
   await db.collection("shops").insertOne({ _id: shopId, ownerId: userId, shopName: `Sub Shop ${n}`, slug: `sub-${n}` });
-  // Blocked: expired 20 days ago; one product hidden by the sweep.
+  // Blocked: expired 20 days ago; one product and one post hidden by the sweep.
   await db.collection("vendorsubscriptions").insertOne({ shopId, status: "expired", expiryDate: new Date(Date.now() - 20 * DAY), amount: 999, currency: "INR", paymentHistory: [], source: "paid" });
   await db.collection("products").insertOne({ name: "P", slug: `p-${n}`, price: 1, shopId, hiddenBySubscription: true, isActive: true });
+  await db.collection("shopposts").insertOne({ shopId, title: "Post", text: "", images: [], status: "published", hiddenBySubscription: true, createdAt: new Date(), updatedAt: new Date() });
   auth.session = { user: { id: String(userId), email: `sv${n}@e.com`, name: "SV", role: "shop_owner", shopId: String(shopId) } };
   return { userId, shopId };
 }
@@ -98,6 +99,7 @@ describe("subscription renewal via SubscriptionCheckout", () => {
     expect(new Date(sub!.expiryDate).getTime()).toBeGreaterThan(Date.now() + 364 * DAY);
     expect(sub?.paymentHistory).toHaveLength(1);
     expect(await db.collection("products").countDocuments({ shopId: v.shopId, hiddenBySubscription: true })).toBe(0);
+    expect(await db.collection("shopposts").countDocuments({ shopId: v.shopId, hiddenBySubscription: true })).toBe(0);
     const done = await db.collection("subscriptioncheckouts").findOne({ razorpayOrderId: order.id });
     expect(done).toMatchObject({ status: "fulfilled", razorpayPaymentId: "pay_tab_closed" });
     expect(done?.expiresAt).toBeUndefined();
