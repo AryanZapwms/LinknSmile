@@ -488,7 +488,15 @@ status, vendor `PATCH /api/vendor/orders/:id` and admin `PUT /api/orders/:id`, a
   the link can be shared; an older post is fetched with `GET /api/shops/[slug]/posts?post=<id>`.
   The route only ever returns what the page would show (`lib/shop-page.ts`).
   The subscription sweep sets `hiddenBySubscription` on a shop's posts together with its
-  products once the subscription has been expired for more than 30 days; renewal clears both.
+  products once the subscription has been expired for more than 30 days. Whatever makes the
+  subscription active again clears both (`showHiddenStorefront()` in
+  `lib/storefront-visibility.ts`): a paid renewal, or an admin granting free access or
+  extending it by days (`PATCH /api/admin/vendor-subscriptions/[shopId]`, which records how many
+  came back in the audit entry).
+- Products are offered to customers only when they are switched on, approved and not hidden
+  (`shownProductFilter()` in `lib/storefront-visibility.ts`): the catalogue, the shop page, the
+  homepage "Featured" section (`GET /api/hero-products`) and `sitemap.ts` all follow this. A
+  featured product that fails it simply drops out of the section until it passes again.
 - Pictures of a deleted post, or one dropped from a post, stay in image storage (the storage
   layer has no delete), as replaced logos and banners do.
 

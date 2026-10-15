@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import Shop from "@/lib/models/shop";
 import { VendorSubscription } from "@/lib/models/vendor-subscription";
 import { AuditLog } from "@/lib/models/audit-log";
+import { showHiddenStorefront } from "@/lib/storefront-visibility";
 import { sendEmail, getVendorSubscriptionCancelledEmail } from "@/lib/email";
 import { resolveEmailLocale } from "@/lib/email-locale";
 import { type NextRequest, NextResponse } from "next/server";
@@ -193,6 +194,10 @@ export async function PATCH(
       subscription.cancellationReason = undefined;
       await subscription.save();
 
+      // Active again: bring back the products and posts the subscription
+      // sweep hid, exactly as a paid renewal does.
+      const shown = await showHiddenStorefront(shopId);
+
       await AuditLog.create({
         action:
           action === "extend" ? "VENDOR_SUBSCRIPTION_EXTENDED" : "VENDOR_SUBSCRIPTION_GRANTED_FREE",
@@ -202,7 +207,7 @@ export async function PATCH(
         shopId,
         before,
         after: subscription.toObject(),
-        metadata,
+        metadata: { ...metadata, productsShown: shown.products, postsShown: shown.posts },
       });
 
       return withCORS(NextResponse.json({ success: true, subscription }));
