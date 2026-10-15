@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { Blog } from "@/lib/models/blog";
 import { Product } from "@/lib/models/product";
+import { shownProductFilter } from "@/lib/storefront-visibility";
 import type { MetadataRoute } from "next";
 
 export const dynamic = "force-dynamic"; // 👈 prevents static export error
@@ -39,7 +40,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const products = await Product.find({ isActive: true }).select("_id updatedAt").lean();
+  // Only products a visitor can open: switched on, approved and not hidden
+  // for an expired subscription. Anything else would send search engines to
+  // a "not found" page.
+  const products = await Product.find(shownProductFilter()).select("_id updatedAt").lean();
 
   const productRoutes = products.map((product: any) => ({
     url: `${baseUrl}/products/${product._id}`,
