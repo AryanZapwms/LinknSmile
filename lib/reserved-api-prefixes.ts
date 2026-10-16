@@ -33,6 +33,7 @@ export const RESERVED_API_PREFIXES = [
   "sentry-example-api",
   "serve-files",
   "serve-upload",
+  "services",
   "setup",
   "shops",
   "tap",

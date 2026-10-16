@@ -19,6 +19,8 @@ export interface PlatformSettingsPublic {
   // always recomputed server-side via computeOrderPricing, never trusted
   // from this. See PROJECT_SOURCE_OF_TRUTH.md §4.17.
   taxRatePercent: number;
+  /** Whether the navbar shows the Services link (/admin/services). */
+  servicesNavEnabled: boolean;
 }
 
 const DEFAULTS: PlatformSettingsPublic = {
@@ -26,6 +28,7 @@ const DEFAULTS: PlatformSettingsPublic = {
   supportPhone: "+91 8355991099",
   brandTagline: "Net & Work Builds Up Net-Worth",
   taxRatePercent: 0,
+  servicesNavEnabled: false,
 };
 
 interface PlatformSettingsStore {

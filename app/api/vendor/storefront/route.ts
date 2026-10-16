@@ -3,6 +3,7 @@
 // PUT (multipart/form-data) — a vendor edits their own shop's public page:
 //   description               text
 //   storeType                 "products" | "services" | "both"
+//   serviceCategory           a service category id, or empty to clear it
 //   logo, banner              image files (JPEG/PNG/WebP)
 //   removeLogo, removeBanner  "true" to clear the image
 // Every field is optional; one that is absent is left as it is. The shop is

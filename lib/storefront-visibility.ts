@@ -1,10 +1,13 @@
 // lib/storefront-visibility.ts
 //
-// Which products the public site shows, and how a shop's products and posts
-// come back after the subscription sweep hid them.
+// Which products the public site shows, which shops are hidden for an
+// expired subscription, and how a shop's products and posts come back after
+// the subscription sweep hid them.
 
 import { Product } from "@/lib/models/product";
 import { ShopPost } from "@/lib/models/shop-post";
+import { VendorSubscription } from "@/lib/models/vendor-subscription";
+import { getSubscriptionAccessState, type SubscriptionLike } from "@/lib/vendor-subscription-status";
 
 /**
  * The products a customer can see and open: switched on, approved (or
@@ -42,4 +45,29 @@ export async function showHiddenStorefront(
     ShopPost.updateMany({ shopId, hiddenBySubscription: true }, { hiddenBySubscription: false }),
   ]);
   return { products: products.modifiedCount, posts: posts.modifiedCount };
+}
+
+/**
+ * Of the given shops, the ones whose storefront is hidden for an expired
+ * subscription: blocked, and more than 30 days past expiry. The same moment
+ * the subscription sweep hides their products and posts. A shop with no
+ * subscription record is not hidden, just as the sweep never hides its
+ * products. Returns shop ids as strings.
+ */
+export async function shopsHiddenBySubscription(
+  shopIds: unknown[],
+  now: Date = new Date()
+): Promise<Set<string>> {
+  if (shopIds.length === 0) return new Set();
+  const subs = await VendorSubscription.find({ shopId: { $in: shopIds } })
+    .select("shopId status expiryDate")
+    .lean<(SubscriptionLike & { shopId: unknown })[]>();
+  const hidden = new Set<string>();
+  for (const sub of subs) {
+    const access = getSubscriptionAccessState(sub, now);
+    if (access.isBlocked && access.storefrontHideDate && now > access.storefrontHideDate) {
+      hidden.add(String(sub.shopId));
+    }
+  }
+  return hidden;
 }

@@ -13,7 +13,8 @@ export type StorefrontErrorReason =
   | "IMAGE_TYPE"
   | "IMAGE_TOO_LARGE"
   | "DESCRIPTION_TOO_LONG"
-  | "STORE_TYPE";
+  | "STORE_TYPE"
+  | "SERVICE_CATEGORY";
 
 export const STOREFRONT_IMAGE_MAX_BYTES: Record<StorefrontImageKind, number> = {
   logo: 2 * 1024 * 1024,

@@ -11,7 +11,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ExternalLink, ImagePlus, Loader2, RotateCcw, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,12 +28,22 @@ import {
   type StorefrontImageKind,
 } from "@/lib/shop-storefront-rules";
 import { STORE_TYPES, storeTypeOf, type StoreType } from "@/lib/shop-store-type";
+import { categoryName, type ServiceCategoryName } from "@/lib/service-category-rules";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface StorefrontShop {
   shopName: string;
   slug?: string;
   /** Missing on shops saved before store types existed; read as "products". */
   storeType?: string | null;
+  /** The /services category id, if one is chosen. */
+  serviceCategory?: string | null;
   description?: string | null;
   logo?: string | null;
   coverImage?: string | null;
@@ -43,6 +53,7 @@ export interface StorefrontShop {
 
 export interface StorefrontSaved {
   storeType: StoreType;
+  serviceCategory: string | null;
   description: string;
   logo: string | null;
   coverImage: string | null;
@@ -57,7 +68,10 @@ interface StorefrontEditorProps {
 
 // A newly chosen file, a pending removal, or null for "as saved".
 type ImageEdit = { file: File; previewUrl: string } | "remove" | null;
-type Field = StorefrontImageKind | "description" | "storeType";
+type Field = StorefrontImageKind | "description" | "storeType" | "serviceCategory";
+
+// Radix Select cannot use an empty string as a value.
+const NO_CATEGORY = "none";
 
 const KINDS: StorefrontImageKind[] = ["banner", "logo"];
 const SAVED_FIELD = { logo: "logo", banner: "coverImage" } as const;
@@ -75,15 +89,26 @@ const megabytes = (bytes: number) => bytes / (1024 * 1024);
 
 export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorProps) {
   const t = useTranslations("StorefrontEditor");
+  const locale = useLocale();
   const { toast } = useToast();
+  // The /services categories to choose from (app/api/services/categories).
+  const [categories, setCategories] = useState<{ _id: string; name: ServiceCategoryName }[]>([]);
+  useEffect(() => {
+    fetch("/api/services/categories")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setCategories(Array.isArray(data?.categories) ? data.categories : []))
+      .catch(() => {});
+  }, []);
 
   const [saved, setSaved] = useState<StorefrontSaved>({
     storeType: storeTypeOf(shop),
+    serviceCategory: shop.serviceCategory ?? null,
     description: shop.description ?? "",
     logo: shop.logo ?? null,
     coverImage: shop.coverImage ?? null,
   });
   const [storeType, setStoreType] = useState<StoreType>(saved.storeType);
+  const [serviceCategory, setServiceCategory] = useState<string | null>(saved.serviceCategory);
   const [description, setDescription] = useState(saved.description);
   const [edits, setEdits] = useState<Record<StorefrontImageKind, ImageEdit>>({
     logo: null,
@@ -117,6 +142,7 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
       return t("errorDescriptionTooLong", { max: STOREFRONT_DESCRIPTION_MAX_LENGTH });
     }
     if (reason === "STORE_TYPE") return t("errorStoreType");
+    if (reason === "SERVICE_CATEGORY") return t("errorServiceCategory");
     if (reason === "IMAGE_TOO_LARGE" && (field === "logo" || field === "banner")) {
       return t("errorImageTooLarge", { maxMb: megabytes(STOREFRONT_IMAGE_MAX_BYTES[field]) });
     }
@@ -150,6 +176,7 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
 
   const isDirty =
     storeType !== saved.storeType ||
+    serviceCategory !== saved.serviceCategory ||
     description !== saved.description ||
     edits.logo !== null ||
     edits.banner !== null;
@@ -160,6 +187,10 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
     try {
       const body = new FormData();
       if (storeType !== saved.storeType) body.append("storeType", storeType);
+      // An empty value clears the category.
+      if (serviceCategory !== saved.serviceCategory) {
+        body.append("serviceCategory", serviceCategory ?? "");
+      }
       if (description !== saved.description) body.append("description", description);
       for (const kind of KINDS) {
         const edit = edits[kind];
@@ -181,6 +212,7 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
 
       const next: StorefrontSaved = {
         storeType: storeTypeOf(json.shop),
+        serviceCategory: json.shop.serviceCategory ?? null,
         description: json.shop.description ?? "",
         logo: json.shop.logo ?? null,
         coverImage: json.shop.coverImage ?? null,
@@ -189,6 +221,7 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
       setEdits({ logo: null, banner: null });
       setSaved(next);
       setStoreType(next.storeType);
+      setServiceCategory(next.serviceCategory);
       setDescription(next.description);
       onSaved?.(next);
       toast({ title: t("saved") });
@@ -334,6 +367,50 @@ export function StorefrontEditor({ endpoint, shop, onSaved }: StorefrontEditorPr
             </p>
           )}
         </div>
+
+        {/* The /services category, for a shop the Services page can list.
+            Hidden until an admin has created categories. */}
+        {storeType !== "products" && categories.length > 0 && (
+          <div className="space-y-2">
+            <p id="storefront-service-category-label" className="text-sm font-medium">
+              {t("serviceCategoryLabel")}
+            </p>
+            <p className="text-muted-foreground text-xs">{t("serviceCategoryHint")}</p>
+            <Select
+              value={serviceCategory ?? NO_CATEGORY}
+              onValueChange={(value) => {
+                setServiceCategory(value === NO_CATEGORY ? null : value);
+                setErrors((prev) => ({ ...prev, serviceCategory: undefined, form: undefined }));
+              }}
+              disabled={saving}
+            >
+              <SelectTrigger aria-labelledby="storefront-service-category-label" className="w-full sm:w-72">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_CATEGORY}>{t("serviceCategoryNone")}</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category._id} value={category._id}>
+                    {categoryName(category.name, locale)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!serviceCategory && (
+              <p
+                role="status"
+                className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800"
+              >
+                {t("serviceCategoryReminder")}
+              </p>
+            )}
+            {errors.serviceCategory && (
+              <p role="alert" className="text-sm text-red-600">
+                {errors.serviceCategory}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Preview — the same arrangement as the header of app/shop/[slug]/page.tsx */}
         <div className="space-y-2">

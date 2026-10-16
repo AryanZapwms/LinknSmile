@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { usePlatformSettings } from "@/hooks/usePlatformSettings";
 import LinkAndSmileLogo from "@/public/linknsmile_newOne.png";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { MashrabiyaPattern } from "@/components/ui/mashrabiya-pattern";
@@ -322,6 +323,8 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("Header");
+  // The Services link appears once an admin switches it on (/admin/services).
+  const { servicesNavEnabled } = usePlatformSettings();
 
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -384,6 +387,7 @@ export function Header() {
   const isLoggedIn = !!session?.user;
 
   const navLinks = [
+    ...(servicesNavEnabled ? [{ href: "/services", label: t("services") }] : []),
     { href: "/blog", label: t("blog") },
     { href: "/about-us", label: t("aboutUs") },
     { href: "/contact-us", label: t("contact") },
