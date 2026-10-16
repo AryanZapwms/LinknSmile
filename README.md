@@ -358,7 +358,7 @@ HTTP methods and payloads):
 `mobile-auth/login`
 
 **Catalog (public read)** — `products`, `products/[id]`, `products/[id]/reviews`,
-`products/reviews/all`, `categories`, `categories/[id]`, `companies`, `shops`, `shops/[slug]/posts`, `blogs`,
+`products/reviews/all`, `categories`, `categories/[id]`, `companies`, `shops`, `shops/[slug]/posts`, `services/categories`, `services/vendors`, `blogs`,
 `blogs/[slug]`, `promos`, `promos/[id]`, `home-banner`, `hero-products`,
 `platform-settings/public`
 
@@ -379,6 +379,7 @@ HTTP methods and payloads):
 `admin/categories`, `admin/reviews(+/[id],/[id]/reply,/[id]/status)`,
 `admin/home-banner(+/[id],/reorder)`, `admin/hero-products(+/[id],/reorder)`,
 `admin/payment-settings(+/public)`, `admin/platform-settings`, `admin/payouts`,
+`admin/services(+/nav,/featured,/categories,/categories/[id],/categories/starting)`,
 `admin/vendor-subscription-settings`, `admin/vendor-subscriptions(+/[shopId])`,
 `admin/vendors(+/[id],/[id]/finance,/[id]/storefront,/[id]/posts,/[id]/posts/[postId])`, `admin/vendors/mou(+/remind)`,
 `admin/wallet-action`,
@@ -405,7 +406,8 @@ All schemas live in `lib/models/`:
 | Model | Purpose |
 |---|---|
 | User | Account (customer/admin/vendor), auth, `locale` field for email language, `lastLoginAt` (last sign-in) |
-| Shop | Vendor storefront record — approval, commission rate, bank details, slug, store type (see below) |
+| Shop | Vendor storefront record — approval, commission rate, bank details, slug, store type, service category (see below) |
+| ServiceCategory | A category of the `/services` page — name in English with optional Arabic and Hindi, slug, order (see below) |
 | ShopPost | A post on a shop's public page — title, text, pictures, optional YouTube/Vimeo link, draft/published/removed (see below) |
 | Product | Catalog item — price, stock, sizes, approval workflow, subscription-hide flag |
 | Category | Hierarchical product category (self-referential parent) |
@@ -430,7 +432,7 @@ All schemas live in `lib/models/`:
 | HomeBanner | Admin-managed homepage hero carousel slides |
 | HeroProduct | Curated homepage "Featured" product spotlight |
 | Coupon | Per-vendor discount codes |
-| PlatformSettings | Singleton — support email/phone, tagline, tax rate |
+| PlatformSettings | Singleton — support email/phone, tagline, tax rate, the Services navbar switch and the featured service vendors |
 
 **Order status tracking** (`lib/order-status-tracking.ts`). The two routes that change an order's
 status, vendor `PATCH /api/vendor/orders/:id` and admin `PUT /api/orders/:id`, also record:
@@ -500,6 +502,36 @@ status, vendor `PATCH /api/vendor/orders/:id` and admin `PUT /api/orders/:id`, a
 - Pictures of a deleted post, or one dropped from a post, stay in image storage (the storage
   layer has no delete), as replaced logos and banners do.
 
+**Services page** (`/services`; `lib/services-page.ts`, admin side `lib/services-admin.ts`).
+
+- A "Services" link in the navbar leads to `/services`. An admin switches it on at
+  `/admin/services` (`PlatformSettings.servicesNavEnabled`, off by default). While it is off the
+  link is hidden and `/services` is "not found" for everyone except admins, who see it as a
+  preview with a banner.
+- Service categories (`ServiceCategory`) are managed only by admins: add, rename, reorder by
+  dragging, remove. Names are in English, with optional Arabic and Hindi that fall back to
+  English. The slug is made from the English name when the category is created and is kept on
+  rename, so `/services?category=<slug>` links keep working. An empty list offers "Add starting
+  categories" (Photography, Design, Tutoring, Consulting, Events, Beauty & Wellness, Repairs,
+  Other; `lib/service-category-rules.ts`), once per country database. Removing a category in use
+  leaves its shops without one.
+- A Services or Both shop picks one category (`Shop.serviceCategory`, optional) on the Store
+  Page tab, saved by the same storefront routes; an admin can change it on the vendor's page,
+  logged like any Store Page change. The list comes from the public `GET /api/services/categories`,
+  which works whether or not the page is switched on.
+- `/services` lists shops that are approved, active, store type Services or Both, and not more
+  than 30 days past subscription expiry (`shopsHiddenBySubscription()` in
+  `lib/storefront-visibility.ts`, the moment their products and posts are hidden too). Featured
+  vendors (`PlatformSettings.servicesFeaturedShops`, admin order) come first; the rest follow
+  with the newest post first, 24 at a time ("Load more": `GET /api/services/vendors?page=&category=`).
+  A card shows the logo, name, city, category and the first picture of the vendor's newest post
+  that has one. The category filter applies to every section. "Latest work" shows the 8 newest
+  posts with a picture, at most 2 per vendor, each opening the post on its shop page (`?post=<id>`).
+- Every admin change (switch, categories, featured list) is written to `AuditLog` in the same
+  transaction as the change: `SERVICES_NAV_SWITCHED`, `SERVICE_CATEGORY_CREATED` / `_RENAMED` /
+  `_REMOVED`, `SERVICE_CATEGORIES_REORDERED`, `SERVICE_CATEGORIES_STARTING_ADDED`,
+  `SERVICES_FEATURED_UPDATED`.
+
 ---
 
 ## 10. Admin Panel
@@ -528,6 +560,7 @@ Access at `/admin` — requires a session with `role: "admin"` (checked per-rout
 | Wallet (`/admin/wallet`) | Platform wallet oversight, manual wallet actions |
 | Payment Settings (`/admin/payment-settings`) | Toggle COD/online payments, min/max COD |
 | Platform Settings (`/admin/platform-settings`) | Support contact info, tagline, tax rate, per deployment |
+| Services (`/admin/services`) | The navbar "Services" switch (off by default), the service categories (add, rename, reorder, remove, or add the starting list) and the featured vendors of `/services`. Every change is logged to `AuditLog`. See "Services page" under Database Models |
 | Images (`/admin/images`) | Image scan/delete utility |
 
 ---
@@ -549,7 +582,7 @@ Subscription renewal is not a separate page — it's a gate baked into `app/vend
 | Wallet (`/wallet`) | Balance, ledger history, order-level earnings breakdown |
 | Payouts (`/payouts`) | Request withdrawals against the wallet balance |
 | Bank Details (`/bank-details`) | Payout bank account (IFSC for India, SWIFT/BIC available for GCC) |
-| Settings (`/settings`) | Shop profile, contact and address, bank details. The Store Page tab edits the public shop page (`/shop/[slug]`) — store type (Products / Services / Both), logo, banner and description — and saves on its own through `PUT /api/vendor/storefront`; changes are live at once, with no approval step. Images are sent as files and stored by the server; `vendor/settings` no longer accepts `logo`/`coverImage` |
+| Settings (`/settings`) | Shop profile, contact and address, bank details. The Store Page tab edits the public shop page (`/shop/[slug]`) — store type (Products / Services / Both), service category (Services and Both shops), logo, banner and description — and saves on its own through `PUT /api/vendor/storefront`; changes are live at once, with no approval step. Images are sent as files and stored by the server; `vendor/settings` no longer accepts `logo`/`coverImage` |
 
 ---
 
