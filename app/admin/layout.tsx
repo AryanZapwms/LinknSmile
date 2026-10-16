@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
+  Briefcase,
   Package,
   ShoppingCart,
   BookOpen,
@@ -51,6 +52,7 @@ const navItems: NavItem[] = [
     icon: <GalleryHorizontal className="h-5 w-5" />,
   },
   { href: "/admin/hero-products", label: "Hero Products", icon: <Star className="h-5 w-5" /> },
+  { href: "/admin/services", label: "Services", icon: <Briefcase className="h-5 w-5" /> },
   { href: "/admin/blogs", label: "Blogs", icon: <BookOpen className="h-5 w-5" /> },
   {
     href: "/admin/product-approvals",

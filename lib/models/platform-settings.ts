@@ -33,6 +33,20 @@ const platformSettingsSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // The /services page (lib/services-admin.ts, lib/services-page.ts). Off
+    // until an admin switches it on: no navbar link, and the page is "not
+    // found" for everyone but admins.
+    servicesNavEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    // Shops shown first on /services, in this order. A shop that stops
+    // qualifying (store type, approval, expired subscription) stays here but
+    // is not shown until it qualifies again.
+    servicesFeaturedShops: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Shop" }],
+      default: [],
+    },
   },
   { timestamps: true }
 );

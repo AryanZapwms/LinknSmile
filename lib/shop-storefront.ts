@@ -1,7 +1,8 @@
 // lib/shop-storefront.ts
 //
 // Saves the editable part of a shop's public page (app/shop/[slug]) — logo,
-// banner (Shop.coverImage), description and store type — for both the
+// banner (Shop.coverImage), description, store type and the /services
+// category (Shop.serviceCategory) — for both the
 // vendor route (app/api/vendor/storefront) and the admin route
 // (app/api/admin/vendors/[id]/storefront).
 //
@@ -12,6 +13,7 @@
 
 import mongoose from "mongoose";
 import Shop from "@/lib/models/shop";
+import { ServiceCategory } from "@/lib/models/service-category";
 import { getImageProvider } from "@/lib/storage";
 import type { ErrorCode } from "@/lib/contracts/errors";
 import {
@@ -33,7 +35,7 @@ const SHOP_FIELD: Record<StorefrontImageKind, "logo" | "coverImage"> = {
   banner: "coverImage",
 };
 const LABEL: Record<StorefrontImageKind, string> = { logo: "Logo", banner: "Banner" };
-const STOREFRONT_SELECT = "shopName slug storeType description logo coverImage";
+const STOREFRONT_SELECT = "shopName slug storeType serviceCategory description logo coverImage";
 
 // Both images at their limit, plus room for the description and the
 // multipart framing.
@@ -45,6 +47,8 @@ export interface StorefrontInput {
   description?: string;
   /** As sent; checked in saveStorefront. undefined leaves the store type as it is. */
   storeType?: string;
+  /** A ServiceCategory id; null clears it; undefined leaves it as it is. */
+  serviceCategory?: string | null;
   /** A file replaces the image, null removes it, undefined leaves it. */
   logo?: File | null;
   banner?: File | null;
@@ -55,6 +59,7 @@ export interface StorefrontFields {
   shopName: string;
   slug: string;
   storeType: StoreType;
+  serviceCategory: string | null;
   description: string;
   logo: string | null;
   coverImage: string | null;
@@ -65,7 +70,7 @@ export interface StorefrontFailure {
   status: number;
   code: ErrorCode;
   message: string;
-  field?: StorefrontImageKind | "description" | "storeType";
+  field?: StorefrontImageKind | "description" | "storeType" | "serviceCategory";
   reason?: StorefrontErrorReason;
 }
 
@@ -100,6 +105,7 @@ function toFields(doc: any): StorefrontFields {
     shopName: doc.shopName,
     slug: doc.slug,
     storeType: storeTypeOf(doc),
+    serviceCategory: doc.serviceCategory ? String(doc.serviceCategory) : null,
     description: doc.description ?? "",
     logo: doc.logo ?? null,
     coverImage: doc.coverImage ?? null,
@@ -138,6 +144,9 @@ export async function readStorefrontForm(
   if (typeof description === "string") input.description = description;
   const storeType = form.get("storeType");
   if (typeof storeType === "string") input.storeType = storeType;
+  // An empty value clears the category.
+  const serviceCategory = form.get("serviceCategory");
+  if (typeof serviceCategory === "string") input.serviceCategory = serviceCategory || null;
 
   for (const kind of KINDS) {
     const entry = form.get(kind);
@@ -165,7 +174,7 @@ export async function saveStorefront(
   if (!existing) return SHOP_NOT_FOUND;
   const before = toFields(existing);
 
-  const set: Record<string, string> = {};
+  const set: Record<string, unknown> = {};
   const unset: Record<string, 1> = {};
 
   if (input.storeType !== undefined) {
@@ -182,6 +191,25 @@ export async function saveStorefront(
     // A shop saved before store types existed reads as "products"; choosing
     // what it already is writes nothing.
     if (input.storeType !== before.storeType) set.storeType = input.storeType;
+  }
+
+  if (input.serviceCategory !== undefined) {
+    // The /services category (lib/models/service-category.ts). It can be set
+    // whatever the store type; only Services and Both shops are listed there.
+    const id = input.serviceCategory;
+    if (id !== null && !(mongoose.isValidObjectId(id) && (await ServiceCategory.exists({ _id: id })))) {
+      return {
+        ok: false,
+        status: 400,
+        code: "VALIDATION_ERROR",
+        message: "Choose one of the service categories",
+        field: "serviceCategory",
+        reason: "SERVICE_CATEGORY",
+      };
+    }
+    if (id !== before.serviceCategory) {
+      set.serviceCategory = id === null ? null : new mongoose.Types.ObjectId(id);
+    }
   }
 
   if (input.description !== undefined) {

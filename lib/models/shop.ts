@@ -9,6 +9,9 @@ export interface IShop extends Document {
   // Absent on shops created before store types existed — read it with
   // storeTypeOf() (lib/shop-store-type.ts), which treats those as "products".
   storeType: StoreType;
+  // The /services category of a Services or Both shop, chosen on the Store
+  // Page tab; null or absent when none is chosen (lib/models/service-category.ts).
+  serviceCategory?: mongoose.Types.ObjectId | null;
   description: string;
   logo?: string;
   coverImage?: string;
@@ -58,6 +61,7 @@ const ShopSchema = new Schema<IShop>(
     shopName: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true },
     storeType: { type: String, enum: [...STORE_TYPES], default: "products" },
+    serviceCategory: { type: Schema.Types.ObjectId, ref: "ServiceCategory", default: null },
     description: { type: String, default: "" },
     logo: { type: String },
     coverImage: { type: String },

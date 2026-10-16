@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
         supportPhone: settings?.supportPhone ?? "+91 8355991099",
         brandTagline: settings?.brandTagline ?? "Net & Work Builds Up Net-Worth",
         taxRatePercent: settings?.taxRatePercent ?? 0,
+        // The navbar "Services" link (/admin/services). Off until switched on.
+        servicesNavEnabled: !!settings?.servicesNavEnabled,
       })
     );
   } catch (error) {
@@ -36,6 +38,7 @@ export async function GET(request: NextRequest) {
         supportPhone: "+91 8355991099",
         brandTagline: "Net & Work Builds Up Net-Worth",
         taxRatePercent: 0,
+        servicesNavEnabled: false,
       })
     );
   }
